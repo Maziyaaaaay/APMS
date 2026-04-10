@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>KTU Activity Point Management System — Project Brief</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #f8fafc;
+    color: #1e293b;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── Page layout ── */
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 48px;
+    background: #fff;
+  }
+
+  /* ── Cover ── */
+  .cover {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+    color: #fff;
+    border-radius: 16px;
+    padding: 48px 40px 40px;
+    margin-bottom: 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: -40px;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+  }
+  .cover-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .cover h1 {
+    font-size: 32px;
+    font-weight: 900;
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+  .cover p {
+    font-size: 15px;
+    opacity: 0.8;
+    max-width: 560px;
+    margin-bottom: 28px;
+  }
+  .cover-meta {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .cover-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .cover-meta-label { font-size: 10px; opacity: 0.6; text-transform: uppercase; letter-spacing: 0.08em; }
+  .cover-meta-value { font-size: 13px; font-weight: 600; }
+
+  /* ── Section ── */
+  .section { margin-bottom: 36px; }
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #6366f1;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e2e8f0;
+  }
+  h2 { font-size: 20px; font-weight: 800; margin-bottom: 10px; color: #0f172a; }
+  p { color: #475569; margin-bottom: 10px; }
+
+  /* ── Cards ── */
+  .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 0; }
+  .card-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .card-icon { font-size: 22px; margin-bottom: 8px; }
+  .card h3 { font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+  .card p { font-size: 12px; color: #64748b; margin: 0; }
+
+  /* ── User Role Cards ── */
+  .role-card {
+    border-radius: 12px;
+    padding: 18px 20px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 12px;
+  }
+  .role-card.student { border-left: 4px solid #6366f1; }
+  .role-card.faculty { border-left: 4px solid #06b6d4; }
+  .role-card.admin   { border-left: 4px solid #f59e0b; }
+  .role-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .role-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+  }
+  .student .role-icon { background: rgba(99,102,241,0.1); }
+  .faculty .role-icon { background: rgba(6,182,212,0.1); }
+  .admin   .role-icon { background: rgba(245,158,11,0.1); }
+  .role-name { font-size: 15px; font-weight: 700; }
+  .role-sub  { font-size: 11px; color: #94a3b8; }
+  .role-features { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+  .role-features li { font-size: 12px; color: #475569; padding-left: 16px; position: relative; }
+  .role-features li::before { content: '✓'; position: absolute; left: 0; color: #10b981; font-weight: 700; font-size: 11px; }
+
+  /* ── Group Table ── */
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead tr { background: #f1f5f9; }
+  th { padding: 10px 12px; text-align: left; font-weight: 700; color: #475569; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+  td { padding: 9px 12px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+  tr:last-child td { border-bottom: none; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px; border-radius: 10px;
+    font-size: 10px; font-weight: 700;
+  }
+  .badge-g1 { background: rgba(245,158,11,0.12); color: #d97706; }
+  .badge-g2 { background: rgba(6,182,212,0.12); color: #0891b2; }
+  .badge-g3 { background: rgba(16,185,129,0.12); color: #059669; }
+
+  /* ── Points Summary ── */
+  .pts-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .pts-card {
+    border-radius: 12px; padding: 16px;
+    text-align: center; border: 1px solid #e2e8f0;
+  }
+  .pts-card.g1 { background: linear-gradient(135deg, #fffbeb, #fef3c7); border-color: #fcd34d; }
+  .pts-card.g2 { background: linear-gradient(135deg, #ecfeff, #cffafe); border-color: #67e8f9; }
+  .pts-card.g3 { background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-color: #86efac; }
+  .pts-val { font-size: 28px; font-weight: 900; }
+  .g1 .pts-val { color: #d97706; }
+  .g2 .pts-val { color: #0891b2; }
+  .g3 .pts-val { color: #059669; }
+  .pts-label { font-size: 11px; color: #64748b; margin-top: 2px; font-weight: 600; }
+
+  /* ── Tech stack ── */
+  .tech-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tech-chip {
+    background: #f1f5f9; border: 1px solid #e2e8f0;
+    border-radius: 20px; padding: 4px 12px;
+    font-size: 12px; font-weight: 600; color: #334155;
+  }
+
+  /* ── Flow ── */
+  .flow {
+    display: flex; align-items: flex-start; gap: 0;
+    counter-reset: step;
+  }
+  .flow-step {
+    display: flex; flex-direction: column; align-items: center;
+    flex: 1; text-align: center;
+  }
+  .flow-num {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff; font-weight: 800; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 8px; flex-shrink: 0;
+  }
+  .flow-label { font-size: 11px; font-weight: 600; color: #334155; }
+  .flow-arrow { font-size: 18px; color: #cbd5e1; align-self: center; margin-bottom: 20px; flex-shrink: 0; }
+
+  /* ── Constraints ── */
+  .constraint-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .constraint-list li {
+    padding: 8px 12px; border-radius: 8px;
+    background: #fefce8; border: 1px solid #fef08a;
+    font-size: 12px; color: #713f12;
+    padding-left: 24px; position: relative;
+  }
+  .constraint-list li::before { content: '⚠'; position: absolute; left: 8px; }
+
+  /* ── Footer ── */
+  .footer {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: #94a3b8;
+  }
+
+  /* ── Print ── */
+  @media print {
+    body { background: #fff; }
+    .page { padding: 20px 24px; }
+    .cover { border-radius: 8px; }
+    .card-grid, .pts-grid { break-inside: avoid; }
+    .role-card { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ═══ COVER ═══ -->
+  <div class="cover">
+    <div class="cover-badge">🎓 KTU University System</div>
+    <h1>Activity Point Management System</h1>
+    <p>A full-stack web application for managing, submitting, verifying, and tracking KTU student activity points as per the APJ Abdul Kalam Technological University 2024 guidelines.</p>
+    <div class="cover-meta">
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">University</span>
+        <span class="cover-meta-value">APJ Abdul Kalam Technological University</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Type</span>
+        <span class="cover-meta-value">Web App (React + Vite)</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Data Layer</span>
+        <span class="cover-meta-value">Browser localStorage (MVP)</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">User Roles</span>
+        <span class="cover-meta-value">Student · Faculty · Admin</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ OVERVIEW ═══ -->
+  <div class="section">
+    <div class="section-title">01 — Overview</div>
+    <h2>What is this system?</h2>
+    <p>KTU mandates that all B.Tech students earn <strong>Activity Points</strong> as a graduation requirement. These points are earned by participating in co-curricular, professional, and advanced activities across three groups. The university does not issue a degree unless students fulfill this requirement.</p>
+    <p>This web application digitizes the entire workflow — from students uploading certificates to faculty verification and admin oversight — replacing the traditional paper-based process.</p>
+  </div>
+
+  <!-- ═══ POINT STRUCTURE ═══ -->
+  <div class="section">
+    <div class="section-title">02 — Point Structure</div>
+    <h2>Requirements by Student Type</h2>
+    <p>Points are organized into three groups. Students must meet the per-group minimum <em>and</em> the total required.</p>
+
+    <div class="pts-grid" style="margin-bottom: 20px;">
+      <div class="pts-card g1">
+        <div class="pts-val">40</div>
+        <div class="pts-label">Group I pts needed<br>(Regular Students)</div>
+      </div>
+      <div class="pts-card g2">
+        <div class="pts-val">40</div>
+        <div class="pts-label">Group II pts needed<br>(Regular Students)</div>
+      </div>
+      <div class="pts-card g3">
+        <div class="pts-val">40</div>
+        <div class="pts-label">Group III pts needed<br>(Regular Students)</div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Student Type</th>
+          <th>Total Required</th>
+          <th>Per Group Minimum</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Regular</strong></td><td>120 pts</td><td>40 pts</td><td>Standard B.Tech students</td></tr>
+        <tr><td><strong>Lateral Entry</strong></td><td>90 pts</td><td>30 pts</td><td>Direct 2nd year entrants</td></tr>
+        <tr><td><strong>PwD</strong></td><td>60 pts</td><td>20 pts</td><td>Persons with Disability</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══ ACTIVITY GROUPS ═══ -->
+  <div class="section">
+    <div class="section-title">03 — Activity Groups</div>
+    <h2>Three Activity Categories</h2>
+    <p>Each group covers a different aspect of student development. The system has <strong>47 activity types</strong> across all three groups.</p>
+
+    <table>
+      <thead>
+        <tr><th>Group</th><th>Focus Area</th><th>Example Activities</th><th>Activities</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-g1">Group I</span></td>
+          <td>Co-curricular & Community</td>
+          <td>Sports, Arts, NSS/NCC, Blood Donation, Community Service, Driving License</td>
+          <td>24 activities</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-g2">Group II</span></td>
+          <td>Professional Development</td>
+          <td>Tech-Fests, IEEE/IET Membership, Internship, Paper Presentation, GATE/GRE, TOEFL/IELTS</td>
+          <td>22 activities</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-g3">Group III</span></td>
+          <td>Advanced & Innovation</td>
+          <td>Patents, Startups, Hackathons (SIH, NASA, Google), Research Publications, LEAP/YIP/STRIDE</td>
+          <td>17 activities</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══ SCORING RULES ═══ -->
+  <div class="section">
+    <div class="section-title">04 — Scoring Rules</div>
+    <h2>Key Calculation Rules (KTU 2024)</h2>
+    <div class="card-grid" style="margin-bottom:0">
+      <div class="card">
+        <div class="card-icon">🏆</div>
+        <h3>Highest Level Only</h3>
+        <p>For the same activity, only the highest achievement level counts. Lower levels are ignored.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🚫</div>
+        <h3>No Double Counting</h3>
+        <p>Participation and Winner points cannot both be claimed for the same event.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📊</div>
+        <h3>Per-Activity Cap</h3>
+        <p>Each activity has a maximum point cap. Points beyond this cap are automatically ignored.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📏</div>
+        <h3>Per-Group Cap</h3>
+        <p>Maximum 40 pts counted per group (30 for Lateral Entry, 20 for PwD). Excess is discarded.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">⏱</div>
+        <h3>Programme Period Only</h3>
+        <p>Activities must have been completed during the student's programme duration at KTU.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🎓</div>
+        <h3>Graduation Requirement</h3>
+        <p>Degree will NOT be awarded without fulfilling the Activity Points requirement.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ USER ROLES ═══ -->
+  <div class="section">
+    <div class="section-title">05 — User Roles</div>
+    <h2>Three Types of Users</h2>
+
+    <div class="role-card student">
+      <div class="role-header">
+        <div class="role-icon">🎒</div>
+        <div>
+          <div class="role-name">Student</div>
+          <div class="role-sub">B.Tech students across all departments · Login: student1–9 / pass123</div>
+        </div>
+      </div>
+      <ul class="role-features">
+        <li>Upload certificates with activity details, level, date, and file (PDF/JPG/PNG)</li>
+        <li>Track real-time points across Group I, II, and III with progress bars</li>
+        <li>See pending, approved, and rejected certificate statuses</li>
+        <li>View KTU 2024 official activity point guidelines in-app</li>
+        <li>Check eligibility status (whether graduation requirement is met)</li>
+        <li>Download approval PDF after faculty verifies a certificate</li>
+      </ul>
+    </div>
+
+    <div class="role-card faculty">
+      <div class="role-header">
+        <div class="role-icon">👩‍🏫</div>
+        <div>
+          <div class="role-name">Faculty Advisor (SFA)</div>
+          <div class="role-sub">Student Faculty Advisor · Login: faculty1 / pass123</div>
+        </div>
+      </div>
+      <ul class="role-features">
+        <li>View all pending certificates submitted by students</li>
+        <li>Preview uploaded certificate image or PDF directly in the review modal</li>
+        <li>Adjust/override the points awarded before approving or rejecting</li>
+        <li>Add remarks/notes visible to the student</li>
+        <li>Approve → auto-generates and downloads an approval PDF</li>
+        <li>View all students' progress with filters by department, semester, and class division</li>
+        <li>Edit own profile (name, email, designation)</li>
+      </ul>
+    </div>
+
+    <div class="role-card admin">
+      <div class="role-header">
+        <div class="role-icon">🛡️</div>
+        <div>
+          <div class="role-name">Admin</div>
+          <div class="role-sub">Admin Officer · Login: admin / admin123</div>
+        </div>
+      </div>
+      <ul class="role-features">
+        <li>Manage student and faculty accounts (add, remove, edit users)</li>
+        <li>Add and remove departments from the system</li>
+        <li>Post and delete university circulars (visible to all students)</li>
+        <li>View all students' progress and eligibility across departments</li>
+        <li>Adjust activity point grading rules and overrides</li>
+        <li>Access system-wide analytics and summaries</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ═══ WORKFLOW ═══ -->
+  <div class="section">
+    <div class="section-title">06 — Certificate Workflow</div>
+    <h2>End-to-End Verification Flow</h2>
+
+    <div class="flow" style="margin-top: 20px;">
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div class="flow-label">Student selects activity &amp; level</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div class="flow-label">Uploads certificate file (PDF/Image)</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div class="flow-label">Submission stored as <em>Pending</em></div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-num">4</div>
+        <div class="flow-label">Faculty reviews image &amp; adjusts points</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-num">5</div>
+        <div class="flow-label">Approve (PDF downloaded) or Reject</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ DEPARTMENTS ═══ -->
+  <div class="section">
+    <div class="section-title">07 — Departments & Data</div>
+    <h2>Supported Departments</h2>
+    <div class="tech-list" style="margin-bottom: 16px;">
+      <span class="tech-chip">Computer Science</span>
+      <span class="tech-chip">Information Technology</span>
+      <span class="tech-chip">Electronics &amp; Communication Engg.</span>
+      <span class="tech-chip">Electrical Engineering</span>
+      <span class="tech-chip">Civil Engineering</span>
+      <span class="tech-chip">Mechanical Engineering</span>
+      <span class="tech-chip">Electrical &amp; Computer Science</span>
+    </div>
+    <p style="font-size:12px;">CS and ECE departments have two class divisions each (CS1/CS2 and ECE1/ECE2). The semester display auto-detects the current semester parity (Even: Jan–Jun, Odd: Jul–Dec).</p>
+  </div>
+
+  <!-- ═══ TECH STACK ═══ -->
+  <div class="section">
+    <div class="section-title">08 — Technology Stack</div>
+    <h2>Technical Architecture</h2>
+    <div class="card-grid card-grid-3">
+      <div class="card">
+        <div class="card-icon">⚛️</div>
+        <h3>Frontend</h3>
+        <p>React 18 + React Router for SPA routing. Vite as bundler/dev server.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🗄️</div>
+        <h3>Data Layer</h3>
+        <p>Browser localStorage acts as the database. No backend server required.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🎨</div>
+        <h3>Styling</h3>
+        <p>Vanilla CSS with glassmorphism, dark theme, CSS custom properties.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📄</div>
+        <h3>PDF Generation</h3>
+        <p>Custom pdfGenerator.js creates approval certificates on-the-fly in-browser.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔐</div>
+        <h3>Auth</h3>
+        <p>auth.js handles session management via localStorage. Role-based routing.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📱</div>
+        <h3>Design</h3>
+        <p>Mobile-first, max-width 430px. Bottom navigation bar pattern.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ KEY FILES ═══ -->
+  <div class="section">
+    <div class="section-title">09 — Key Source Files</div>
+    <h2>Project Structure</h2>
+    <table>
+      <thead><tr><th>File</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>src/pages/StudentPortal.jsx</code></td><td>Student UI: upload, progress tracking, settings, certificate cards</td></tr>
+        <tr><td><code>src/pages/FacultyPortal.jsx</code></td><td>Faculty UI: review modal with certificate preview &amp; editable points, student progress dashboard</td></tr>
+        <tr><td><code>src/pages/AdminPortal.jsx</code></td><td>Admin UI: user management, departments, circulars, point overrides</td></tr>
+        <tr><td><code>src/utils/points.js</code></td><td>All 47 activity definitions + KTU scoring algorithm (caps, highest-level rule)</td></tr>
+        <tr><td><code>src/utils/storage.js</code></td><td>localStorage CRUD layer for users, certificates, departments, circulars</td></tr>
+        <tr><td><code>src/utils/auth.js</code></td><td>Login, logout, session, role-based access</td></tr>
+        <tr><td><code>src/utils/pdfGenerator.js</code></td><td>In-browser PDF generation for approved certificates</td></tr>
+        <tr><td><code>src/App.jsx</code></td><td>Root routing (/login, /student, /faculty, /admin)</td></tr>
+        <tr><td><code>src/index.css</code></td><td>Global design system (CSS variables, components, dark theme)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══ CONSTRAINTS ═══ -->
+  <div class="section">
+    <div class="section-title">10 — Known Constraints (MVP)</div>
+    <h2>Current Limitations</h2>
+    <ul class="constraint-list">
+      <li>All data is stored in <strong>browser localStorage</strong> — data is lost if the browser storage is cleared. Not suitable for production without migrating to a real database.</li>
+      <li>Certificate files are stored as <strong>base64 strings in localStorage</strong>. Large files (&gt;1–2 MB) may exceed the ~5 MB browser storage limit.</li>
+      <li>There is <strong>no real authentication</strong> — passwords are stored in plain text in localStorage. A real backend with hashed passwords is needed for production.</li>
+      <li>There is only <strong>one faculty advisor</strong> account. The system does not currently route students to their specific department's advisor.</li>
+      <li>The PDF generation is done <strong>client-side in the browser</strong> — no server-side PDF rendering.</li>
+    </ul>
+  </div>
+
+  <!-- ═══ FOOTER ═══ -->
+  <div class="footer">
+    <span>KTU Activity Point Management System — Project Brief</span>
+    <span>Based on APJ Abdul Kalam Technological University Activity Points Handbook 2024</span>
+  </div>
+
+</div>
+
+<!-- Print prompt -->
+<div style="position:fixed;bottom:20px;right:20px;background:#6366f1;color:#fff;padding:12px 20px;border-radius:12px;font-family:Inter,sans-serif;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(99,102,241,0.4);cursor:pointer;" onclick="window.print()">
+  🖨️ Save as PDF
+</div>
+
+</body>
+</html>
