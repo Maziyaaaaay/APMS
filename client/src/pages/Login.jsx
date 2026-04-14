@@ -257,7 +257,7 @@ export default function Login() {
             {/* Help Center Modal */}
             {showHelp && (
                 <div className="modal-overlay" onClick={() => setShowHelp(false)}>
-                    <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 500 }}>
+                    <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 500 }}>
                         <div className="modal-header">
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                 <span className="material-symbols-outlined" style={{ color: 'var(--accent)', fontSize: 24 }}>support_agent</span>
@@ -289,7 +289,7 @@ export default function Login() {
             {/* User Guide Modal */}
             {showGuide && (
                 <div className="modal-overlay" onClick={() => setShowGuide(false)}>
-                    <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 500 }}>
+                    <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 500 }}>
                         <div className="modal-header">
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                 <span className="material-symbols-outlined" style={{ color: 'var(--primary)', fontSize: 24 }}>menu_book</span>

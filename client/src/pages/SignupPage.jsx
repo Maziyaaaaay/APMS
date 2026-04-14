@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { signup } from '../utils/storage';
+import { signup } from '../utils/auth';
 import { compressImage } from '../utils/imageCompressor';
 
 const DEPARTMENTS = [
@@ -59,8 +59,9 @@ export default function SignupPage() {
       setError('Name and username are required.'); return;
     }
     setLoading(true);
+    setLoading(true);
     try {
-      await signup({
+      const result = await signup({
         role,
         name: form.name.trim(),
         username: form.username.trim(),
@@ -73,10 +74,14 @@ export default function SignupPage() {
         year: role === 'student' ? form.year : undefined,
         profileUrl: role === 'student' ? form.profileUrl : undefined,
       });
-      setSuccess(true);
-      setTimeout(() => navigate('/?registered=1'), 1800);
+      if (result.success) {
+        setSuccess(true);
+        setTimeout(() => navigate('/?registered=1'), 1800);
+      } else {
+        setError(result.message);
+      }
     } catch (err) {
-      setError(err.message);
+      setError('Connection error — make sure the server is running.');
     } finally {
       setLoading(false);
     }

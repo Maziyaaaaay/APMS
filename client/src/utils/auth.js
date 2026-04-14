@@ -22,6 +22,15 @@ export async function login(username, password, role) {
   }
 }
 
+export async function signup(userData) {
+  try {
+    const result = await api.post('/auth/signup', userData);
+    return { success: true, user: result.user };
+  } catch (err) {
+    return { success: false, message: err.message };
+  }
+}
+
 export function logout() {
   api.setToken(null);
   localStorage.removeItem('apms_user');
