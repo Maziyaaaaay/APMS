@@ -13,19 +13,38 @@ router.post('/login', async (req, res) => {
     return res.status(400).json({ error: 'username, password, and role are required' });
   }
 
-  const { data: users, error } = await supabase
-    .from('users')
-    .select('*')
-    .eq('role', role)
-    .or(`username.eq.${username},roll_no.eq.${username}`)
-    .limit(1);
-
-  if (error) return res.status(500).json({ error: error.message });
-  if (!users || users.length === 0) {
-    return res.status(401).json({ error: 'Invalid username or password.' });
+  // Try matching by username first, then by roll_no
+  // (Using separate queries avoids issues with PostgREST .or() filter syntax
+  //  when usernames contain dots, commas, or other special characters)
+  let user = null;
+  {
+    const { data, error: err1 } = await supabase
+      .from('users')
+      .select('*')
+      .eq('role', role)
+      .eq('username', username)
+      .limit(1);
+    if (err1) return res.status(500).json({ error: err1.message });
+    if (data && data.length > 0) {
+      user = data[0];
+    } else {
+      // Fallback: try matching by roll number
+      const { data: data2, error: err2 } = await supabase
+        .from('users')
+        .select('*')
+        .eq('role', role)
+        .eq('roll_no', username)
+        .limit(1);
+      if (err2) return res.status(500).json({ error: err2.message });
+      if (data2 && data2.length > 0) {
+        user = data2[0];
+      }
+    }
   }
 
-  const user = users[0];
+  if (!user) {
+    return res.status(401).json({ error: 'Invalid username or password.' });
+  }
   const valid = await bcrypt.compare(password, user.password_hash);
   if (!valid) {
     return res.status(401).json({ error: 'Invalid username or password.' });

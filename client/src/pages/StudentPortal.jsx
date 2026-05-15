@@ -45,6 +45,23 @@ export default function StudentPortal() {
         getCertificatesByStudent(user.id).then(setCerts).catch(console.error);
     }, []);
 
+    // Re-fetch certs whenever the student switches to dashboard or submissions tab
+    useEffect(() => {
+        if (!user) return;
+        if (tab === 'dashboard' || tab === 'submissions') {
+            getCertificatesByStudent(user.id).then(setCerts).catch(console.error);
+        }
+    }, [tab]);
+
+    // Auto-refresh every 30s while on dashboard to pick up newly approved certs
+    useEffect(() => {
+        if (!user || tab !== 'dashboard') return;
+        const interval = setInterval(() => {
+            getCertificatesByStudent(user.id).then(setCerts).catch(console.error);
+        }, 30000);
+        return () => clearInterval(interval);
+    }, [tab]);
+
     const refreshCerts = () => getCertificatesByStudent(user.id).then(setCerts).catch(console.error);
     const summary = calculateStudentSummary(certs, user?.studentType || user?.student_type || 'regular');
     const req     = STUDENT_TYPES[user?.studentType || user?.student_type || 'regular'];

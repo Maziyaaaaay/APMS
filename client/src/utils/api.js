@@ -4,7 +4,7 @@
 const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 function getToken() {
-  return sessionStorage.getItem('apms_token');
+  return localStorage.getItem('apms_token');
 }
 
 async function request(method, path, body = null) {
@@ -41,8 +41,8 @@ export const api = {
   patch: (path, body) => request('PATCH', path, body),
   delete: (path) => request('DELETE', path),
   setToken: (token) => {
-    if (token) sessionStorage.setItem('apms_token', token);
-    else sessionStorage.removeItem('apms_token');
+    if (token) localStorage.setItem('apms_token', token);
+    else localStorage.removeItem('apms_token');
   },
   getToken,
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { login } from '../utils/auth';
 
 const ROLES = [
@@ -22,6 +22,8 @@ export default function Login() {
     const [dark,     setDark]     = useState(
         () => localStorage.getItem('theme') === 'dark'
     );
+    const [searchParams] = useSearchParams();
+    const justRegistered = searchParams.get('registered') === '1';
 
     /* Apply dark class to <html> */
     useEffect(() => {
@@ -200,6 +202,14 @@ export default function Login() {
                             />
                             <label htmlFor="remember">Remember this device</label>
                         </div>
+
+                        {/* Registration success banner */}
+                        {justRegistered && !error && (
+                            <div className="alert alert-success" style={{ marginBottom: 16 }}>
+                                <span className="material-symbols-outlined" style={{ fontSize:18, flexShrink:0 }}>check_circle</span>
+                                Account created successfully! Please log in with your credentials.
+                            </div>
+                        )}
 
                         {/* Error */}
                         {error && (

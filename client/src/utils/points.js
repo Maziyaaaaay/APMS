@@ -680,19 +680,37 @@ export function calculateStudentSummary(certificates, studentType = 'regular') {
 
     const groupRaw = { 1: 0, 2: 0, 3: 0 };
 
-    // Track highest per activityId to apply "highest level only" rule
-    const bestPerActivity = {};
+    // Separate handling for different activity types:
+    // - 'fixed'/'hours' activities: SUM all approved entries (e.g. multiple blood donations)
+    // - 'level'/'choice' activities: keep only the HIGHEST entry (KTU "highest level only" rule)
+    const summedPerActivity = {};   // for fixed/hours: accumulate points
+    const bestPerActivity = {};     // for level/choice: keep highest only
+
     for (const cert of approved) {
         const actId = cert.activity_id || cert.activityId;
         const pts = cert.points_awarded ?? cert.pointsAwarded ?? 0;
-        const prev = bestPerActivity[actId] || 0;
-        if (pts > prev) {
-            bestPerActivity[actId] = pts;
+        const activity = ACTIVITIES[actId];
+        if (!activity) continue;
+
+        if (activity.type === 'fixed' || activity.type === 'hours') {
+            // Accumulate all approved submissions for this activity
+            summedPerActivity[actId] = (summedPerActivity[actId] || 0) + pts;
+        } else {
+            // level/choice: only keep the highest single entry
+            const prev = bestPerActivity[actId] || 0;
+            if (pts > prev) {
+                bestPerActivity[actId] = pts;
+            }
         }
     }
 
-    // Apply per-activity maxPoints cap and group them
-    for (const [activityId, pts] of Object.entries(bestPerActivity)) {
+    // Merge both maps and apply per-activity maxPoints cap
+    const allActivities = { ...bestPerActivity };
+    for (const [actId, pts] of Object.entries(summedPerActivity)) {
+        allActivities[actId] = pts;
+    }
+
+    for (const [activityId, pts] of Object.entries(allActivities)) {
         const activity = ACTIVITIES[activityId];
         if (!activity) continue;
         const capped = Math.min(pts, activity.maxPoints);
