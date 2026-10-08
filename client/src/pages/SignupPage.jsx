@@ -1,20 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { signup } from '../utils/auth';
+import { getDepartments } from '../utils/storage';
 import { compressImage } from '../utils/imageCompressor';
-
-const DEPARTMENTS = [
-  'Computer Science',
-  'Information Technology',
-  'Electronics and Communication Engineering',
-  'Electrical Engineering',
-  'Civil Engineering',
-  'Mechanical Engineering',
-  'Electrical and Computer Science',
-];
 
 export default function SignupPage() {
   const navigate = useNavigate();
+  const [departments, setDepartments] = useState([]);
+  const [departmentsLoading, setDepartmentsLoading] = useState(true);
   const [role, setRole] = useState('student');
   const [form, setForm] = useState({
     name: '', username: '', password: '', confirmPassword: '',
@@ -25,6 +18,14 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'));
+
+  useEffect(() => {
+    let active = true;
+    getDepartments().then(data => { if (active) setDepartments(data); })
+      .catch(() => { if (active) setError('Could not load departments. Refresh this page to try again.'); })
+      .finally(() => { if (active) setDepartmentsLoading(false); });
+    return () => { active = false; };
+  }, []);
 
   const profilePicRef = useRef();
 
@@ -53,8 +54,8 @@ export default function SignupPage() {
     if (form.password !== form.confirmPassword) {
       setError('Passwords do not match.'); return;
     }
-    if (form.password.length < 6) {
-      setError('Password must be at least 6 characters.'); return;
+    if (form.password.length < 12) {
+      setError('Password must be at least 12 characters.'); return;
     }
     if (!form.name.trim() || !form.username.trim()) {
       setError('Name and username are required.'); return;
@@ -80,8 +81,8 @@ export default function SignupPage() {
       } else {
         setError(result.message);
       }
-    } catch (err) {
-      setError('Connection error — make sure the server is running.');
+    } catch {
+      setError('Could not reach APMS. Check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -178,8 +179,8 @@ export default function SignupPage() {
           {success ? (
             <div style={{ padding: '32px 0', textAlign: 'center' }}>
               <span className="material-symbols-outlined" style={{ fontSize: 56, color: 'var(--success)', display: 'block', marginBottom: 12 }}>check_circle</span>
-              <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>Account Created!</div>
-              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Redirecting you to login…</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>Request submitted</div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Your account is waiting for administrator approval. You can sign in after it is approved.</div>
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
@@ -209,9 +210,9 @@ export default function SignupPage() {
 
               <div className="form-group">
                 <label className="form-label">Department</label>
-                <select className="input" value={form.department} onChange={set('department')}>
+                <select className="input" value={form.department} onChange={set('department')} required disabled={departmentsLoading}>
                   <option value="">— Select Department —</option>
-                  {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+                  {departments.map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
               </div>
 
@@ -277,7 +278,7 @@ export default function SignupPage() {
               <div className="form-row">
                 <div className="form-group">
                   <label className="form-label">Password *</label>
-                  <input className="input" type="password" placeholder="Min. 6 characters" value={form.password} onChange={set('password')} required />
+                  <input className="input" type="password" placeholder="Min. 12 characters" minLength={12} value={form.password} onChange={set('password')} required />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Confirm Password *</label>
@@ -288,7 +289,7 @@ export default function SignupPage() {
               <button
                 type="submit"
                 className="login-submit-btn"
-                disabled={loading}
+                disabled={loading || departmentsLoading || !departments.length}
               >
                 {loading ? (
                   <><span className="material-symbols-outlined" style={{ fontSize: 18, animation: 'spin 1s linear infinite' }}>refresh</span> Creating account…</>

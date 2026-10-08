@@ -1,0 +1,11 @@
+{
+  "name": "ktu-apms",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "npm run build --prefix client"
+  },
+  "engines": {
+    "node": "24.x"
+  }
+}

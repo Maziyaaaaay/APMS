@@ -3,9 +3,9 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { login } from '../utils/auth';
 
 const ROLES = [
-    { key: 'student',  label: 'Student',        hint: 'student1 / pass123' },
-    { key: 'faculty',  label: 'Faculty Advisor', hint: 'faculty1 / pass123' },
-    { key: 'admin',    label: 'Admin',           hint: 'admin / admin123'   },
+    { key: 'student',  label: 'Student' },
+    { key: 'faculty',  label: 'Faculty Advisor' },
+    { key: 'admin',    label: 'Admin' },
 ];
 
 export default function Login() {
@@ -47,7 +47,7 @@ export default function Login() {
             } else {
                 setError(result.message);
             }
-        } catch (err) {
+        } catch {
             setError('Connection error — make sure the server is running.');
         }
         setLoading(false);

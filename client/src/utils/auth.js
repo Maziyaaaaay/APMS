@@ -4,8 +4,9 @@ import { api } from './api.js';
 // Decode JWT payload without verification (safe — server verified it)
 function decodeToken(token) {
   try {
-    const payload = token.split('.')[1];
-    return JSON.parse(atob(payload));
+    const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const bytes = Uint8Array.from(atob(payload), c => c.charCodeAt(0));
+    return JSON.parse(new TextDecoder().decode(bytes));
   } catch {
     return null;
   }
@@ -61,3 +62,4 @@ export function requireAuth(role) {
   if (role && user.role !== role) return false;
   return true;
 }
+

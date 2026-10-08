@@ -1,19 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, logout } from '../utils/auth';
 import {
-    getUsers, getCertificates, addUser, deleteUser, updateUser,
+    getUsers, getCertificates, addUser, deleteUser, updateUser, reviewAccount,
     getDepartmentsWithIds, addDepartment, removeDepartment,
     getCirculars, addCircular, deleteCircular,
     getPointOverrides, savePointOverride, deletePointOverride,
-    promoteToAdmin,
+    promoteToAdmin, transferOwnership,
 } from '../utils/storage';
+import { ReviewsTab } from './FacultyPortal';
 import { compressImage } from '../utils/imageCompressor';
 import { ACTIVITIES, calculateStudentSummary } from '../utils/points';
 
 const NAV_ITEMS = [
     { key: 'dashboard',    icon: 'dashboard',          label: 'Dashboard'     },
     { key: 'users',        icon: 'manage_accounts',    label: 'Manage Users'  },
+    { key: 'reviews', icon: 'fact_check', label: 'Submission Reviews' },
+    { key: 'approvals',    icon: 'how_to_reg',         label: 'Account Requests' },
     { key: 'departments',  icon: 'account_balance',    label: 'Departments'   },
     { key: 'circulars',    icon: 'campaign',           label: 'Circulars'     },
     { key: 'points',       icon: 'analytics',          label: 'Point Grading' },
@@ -29,17 +32,18 @@ export default function AdminPortal() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'));
 
-    useEffect(() => {
-        if (!user) { navigate('/'); return; }
-        refresh();
-    }, []);
-
-    const refresh = async () => {
+    const [loadError, setLoadError] = useState('');
+    const refresh = useCallback(async () => {
         try {
             const [usersData, certsData] = await Promise.all([getUsers(), getCertificates()]);
-            setUsers(usersData); setCerts(certsData);
-        } catch (err) { console.error('Failed to load:', err); }
-    };
+            setUsers(usersData); setCerts(certsData); setLoadError('');
+        } catch (err) { setLoadError(err.message); }
+    }, []);
+    useEffect(() => {
+        if (!user) { navigate('/'); return; }
+        Promise.resolve().then(refresh);
+    }, [user, navigate, refresh]);
+
     const handleLogout = () => { logout(); navigate('/'); };
     const toggleDark = () => {
         const next = !dark;
@@ -48,13 +52,15 @@ export default function AdminPortal() {
         localStorage.setItem('theme', next ? 'dark' : 'light');
     };
 
-    const students = users.filter(u => u.role === 'student');
-    const faculty  = users.filter(u => u.role === 'faculty');
+    const students = users.filter(u => u.role === 'student' && (u.account_status || 'approved') === 'approved');
+    const faculty  = users.filter(u => u.role === 'faculty' && (u.account_status || 'approved') === 'approved');
     const initials = user?.name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'AD';
 
     const PAGE_TITLES = {
         dashboard:   'Dashboard',
         users:       'Manage Users',
+        approvals:   'Account Requests',
+        reviews: 'Submission Reviews',
         departments: 'Departments',
         circulars:   'Circulars & Announcements',
         points:      'Activity Point Grading',
@@ -130,8 +136,11 @@ export default function AdminPortal() {
                 </header>
 
                 <div className="page-content">
+                    {loadError && <div role="alert" className="alert alert-danger">{loadError} <button onClick={refresh}>Try again</button></div>}
                     {tab === 'dashboard'   && <DashboardTab students={students} faculty={faculty} certs={certs} onNavigate={setTab} />}
                     {tab === 'users'       && <UsersTab students={students} faculty={faculty} certs={certs} onRefresh={refresh} currentUser={user} />}
+                    {tab === 'reviews' && <ReviewsTab pendingCerts={certs.filter(c => c.status === 'pending')} students={users.filter(u => u.role === 'student')} user={user} onRefresh={refresh} />}
+                    {tab === 'approvals'   && <AccountApprovals users={users} onRefresh={refresh} currentUser={user} />}
                     {tab === 'departments' && <DepartmentsTab />}
                     {tab === 'circulars'   && <CircularsTab />}
                     {tab === 'points'      && <PointGradingTab />}
@@ -139,6 +148,101 @@ export default function AdminPortal() {
                 </div>
             </div>
         </div>
+    );
+}
+
+function AccountApprovals({ users, onRefresh, currentUser }) {
+    const [busyId, setBusyId] = useState(null);
+    const [transferTarget, setTransferTarget] = useState(null);
+    const [transferPassword, setTransferPassword] = useState('');
+    const [transferError, setTransferError] = useState('');
+    const pending = users.filter(u => ['student', 'faculty'].includes(u.role) && ['pending', 'rejected', 'disabled'].includes(u.account_status));
+    const decide = async (account, status) => {
+        setBusyId(account.id);
+        try {
+            await reviewAccount(account.id, status);
+            await onRefresh();
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            setBusyId(null);
+        }
+    };
+    const disableAdmin = async (account) => {
+        if (!window.confirm(`Disable admin account ${account.name}?`)) return;
+        setBusyId(account.id);
+        try { await deleteUser(account.id); await onRefresh(); }
+        catch (err) { alert(err.message); }
+        finally { setBusyId(null); }
+    };
+    const handover = async (event) => {
+        event.preventDefault();
+        setBusyId(transferTarget.id);
+        setTransferError('');
+        try {
+            await transferOwnership(transferTarget.id, transferPassword);
+            setTransferPassword('');
+            logout();
+            window.location.assign('/');
+        } catch (err) { setTransferError(err.message); }
+        finally { setBusyId(null); }
+    };
+    const administrators = users.filter(u => u.role === 'admin' && !u.is_super_admin);
+    return (
+        <>
+        <section className="card">
+            <div className="card-header"><h3>Student and faculty access</h3><span className="badge badge-pending">{pending.length} waiting</span></div>
+            <div className="card-body">
+                <p className="td-muted" style={{ marginTop: 0 }}>New registrations stay locked until an administrator approves them.</p>
+                {pending.length === 0 ? <div className="empty-state"><span className="material-symbols-outlined">task_alt</span><p>No accounts are waiting for approval.</p></div> : (
+                    <div className="table-overflow"><table className="data-table">
+                        <thead><tr><th>Name</th><th>Role</th><th>Department</th><th>Status / requested</th><th>Decision</th></tr></thead>
+                        <tbody>{pending.map(account => <tr key={account.id}>
+                            <td><div className="td-bold">{account.name}</div><div className="td-muted">{account.email || account.username}</div></td>
+                            <td>{account.role === 'faculty' ? 'Faculty' : 'Student'}</td>
+                            <td>{account.department || '—'}</td>
+                            <td>{account.account_status}<br />{account.created_at ? new Date(account.created_at).toLocaleDateString('en-IN') : '—'}</td>
+                            <td><div style={{ display: 'flex', gap: 8 }}>
+                                <button className="btn btn-primary btn-sm" disabled={busyId === account.id} onClick={() => decide(account, 'approved')}>Approve</button>
+                                <button className="btn btn-danger btn-sm" disabled={busyId === account.id} onClick={() => decide(account, 'rejected')}>Reject</button>
+                            </div></td>
+                        </tr>)}</tbody>
+                    </table></div>
+                )}
+            </div>
+        </section>
+        {currentUser?.isSuperAdmin && <section className="card" style={{ marginTop: 20 }}>
+            <div className="card-header"><h3>Admin access</h3><span className="td-muted">Super admin controls</span></div>
+            <div className="card-body">
+                {administrators.length === 0 ? <p className="td-muted">No additional admins yet. Promote a trusted user from Manage Users.</p> :
+                    <div className="table-overflow"><table className="data-table">
+                        <thead><tr><th>Admin</th><th>Username</th><th>Access</th></tr></thead>
+                        <tbody>{administrators.map(account => <tr key={account.id}>
+                            <td>{account.name}</td><td>@{account.username}</td>
+                            <td><div style={{ display: 'flex', gap: 8 }}>
+                                <button className="btn btn-danger btn-sm" disabled={busyId === account.id} onClick={() => disableAdmin(account)}>Disable</button>
+                                {account.account_status === 'approved' && <button className="btn btn-outline btn-sm" disabled={Boolean(busyId)} onClick={() => { setTransferTarget(account); setTransferPassword(''); setTransferError(''); }}>Transfer ownership</button>}
+                            </div></td>
+                        </tr>)}</tbody>
+                    </table></div>}
+            </div>
+        </section>}
+        {transferTarget && <div className="modal-overlay" role="presentation">
+            <section className="modal" role="dialog" aria-modal="true" aria-labelledby="handover-title">
+                <div className="modal-header"><h3 id="handover-title">Transfer super admin access</h3></div>
+                <form onSubmit={handover} className="modal-body">
+                    <p>{transferTarget.name} will become the only super admin. You will remain an admin. Both accounts will need to sign in again.</p>
+                    {transferError && <div className="alert alert-error" role="alert">{transferError}</div>}
+                    <label className="form-label" htmlFor="handover-password">Your current password</label>
+                    <input id="handover-password" className="input" type="password" autoComplete="current-password" required value={transferPassword} onChange={e => setTransferPassword(e.target.value)} />
+                    <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                        <button type="button" className="btn btn-outline" disabled={Boolean(busyId)} onClick={() => { setTransferTarget(null); setTransferPassword(''); }}>Cancel</button>
+                        <button type="submit" className="btn btn-primary" disabled={Boolean(busyId)}>{busyId ? 'Transferring…' : 'Transfer ownership'}</button>
+                    </div>
+                </form>
+            </section>
+        </div>}
+        </>
     );
 }
 
@@ -159,7 +263,7 @@ function DashboardTab({ students, faculty, certs, onNavigate }) {
         { icon: 'description',   label: 'Total Certs',   val: certs.length,     color: '#7c3aed',         bg: 'rgba(124,58,237,0.1)', tab: null          },
         { icon: 'verified',      label: 'Approved',      val: totalApproved,    color: 'var(--success)',  bg: 'rgba(16,185,129,0.1)', tab: null          },
         { icon: 'schedule',      label: 'Pending',       val: totalPending,     color: 'var(--warning)',  bg: 'rgba(245,158,11,0.1)', tab: null          },
-        { icon: 'military_tech', label: 'Eligible',      val: eligible,         color: '#f59e0b',         bg: 'rgba(245,158,11,0.1)', tab: null          },
+        { icon: 'military_tech', label: 'At estimated target', val: eligible, color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', tab: null },
     ];
 
     const recentCerts = [...certs]
@@ -437,8 +541,8 @@ function UsersTab({ students, faculty, certs, onRefresh, currentUser }) {
                                             {userType === 'student' && (
                                                 <td>
                                                     {summary?.eligible
-                                                        ? <span className="badge badge-approved">Eligible</span>
-                                                        : <span className="badge badge-pending">In Progress</span>
+                                                        ? <span className="badge badge-approved">Estimate meets target</span>
+                                                        : <span className="badge badge-pending">Estimated in progress</span>
                                                     }
                                                 </td>
                                             )}
@@ -569,6 +673,8 @@ function CircularsTab() {
     const [circulars, setCirculars] = useState([]);
     const [title, setTitle] = useState('');
     const [body, setBody] = useState('');
+    const [sourceUrl, setSourceUrl] = useState('');
+    const [issuedOn, setIssuedOn] = useState('');
     const [priority, setPri] = useState('normal');
     const [showForm, setShowForm] = useState(false);
 
@@ -582,9 +688,9 @@ function CircularsTab() {
 
     const handlePost = async () => {
         if (!title.trim() || !body.trim()) return;
-        try { await addCircular({ title: title.trim(), content: body.trim() }); } catch (err) { alert(err.message); return; }
+        try { await addCircular({ title: title.trim(), content: body.trim(), sourceUrl: sourceUrl.trim(), issuedOn: issuedOn || null }); } catch (err) { alert(err.message); return; }
         getCirculars().then(setCirculars);
-        setTitle(''); setBody(''); setPri('normal'); setShowForm(false);
+        setTitle(''); setBody(''); setSourceUrl(''); setIssuedOn(''); setPri('normal'); setShowForm(false);
     };
 
     const handleDelete = async (id) => {
@@ -621,6 +727,17 @@ function CircularsTab() {
                             <textarea className="input" rows={4} placeholder="Write the full announcement here..."
                                 value={body} onChange={e => setBody(e.target.value)} style={{ resize: 'vertical' }} />
                         </div>
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label className="form-label">Official source link</label>
+                                <input className="input" type="url" placeholder="https://ktu.edu.in/..."
+                                    value={sourceUrl} onChange={e => setSourceUrl(e.target.value)} />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Circular issue date</label>
+                                <input className="input" type="date" value={issuedOn} onChange={e => setIssuedOn(e.target.value)} />
+                            </div>
+                        </div>
                         <div className="form-group">
                             <label className="form-label">Priority</label>
                             <div style={{ display: 'flex', gap: 8 }}>
@@ -655,7 +772,7 @@ function CircularsTab() {
                                             {circ.priority || 'normal'}
                                         </span>
                                         <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                                            {new Date(circ.created_at || circ.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                        {(circ.issued_on ? new Date(`${circ.issued_on}T00:00:00`) : new Date(circ.created_at || circ.createdAt)).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                                         </span>
                                     </div>
                                     <button className="btn btn-danger btn-sm" style={{ fontSize: 11, padding: '3px 10px' }}
@@ -665,6 +782,9 @@ function CircularsTab() {
                                 </div>
                                 <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)', marginBottom: 6 }}>{circ.title}</div>
                                 <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{circ.content || circ.body}</div>
+                                {circ.source_url && <a href={circ.source_url} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm" style={{ marginTop: 10 }}>
+                                    <span className="material-symbols-outlined" style={{ fontSize: 15 }}>open_in_new</span>View official source
+                                </a>}
                             </div>
                         );
                     })}
@@ -683,7 +803,6 @@ function PointGradingTab() {
     const [searchAct, setSearchAct] = useState('');
     const [groupFilter, setGroupFilter] = useState(0);
     const [editNote, setEditNote] = useState('');
-    const [editMax, setEditMax] = useState('');
 
     useEffect(() => { getPointOverrides().then(setOverrides).catch(console.error); }, []);
 
@@ -697,14 +816,12 @@ function PointGradingTab() {
     const startEdit = (a) => {
         const ov = overrides[a.id] || {};
         setEditNote(ov.note || '');
-        setEditMax(ov.maxPoints !== undefined ? String(ov.maxPoints) : '');
         setEditing(a.id);
     };
 
     const saveEdit = async (activityId) => {
         const newOv = {};
         if (editNote.trim()) newOv.note = editNote.trim();
-        if (editMax !== '' && !isNaN(editMax)) newOv.maxPoints = parseInt(editMax);
         try {
             if (Object.keys(newOv).length > 0) { await savePointOverride(activityId, newOv); }
             else { await deletePointOverride(activityId); }
@@ -723,7 +840,7 @@ function PointGradingTab() {
             <div className="alert" style={{ background: 'rgba(45,91,227,0.06)', border: '1px solid rgba(45,91,227,0.15)', marginBottom: 20 }}>
                 <span className="material-symbols-outlined" style={{ fontSize: 16, color: 'var(--accent)' }}>info</span>
                 <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-                    Base values come from the official KTU 2024 handbook. You can add admin notes or adjust max point caps per activity.
+                    Official KTU point values and caps are locked to the current handbook catalog. Admins can attach internal clarification notes without changing calculated points.
                 </span>
             </div>
 
@@ -757,11 +874,8 @@ function PointGradingTab() {
                                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>
                                         Group {a.group} · {a.category} ·
                                         <span style={{ color: 'var(--accent)', fontWeight: 700, marginLeft: 4 }}>
-                                            Max {ov?.maxPoints !== undefined ? ov.maxPoints : a.maxPoints} pts
+                                            Max {a.maxPoints} pts
                                         </span>
-                                        {ov?.maxPoints !== undefined && (
-                                            <span style={{ color: 'var(--text-muted)', marginLeft: 4 }}>(base: {a.maxPoints})</span>
-                                        )}
                                     </div>
                                     {ov?.note && !isEditing && (
                                         <div style={{ fontSize: 12, color: '#06b6d4', marginTop: 5, fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -787,17 +901,10 @@ function PointGradingTab() {
 
                             {isEditing && (
                                 <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
-                                    <div className="form-row">
-                                        <div className="form-group" style={{ marginBottom: 0 }}>
-                                            <label className="form-label">Override Max Points</label>
-                                            <input className="input" type="number" placeholder={`Default: ${a.maxPoints}`}
-                                                value={editMax} onChange={e => setEditMax(e.target.value)} />
-                                        </div>
-                                        <div className="form-group" style={{ marginBottom: 0 }}>
-                                            <label className="form-label">Admin Note</label>
-                                            <input className="input" placeholder="e.g. Only applicable from S3 onwards"
-                                                value={editNote} onChange={e => setEditNote(e.target.value)} />
-                                        </div>
+                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                        <label className="form-label">Admin Note</label>
+                                        <input className="input" placeholder="Add an internal clarification note"
+                                            value={editNote} onChange={e => setEditNote(e.target.value)} />
                                     </div>
                                     <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                                         <button className="btn btn-ghost btn-sm" style={{ flex: 1 }} onClick={() => setEditing(null)}>Cancel</button>
@@ -832,8 +939,8 @@ function ProfileTab({ user, onLogout, onUpdateUser }) {
             const fileData = await compressImage(f);
             const updated = await updateUser({ ...user, profileUrl: fileData });
             onUpdateUser(updated);
-        } catch (err) { 
-            alert(err.message); 
+        } catch (err) {
+            alert(err.message);
         }
         setUploading(false);
     };

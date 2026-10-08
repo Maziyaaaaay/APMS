@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, logout } from '../utils/auth';
-import { getCertificates, getUsers, updateCertificate, updateUser, getCirculars } from '../utils/storage';
+import { getCertificates, getUsers, updateCertificate, updateUser, getCirculars, getCertificateFileUrl } from '../utils/storage';
 import { compressImage } from '../utils/imageCompressor';
 import { ACTIVITIES, calculateStudentSummary } from '../utils/points';
 import { generateApprovalPDF } from '../utils/pdfGenerator';
@@ -43,12 +43,8 @@ export default function FacultyPortal() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'));
 
-    useEffect(() => {
-        if (!user) { navigate('/'); return; }
-        refreshData();
-    }, []);
-
-    const refreshData = async () => {
+    const [loadError, setLoadError] = useState('');
+    const refreshData = useCallback(async () => {
         try {
             const [certsData, usersData, circsData] = await Promise.all([
                 getCertificates(),
@@ -57,11 +53,15 @@ export default function FacultyPortal() {
             ]);
             setCerts(certsData);
             setStudents(usersData.filter(u => u.role === 'student'));
-            setCirculars(circsData);
+            setCirculars(circsData); setLoadError('');
         } catch (err) {
-            console.error('Failed to load data:', err);
+            setLoadError(err.message);
         }
-    };
+    }, []);
+    useEffect(() => {
+        if (!user) { navigate('/'); return; }
+        Promise.resolve().then(refreshData);
+    }, [user, navigate, refreshData]);
 
     const handleLogout = () => { logout(); navigate('/'); };
     const toggleDark = () => {
@@ -155,6 +155,7 @@ export default function FacultyPortal() {
 
                 {/* Page Content */}
                 <div className="page-content">
+                    {loadError && <div role="alert" className="alert alert-danger">{loadError} <button onClick={refreshData}>Try again</button></div>}
                     {tab === 'dashboard' && (
                         <DashboardTab
                             user={user}
@@ -189,7 +190,7 @@ export default function FacultyPortal() {
 /* ═══════════════════════════════════════════════════
    DASHBOARD TAB
 ════════════════════════════════════════════════════ */
-function DashboardTab({ user, certs, students, pendingCerts, circulars, onRefresh, onGoReviews }) {
+function DashboardTab({ user, certs, students, pendingCerts, circulars, onGoReviews }) {
     const now = new Date();
     const thisMonth = now.getMonth();
     const thisYear = now.getFullYear();
@@ -206,10 +207,6 @@ function DashboardTab({ user, certs, students, pendingCerts, circulars, onRefres
     };
 
     const getStudent = (cert) => cert.student || students.find(s => s.id === (cert.student_id || cert.studentId));
-
-    const recentCerts = [...certs]
-        .sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt))
-        .slice(0, 5);
 
     const topCirculars = (circulars || []).slice(0, 3);
 
@@ -340,10 +337,13 @@ function DashboardTab({ user, certs, students, pendingCerts, circulars, onRefres
                             return (
                                 <div key={circ.id} style={{ padding: '10px 12px', borderRadius: 'var(--radius-sm)', background: pc.bg, border: `1px solid ${pc.border}` }}>
                                     <div style={{ fontSize: 10, fontWeight: 700, color: pc.text, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3 }}>
-                                        {circ.priority || 'normal'} · {new Date(circ.created_at || circ.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                                        {circ.priority || 'normal'} · {circ.issued_on ? new Date(`${circ.issued_on}T00:00:00`).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : new Date(circ.created_at || circ.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
                                     </div>
                                     <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 3 }}>{circ.title}</div>
                                     <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{circ.content || circ.body}</div>
+                                    {circ.source_url && <a href={circ.source_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 7, fontSize: 11, color: 'var(--accent)' }}>
+                                        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>open_in_new</span>Official circular
+                                    </a>}
                                 </div>
                             );
                         })}
@@ -357,7 +357,7 @@ function DashboardTab({ user, certs, students, pendingCerts, circulars, onRefres
 /* ═══════════════════════════════════════════════════
    PENDING REVIEWS TAB
 ════════════════════════════════════════════════════ */
-function ReviewsTab({ pendingCerts, students, user, onRefresh }) {
+export function ReviewsTab({ pendingCerts, students, user, onRefresh }) {
     const [reviewing, setReviewing] = useState(null);
     const [search, setSearch] = useState('');
     const now = new Date();
@@ -482,13 +482,38 @@ function ReviewModal({ cert, student, faculty, onClose, onRefresh }) {
     const [remark, setRemark] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [done, setDone] = useState(null);
+    const [reviewError, setReviewError] = useState('');
+    const [filePreviewUrl, setFilePreviewUrl] = useState(cert.file_url?.startsWith('data:') ? cert.file_url : cert.fileData || '');
     const initialPoints = cert.points_awarded ?? cert.pointsAwarded ?? 0;
     const [pointsOverride, setPointsOverride] = useState(initialPoints);
     const actId = cert.activity_id || cert.activityId;
-    const activity = ACTIVITIES[actId];
+    const activity = cert.activity_snapshot || ACTIVITIES[actId];
+
+    useEffect(() => {
+        let active = true;
+        if (cert.file_url && !cert.file_url.startsWith('data:')) {
+            getCertificateFileUrl(cert.id).then(({ url }) => { if (active) setFilePreviewUrl(url); })
+                .catch(err => { if (active) setReviewError(err.message); });
+        }
+        return () => { active = false; };
+    }, [cert.id, cert.file_url, cert.fileData]);
+
+    const refreshPreview = async () => {
+        try { const { url } = await getCertificateFileUrl(cert.id); setFilePreviewUrl(url); setReviewError(''); }
+        catch (err) { setReviewError(err.message); }
+    };
 
     const handle = async (action) => {
+        if (action === 'rejected' && !remark.trim()) {
+            setReviewError('Explain why this certificate is rejected so the student can correct it.');
+            return;
+        }
+        if (Number(pointsOverride) !== Number(initialPoints) && !remark.trim()) {
+            setReviewError('Add a short reason for changing the catalog-calculated points.');
+            return;
+        }
         setSubmitting(true);
+        setReviewError('');
         try {
             await updateCertificate({
                 ...cert,
@@ -501,11 +526,12 @@ function ReviewModal({ cert, student, faculty, onClose, onRefresh }) {
                 generateApprovalPDF({ ...cert, pointsAwarded: Number(pointsOverride) }, student, faculty);
             }
             setDone(action);
+            setTimeout(() => { onRefresh(); onClose(); }, 1500);
         } catch (err) {
             console.error('Review error:', err);
+            setReviewError(err.message || 'Could not save the review. Please try again.');
         }
         setSubmitting(false);
-        setTimeout(() => { onRefresh(); onClose(); }, 1500);
     };
 
     if (done) {
@@ -548,10 +574,11 @@ function ReviewModal({ cert, student, faculty, onClose, onRefresh }) {
                     <div style={{ display: 'grid', gap: 0, marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
                         {[
                             ['Activity', activity?.name || cert.activityName || 'Unknown Activity'],
+                            ['Event', cert.event_name || '—'],
                             ['Group', `Group ${activity?.group || '?'}`],
                             ['Category', activity?.category || '—'],
                             ['Level', cert.level_selected || cert.selectedLevel || 'N/A'],
-                            ['Date', cert.created_at || cert.activityDate ? new Date(cert.created_at || cert.activityDate).toLocaleDateString('en-IN') : 'N/A'],
+                            ['Activity date', cert.activity_date || cert.activityDate ? new Date(`${cert.activity_date || cert.activityDate}T00:00:00`).toLocaleDateString('en-IN') : 'N/A'],
                             ['Description', cert.description || '—'],
                         ].map(([label, val]) => (
                             <div key={label} style={{ display: 'flex', gap: 10, fontSize: 13, padding: '9px 14px', borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}>
@@ -562,21 +589,21 @@ function ReviewModal({ cert, student, faculty, onClose, onRefresh }) {
                     </div>
 
                     {/* Certificate Preview */}
-                    {(cert.file_url || cert.fileData) && (
+                    {(filePreviewUrl || cert.fileData || cert.file_url) && (
                         <div style={{ marginBottom: 16 }}>
                             <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
                                 <span className="material-symbols-outlined" style={{ fontSize: 16 }}>attach_file</span>
                                 Uploaded Certificate
                             </div>
                             <div style={{ borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: '1px solid var(--border)' }}>
-                                {(cert.file_url || cert.fileData).includes('application/pdf') ? (
-                                    <iframe src={cert.file_url || cert.fileData} title="Certificate PDF" style={{ width: '100%', height: 240, border: 'none', display: 'block' }} />
+                                {(cert.file_mime_type || cert.file_url || cert.fileData || '').includes('pdf') ? (
+                                    filePreviewUrl ? <iframe src={filePreviewUrl} title="Certificate PDF" style={{ width: '100%', height: 240, border: 'none', display: 'block' }} /> : <div style={{ padding: 24, textAlign: 'center' }}>Loading secure document…</div>
                                 ) : (
-                                    <img src={cert.file_url || cert.fileData} alt="Uploaded Certificate" style={{ width: '100%', maxHeight: 240, objectFit: 'contain', display: 'block' }} />
+                                    filePreviewUrl ? <img src={filePreviewUrl} alt="Uploaded Certificate" style={{ width: '100%', maxHeight: 240, objectFit: 'contain', display: 'block' }} /> : <div style={{ padding: 24, textAlign: 'center' }}>Loading secure document…</div>
                                 )}
                                 <div style={{ padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)', background: 'var(--surface2)' }}>
-                                    <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{cert.fileName || 'View Attachment'}</span>
-                                    <a href={cert.file_url || cert.fileData} target="_blank" rel="noopener noreferrer"
+                                    <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{cert.file_name || cert.fileName || 'View Attachment'}</span>
+                                    <a href={filePreviewUrl || undefined} target="_blank" rel="noopener noreferrer"
                                         style={{ fontSize: 11, fontWeight: 600, color: 'var(--accent)', textDecoration: 'none', padding: '3px 10px', background: 'rgba(45,91,227,0.1)', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
                                         <span className="material-symbols-outlined" style={{ fontSize: 13 }}>open_in_new</span>
                                         View Full
@@ -621,10 +648,12 @@ function ReviewModal({ cert, student, faculty, onClose, onRefresh }) {
 
                     {/* Remark */}
                     <div className="form-group">
-                        <label className="form-label">Remark (Optional)</label>
+                        <label className="form-label">Remark {Number(pointsOverride) !== Number(initialPoints) ? '(Required for a points adjustment)' : '(Optional)'}</label>
                         <textarea className="input" rows={2} placeholder="Add a note for the student..."
                             value={remark} onChange={e => setRemark(e.target.value)} style={{ resize: 'none' }} />
                     </div>
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={refreshPreview}>Refresh secure document</button>
+                    {reviewError && <div className="alert alert-error" style={{ margin: '0 16px 16px' }}>{reviewError}</div>}
                 </div>
 
                 {/* Actions */}
@@ -747,8 +776,8 @@ function StudentsTab({ certs, students }) {
                                         </div>
                                     </div>
                                     {summary.eligible
-                                        ? <span className="badge badge-approved">Eligible</span>
-                                        : <span className="badge badge-pending">In Progress</span>
+                                        ? <span className="badge badge-approved">Estimate meets target</span>
+                                        : <span className="badge badge-pending">Estimated in progress</span>
                                     }
                                 </div>
                                 <div style={{ padding: '12px 16px' }}>
@@ -790,22 +819,15 @@ function ProfileTab({ user, onLogout, onRefresh, onUpdateUser }) {
     const [name, setName] = useState(user?.name || '');
     const [email, setEmail] = useState(user?.email || '');
     const [designation, setDesignation] = useState(user?.designation || '');
-    const [department, setDepartment] = useState(user?.department || '');
     const [saved, setSaved] = useState(false);
     const [uploading, setUploading] = useState(false);
     const fileInputRef = React.useRef();
 
     const initials = user?.name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'FA';
 
-    const DEPT_LIST = [
-        'Computer Science', 'Information Technology',
-        'Electronics and Communication Engineering', 'Electrical Engineering',
-        'Civil Engineering', 'Mechanical Engineering', 'Electrical and Computer Science',
-    ];
-
     const handleSave = async () => {
         try {
-            const updated = await updateUser({ ...user, name, email, designation, department });
+            const updated = await updateUser({ ...user, name, email, designation });
             onUpdateUser(updated);
             setSaved(true);
             setEditing(false);
@@ -818,7 +840,6 @@ function ProfileTab({ user, onLogout, onRefresh, onUpdateUser }) {
         setName(user?.name || '');
         setEmail(user?.email || '');
         setDesignation(user?.designation || '');
-        setDepartment(user?.department || '');
         setEditing(true);
     };
 
@@ -830,8 +851,8 @@ function ProfileTab({ user, onLogout, onRefresh, onUpdateUser }) {
             const fileData = await compressImage(f);
             const updated = await updateUser({ ...user, profileUrl: fileData });
             onUpdateUser(updated);
-        } catch (err) { 
-            alert(err.message); 
+        } catch (err) {
+            alert(err.message);
         }
         setUploading(false);
     };
@@ -917,13 +938,6 @@ function ProfileTab({ user, onLogout, onRefresh, onUpdateUser }) {
                             <div className="form-group" style={{ marginBottom: 0 }}>
                                 <label className="form-label">Designation</label>
                                 <input className="input" value={designation} onChange={e => setDesignation(e.target.value)} />
-                            </div>
-                            <div className="form-group" style={{ marginBottom: 0 }}>
-                                <label className="form-label">Department</label>
-                                <select className="input" value={department} onChange={e => setDepartment(e.target.value)}>
-                                    <option value="">— Select Department —</option>
-                                    {DEPT_LIST.map(d => <option key={d} value={d}>{d}</option>)}
-                                </select>
                             </div>
                             <div style={{ padding:'8px 0', fontSize:12, color:'var(--text-muted)', display:'flex', alignItems:'center', gap:6 }}>
                                 <span className="material-symbols-outlined" style={{ fontSize:14 }}>info</span>

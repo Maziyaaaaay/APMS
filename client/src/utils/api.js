@@ -17,10 +17,11 @@ async function request(method, path, body = null) {
     res = await fetch(`${BASE_URL}${path}`, {
       method,
       headers,
+      signal: AbortSignal.timeout(30000),
       body: body ? JSON.stringify(body) : undefined,
     });
-  } catch (networkErr) {
-    throw new Error('Cannot connect to server. Please make sure the backend is running on port 3001.');
+  } catch {
+    throw new Error('We could not reach APMS. Check your connection and try again.');
   }
 
   // Safely parse JSON — empty body or non-JSON means server is unreachable/crashed
@@ -30,6 +31,11 @@ async function request(method, path, body = null) {
     try { data = JSON.parse(text); } catch { throw new Error('Server returned an invalid response. Is the backend running?'); }
   }
 
+  if (res.status === 401 && token && path !== '/auth/login') {
+    localStorage.removeItem('apms_token');
+    localStorage.removeItem('apms_user');
+    window.dispatchEvent(new Event('apms-session-ended'));
+  }
   if (!res.ok) throw new Error(data.error || `Request failed: ${res.status}`);
   return data;
 }
@@ -46,3 +52,4 @@ export const api = {
   },
   getToken,
 };
+

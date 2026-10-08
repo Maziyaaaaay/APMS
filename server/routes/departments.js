@@ -1,16 +1,17 @@
-import express from 'express';
+import { createRouter } from '../lib/router.js';
 import supabase from '../db/supabase.js';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
 
-const router = express.Router();
-router.use(authMiddleware);
+const router = createRouter();
 
 // GET /api/departments — all roles can read
 router.get('/', async (_req, res) => {
-  const { data, error } = await supabase.from('departments').select('*').order('name');
+  const { data, error } = await supabase.from('departments').select('id, name').order('name');
   if (error) return res.status(500).json({ error: error.message });
   res.json(data);
 });
+
+router.use(authMiddleware);
 
 // POST /api/departments — admin only
 router.post('/', requireRole('admin'), async (req, res) => {
@@ -29,3 +30,4 @@ router.delete('/:id', requireRole('admin'), async (req, res) => {
 });
 
 export default router;
+

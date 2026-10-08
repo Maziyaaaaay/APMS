@@ -1,6 +1,8 @@
 // KTU 2024 Activity Points Algorithm
 // Source: APJ Abdul Kalam Technological University - Activity Points Handbook 2024
 
+export const CATALOG_VERSION = 'ktu-2024-provisional-v2';
+
 export const STUDENT_TYPES = {
     regular: { total: 120, perGroup: 40 },
     lateral: { total: 90, perGroup: 30 },
@@ -10,7 +12,7 @@ export const STUDENT_TYPES = {
 export const ACTIVITIES = {
     // ───────────── GROUP I ─────────────
     '1.1': {
-        id: '1.1', group: 1, name: 'Sports/Games/Arts — Participation',
+        id: '1.1', group: 1, exclusiveGroup: 'sport-event', name: 'Sports/Games/Arts — Participation',
         category: 'Sports, Arts & Cultural',
         type: 'level',
         maxPoints: 40,
@@ -24,7 +26,7 @@ export const ACTIVITIES = {
         note: 'KTU Organized/Approved Events only',
     },
     '1.2': {
-        id: '1.2', group: 1, name: 'Sports/Games/Arts — Winners (Single Events)',
+        id: '1.2', group: 1, exclusiveGroup: 'sport-event', name: 'Sports/Games/Arts — Winners (Single Events)',
         category: 'Sports, Arts & Cultural',
         type: 'level',
         maxPoints: 40,
@@ -38,7 +40,7 @@ export const ACTIVITIES = {
         note: 'Winners: 1st, 2nd and 3rd places',
     },
     '1.3': {
-        id: '1.3', group: 1, name: 'Sports/Games/Arts — Winners (Group Events)',
+        id: '1.3', group: 1, exclusiveGroup: 'sport-event', name: 'Sports/Games/Arts — Winners (Group Events)',
         category: 'Sports, Arts & Cultural',
         type: 'level',
         maxPoints: 40,
@@ -54,9 +56,9 @@ export const ACTIVITIES = {
         id: '1.4', group: 1, name: 'College Magazine Publication',
         category: 'Sports, Arts & Cultural',
         type: 'fixed',
-        maxPoints: 20,
+        maxPoints: 5,
         pointsPerEntry: 5,
-        note: 'Max 5 pts per magazine per academic year',
+        note: '5 pts per magazine; maximum 5 pts per magazine in an academic year',
     },
     '1.5': {
         id: '1.5', group: 1, name: 'Driving License (4-Wheeler)',
@@ -189,38 +191,9 @@ export const ACTIVITIES = {
         maxPoints: 5,
         pointsPerEntry: 5,
     },
-    '1.22': {
-        id: '1.22', group: 1, name: 'College/University Union',
-        category: 'Union/Club Activities',
-        type: 'choice',
-        maxPoints: 30,
-        levels: [
-            { label: 'College Union — Executive Committee Member', points: 15 },
-            { label: 'College Union — Office Bearer', points: 20 },
-            { label: 'University Union — Member (Excl. Office Bearers)', points: 25 },
-            { label: 'University Union — Office Bearer', points: 30 },
-        ],
-    },
-    '1.23': {
-        id: '1.23', group: 1, name: 'College Magazine Editorial Board',
-        category: 'Union/Club Activities',
-        type: 'fixed',
-        maxPoints: 10,
-        pointsPerEntry: 5,
-        note: '5 pts per academic year',
-    },
-    '1.24': {
-        id: '1.24', group: 1, name: 'Hobby Club Executive/Convenor',
-        category: 'Union/Club Activities',
-        type: 'fixed',
-        maxPoints: 10,
-        pointsPerEntry: 5,
-        note: '5 pts per academic year',
-    },
-
     // ───────────── GROUP II ─────────────
     '2.1': {
-        id: '2.1', group: 2, name: 'Tech-Fest Participation (KTU Approved)',
+        id: '2.1', group: 2, exclusiveGroup: 'techfest', name: 'Tech-Fest Participation (KTU Approved)',
         category: 'Technical Events & Competitions',
         type: 'level',
         maxPoints: 40,
@@ -233,7 +206,7 @@ export const ACTIVITIES = {
         ],
     },
     '2.2': {
-        id: '2.2', group: 2, name: 'Tech-Fest Winners (KTU Approved)',
+        id: '2.2', group: 2, exclusiveGroup: 'techfest', name: 'Tech-Fest Winners (KTU Approved)',
         category: 'Technical Events & Competitions',
         type: 'level',
         maxPoints: 40,
@@ -246,7 +219,7 @@ export const ACTIVITIES = {
         ],
     },
     '2.3': {
-        id: '2.3', group: 2, name: 'Professional Society Events — Participation (IEEE/IET/ASME etc.)',
+        id: '2.3', group: 2, exclusiveGroup: 'professional-society', name: 'Professional Society Events — Participation (IEEE/IET/ASME etc.)',
         category: 'Technical Events & Competitions',
         type: 'level',
         maxPoints: 20,
@@ -259,7 +232,7 @@ export const ACTIVITIES = {
         ],
     },
     '2.4': {
-        id: '2.4', group: 2, name: 'Professional Society Events — Winners (IEEE/IET/ASME etc.)',
+        id: '2.4', group: 2, exclusiveGroup: 'professional-society', name: 'Professional Society Events — Winners (IEEE/IET/ASME etc.)',
         category: 'Technical Events & Competitions',
         type: 'level',
         maxPoints: 35,
@@ -288,7 +261,7 @@ export const ACTIVITIES = {
         note: '5 pts per event',
     },
     '2.7': {
-        id: '2.7', group: 2, name: 'Paper Presentation — Participation (KTU/IITs/NITs/NIRF Top 100)',
+        id: '2.7', group: 2, exclusiveGroup: 'paper-top-institute', name: 'Paper Presentation — Participation (KTU/IITs/NITs/NIRF Top 100)',
         category: 'Technical Events & Competitions',
         type: 'fixed',
         maxPoints: 40,
@@ -296,7 +269,7 @@ export const ACTIVITIES = {
         note: '10 pts per event',
     },
     '2.8': {
-        id: '2.8', group: 2, name: 'Paper Presentation — Winners (KTU/IITs/NITs/NIRF Top 100)',
+        id: '2.8', group: 2, exclusiveGroup: 'paper-top-institute', name: 'Paper Presentation — Winners (KTU/IITs/NITs/NIRF Top 100)',
         category: 'Technical Events & Competitions',
         type: 'choice',
         maxPoints: 40,
@@ -306,14 +279,14 @@ export const ACTIVITIES = {
         ],
     },
     '2.9': {
-        id: '2.9', group: 2, name: 'Paper Presentation — Participation (KTU Affiliated Colleges)',
+        id: '2.9', group: 2, exclusiveGroup: 'paper-ktu-affiliated', name: 'Paper Presentation — Participation (KTU Affiliated Colleges)',
         category: 'Technical Events & Competitions',
         type: 'fixed',
         maxPoints: 40,
         pointsPerEntry: 5,
     },
     '2.10': {
-        id: '2.10', group: 2, name: 'Paper Presentation — Winners (KTU Affiliated Colleges)',
+        id: '2.10', group: 2, exclusiveGroup: 'paper-ktu-affiliated', name: 'Paper Presentation — Winners (KTU Affiliated Colleges)',
         category: 'Technical Events & Competitions',
         type: 'choice',
         maxPoints: 40,
@@ -331,6 +304,19 @@ export const ACTIVITIES = {
             { label: 'Member', points: 5 },
             { label: 'Executive Committee Member', points: 10 },
             { label: 'Student Secretary / Chapter Lead / Chair', points: 15 },
+            { label: 'Professional Body Coordinator (per event)', points: 5 },
+        ],
+    },
+    '1.22': {
+        id: '1.22', group: 1, name: 'College/University Union',
+        category: 'Leadership & Management',
+        type: 'choice',
+        maxPoints: 30,
+        levels: [
+            { label: 'College Union — Executive Committee Member', points: 15 },
+            { label: 'College Union — Office Bearer', points: 20 },
+            { label: 'University Union — Member (Excl. Office Bearers)', points: 25 },
+            { label: 'University Union — Office Bearer', points: 30 },
         ],
     },
     '2.12': {
@@ -400,6 +386,22 @@ export const ACTIVITIES = {
             { label: 'High Impact Project — L5', points: 20 },
         ],
     },
+    '1.23': {
+        id: '1.23', group: 1, name: 'College Magazine Editorial Board',
+        category: 'Leadership & Management',
+        type: 'fixed',
+        maxPoints: 10,
+        pointsPerEntry: 5,
+        note: '5 pts per academic year',
+    },
+    '1.24': {
+        id: '1.24', group: 1, name: 'Hobby Club Executive/Convenor',
+        category: 'Leadership & Management',
+        type: 'fixed',
+        maxPoints: 10,
+        pointsPerEntry: 5,
+        note: '5 pts per academic year',
+    },
     '2.19': {
         id: '2.19', group: 2, name: 'ICFOSS / FOSS Activities (Min 1 Academic Year)',
         category: 'FOSS & Open Source',
@@ -461,13 +463,12 @@ export const ACTIVITIES = {
             { label: 'GMAT Score 600–649', points: 20 },
         ],
     },
-
     // ───────────── GROUP III ─────────────
     '3.1': {
         id: '3.1', group: 3, name: 'Industrial Visit Report (Min 4 Industries, S5/S6)',
         category: 'Industry Exposure & Academic Projects',
         type: 'fixed',
-        maxPoints: 20,
+        maxPoints: 5,
         pointsPerEntry: 5,
     },
     '3.2': {
@@ -544,7 +545,7 @@ export const ACTIVITIES = {
         id: '3.9', group: 3, name: 'Registered Startup (MSME/DPIIT/ROC/Kerala Startup Mission)',
         category: 'Innovation & Entrepreneurship',
         type: 'fixed',
-        maxPoints: 40,
+        maxPoints: 30,
         pointsPerEntry: 30,
     },
     '3.10': {
@@ -620,30 +621,6 @@ export const ACTIVITIES = {
         pointsPerHour: 1,
         note: '1 point per hour, max 40 points. Only KTU-approved courses count.',
     },
-    '3.18': {
-        id: '3.18', group: 3, name: 'State-Level Hackathons (Govt/KSUM etc.)',
-        category: 'Hackathons',
-        type: 'choice',
-        maxPoints: 30,
-        levels: [
-            { label: '1st Prize', points: 30 },
-            { label: '2nd Prize', points: 25 },
-            { label: '3rd Prize', points: 20 },
-            { label: 'Participation', points: 15 },
-        ],
-    },
-    '3.19': {
-        id: '3.19', group: 3, name: 'District/College-Level Hackathons',
-        category: 'Hackathons',
-        type: 'choice',
-        maxPoints: 20,
-        levels: [
-            { label: '1st Prize', points: 20 },
-            { label: '2nd Prize', points: 15 },
-            { label: '3rd Prize', points: 10 },
-            { label: 'Participation', points: 5 },
-        ],
-    },
 };
 
 // Get all activities by group
@@ -672,61 +649,48 @@ export function calculatePoints(activityId, selectedLevel, hours) {
     return 0;
 }
 
-// Calculate summary for a student (all approved certificates)
+// Calculate summary for a student (approved certificates only). Repeated records for
+// one activity/event count once; participation/winner categories in an exclusive group
+// also count only at their highest approved value.
 export function calculateStudentSummary(certificates, studentType = 'regular') {
-    const approved = certificates.filter(c => c.status === 'approved');
     const req = STUDENT_TYPES[studentType] || STUDENT_TYPES.regular;
-    const GROUP_CAP = req.perGroup;
-
     const groupRaw = { 1: 0, 2: 0, 3: 0 };
+    const bestAwards = new Map();
 
-    // Separate handling for different activity types:
-    // - 'fixed'/'hours' activities: SUM all approved entries (e.g. multiple blood donations)
-    // - 'level'/'choice' activities: keep only the HIGHEST entry (KTU "highest level only" rule)
-    const summedPerActivity = {};   // for fixed/hours: accumulate points
-    const bestPerActivity = {};     // for level/choice: keep highest only
-
-    for (const cert of approved) {
+    for (const cert of certificates) {
+        if (cert.status !== 'approved') continue;
         const actId = cert.activity_id || cert.activityId;
-        const pts = cert.points_awarded ?? cert.pointsAwarded ?? 0;
-        const activity = ACTIVITIES[actId];
-        if (!activity) continue;
-
-        if (activity.type === 'fixed' || activity.type === 'hours') {
-            // Accumulate all approved submissions for this activity
-            summedPerActivity[actId] = (summedPerActivity[actId] || 0) + pts;
-        } else {
-            // level/choice: only keep the highest single entry
-            const prev = bestPerActivity[actId] || 0;
-            if (pts > prev) {
-                bestPerActivity[actId] = pts;
-            }
+        const activity = cert.activity_snapshot || cert.activitySnapshot || ACTIVITIES[actId];
+        if (!activity || ![1, 2, 3].includes(activity.group)) continue;
+        const points = Number(cert.points_awarded ?? cert.pointsAwarded ?? 0);
+        if (!Number.isFinite(points) || points <= 0) continue;
+        const version = cert.catalog_version || cert.catalogVersion || CATALOG_VERSION;
+        const name = String(cert.event_name || cert.eventName || '').trim().toLowerCase().replace(/\s+/g, ' ');
+        const year = String(cert.activity_date || cert.activityDate || '').slice(0, 4);
+        // Without a validated event identifier these remain provisional estimates.
+        const event = name && year ? [name, year] : ['legacy', cert.id || JSON.stringify(cert)];
+        const key = JSON.stringify([version, activity.group, activity.exclusiveGroup || actId, event]);
+        const previous = bestAwards.get(key);
+        if (!previous || points > previous.points) {
+            bestAwards.set(key, { activity, version, points });
         }
     }
-
-    // Merge both maps and apply per-activity maxPoints cap
-    const allActivities = { ...bestPerActivity };
-    for (const [actId, pts] of Object.entries(summedPerActivity)) {
-        allActivities[actId] = pts;
+    const activityAwards = new Map();
+    for (const award of bestAwards.values()) {
+        const key = JSON.stringify([award.version, award.activity.id]);
+        const previous = activityAwards.get(key);
+        activityAwards.set(key, { ...award, points: (previous?.points || 0) + award.points });
     }
-
-    for (const [activityId, pts] of Object.entries(allActivities)) {
-        const activity = ACTIVITIES[activityId];
-        if (!activity) continue;
-        const capped = Math.min(pts, activity.maxPoints);
-        groupRaw[activity.group] = (groupRaw[activity.group] || 0) + capped;
+    for (const { activity, points } of activityAwards.values()) {
+        groupRaw[activity.group] += Math.min(points, activity.maxPoints);
     }
-
-    // Apply group cap
-    const group1 = Math.min(groupRaw[1], GROUP_CAP);
-    const group2 = Math.min(groupRaw[2], GROUP_CAP);
-    const group3 = Math.min(groupRaw[3], GROUP_CAP);
+    const group1 = Math.min(groupRaw[1], 40);
+    const group2 = Math.min(groupRaw[2], 40);
+    const group3 = Math.min(groupRaw[3], 40);
     const total = group1 + group2 + group3;
-
     return {
         group1, group2, group3, total,
-        required: req.total,
-        perGroupMin: req.perGroup,
+        required: req.total, perGroupMin: req.perGroup, perGroupMax: 40,
         eligible: group1 >= req.perGroup && group2 >= req.perGroup && group3 >= req.perGroup && total >= req.total,
     };
 }

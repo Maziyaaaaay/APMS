@@ -5,9 +5,10 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node index.js",
-    "dev": "node --watch index.js",
-    "seed": "node seed.js"
+    "start": "node start.js",
+    "dev": "node --watch start.js",
+    "seed": "node seed.js",
+    "reset-certificate-storage": "node reset_certificate_storage.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
