@@ -272,6 +272,11 @@ function DashboardTab({ students, faculty, certs, onNavigate }) {
 
     return (
         <>
+            <section className="workspace-hero">
+                <div><span className="form-eyebrow">CAMPUS AT A GLANCE</span><h2>A little clarity.<br />A lot of possibility.</h2><p>Your people, their progress, and everything that needs your attention.</p><button className="btn btn-primary btn-lg" onClick={() => onNavigate('approvals')}>Review account requests <span className="material-symbols-outlined">arrow_forward</span></button></div>
+                <div className="hero-note"><span className="material-symbols-outlined">auto_awesome</span><strong>{totalPending}</strong><span>submissions awaiting a review</span><button className="btn btn-ghost" onClick={() => onNavigate('reviews')}>Open review queue</button></div>
+            </section>
+            <div className="section-kicker">THE BIG PICTURE <span>Live campus overview</span></div>
             {/* KPI Stats */}
             <div className="stat-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', marginBottom: 24 }}>
                 {stats.map(s => (

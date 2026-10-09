@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -96,7 +96,7 @@ html.dark {
 html { scroll-behavior: smooth; }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -185,7 +185,7 @@ body {
   font-size: 13.5px; font-weight: 500;
   cursor: pointer; text-decoration: none;
   border: none; background: none;
-  font-family: 'Inter', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   transition: background 0.15s, color 0.15s;
   width: 100%;
   text-align: left;
@@ -208,7 +208,7 @@ body {
   border-radius: 10px; color: rgba(255,255,255,0.7);
   font-size: 12px; font-weight: 500;
   cursor: pointer; display: flex; align-items: center; gap: 8px;
-  transition: background 0.2s; font-family: 'Inter', sans-serif;
+  transition: background 0.2s; font-family: 'DM Sans', sans-serif;
 }
 .sidebar-help-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
 
@@ -371,7 +371,7 @@ body {
   padding: 9px 18px; border-radius: var(--radius-sm); border: none;
   font-size: 13px; font-weight: 600; cursor: pointer;
   transition: all 0.18s ease; letter-spacing: 0.01em;
-  font-family: 'Inter', sans-serif; line-height: 1;
+  font-family: 'DM Sans', sans-serif; line-height: 1;
   text-decoration: none; white-space: nowrap;
 }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -397,7 +397,7 @@ body {
   width: 100%; padding: 11px 14px;
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius-sm); color: var(--text); font-size: 14px;
-  font-family: 'Inter', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   transition: border-color 0.2s, box-shadow 0.2s;
   outline: none;
 }
@@ -709,7 +709,7 @@ select.input option { background: var(--surface); }
   margin-bottom: -2px;
   background: none; font-size: 13px; font-weight: 600;
   color: var(--text-muted); cursor: pointer;
-  font-family: 'Inter', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   transition: all 0.15s; white-space: nowrap;
 }
 .role-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
@@ -726,7 +726,7 @@ select.input option { background: var(--surface); }
   background: var(--accent); color: #fff;
   border: none; border-radius: 10px;
   font-size: 15px; font-weight: 700;
-  cursor: pointer; font-family: 'Inter', sans-serif;
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
   display: flex; align-items: center; justify-content: center; gap: 8px;
   transition: all 0.2s;
 }

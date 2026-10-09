@@ -1,3 +1,4 @@
+import AchievementScene from '../components/AchievementScene';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { login } from '../utils/auth';
@@ -64,13 +65,14 @@ export default function Login() {
                     <h1>KTU APMS</h1>
                 </div>
 
-                <h2>Activity Point<br />Management System</h2>
+                <div className="brand-eyebrow">YOUR CAMPUS. YOUR POSSIBILITIES.</div>
+                <h2>Small steps.<br /><em>Big achievements.</em></h2>
                 <p>
-                    A professional platform for tracking student achievements and managing
-                    activity points efficiently within the KTU ecosystem. Streamline your
-                    academic journey with real-time tracking.
+                    Every experience counts. Collect your achievements, follow your progress,
+                    and make your campus journey your own.
                 </p>
 
+                <AchievementScene />
                 <div className="login-features">
                     <div className="login-feature-item">
                         <div className="login-feature-dot">
@@ -82,7 +84,7 @@ export default function Login() {
                         <div className="login-feature-dot">
                             <span className="material-symbols-outlined">analytics</span>
                         </div>
-                        <span>Real-time Credit Calculation</span>
+                        <span>Follow your point journey</span>
                     </div>
                     <div className="login-feature-item">
                         <div className="login-feature-dot">
@@ -92,7 +94,7 @@ export default function Login() {
                     </div>
                 </div>
 
-                <div className="login-brand-footer">© 2024 KTU APMS. All rights reserved.</div>
+                <div className="login-brand-footer">Made for every step of your campus journey.</div>
             </div>
 
             {/* ── Right form panel ── */}
@@ -121,7 +123,7 @@ export default function Login() {
                     </div>
 
                     <div className="login-heading">
-                        <h2>Welcome Back</h2>
+                        <div className="form-eyebrow">LET’S PICK UP WHERE YOU LEFT OFF</div><h2>Your next chapter<br />starts here.</h2>
                         <p>Please select your role and enter your credentials.</p>
                     </div>
 
