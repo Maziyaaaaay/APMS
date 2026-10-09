@@ -146,3 +146,10 @@ button.metric-card { cursor:pointer; }
 .login-brand-panel > p { font-size:14px; color:#a6afd0; max-width:420px; }.login-heading p { font-size:12px; color:#a3accb; }.login-page .input { font-size:13px; padding-top:14px; padding-bottom:14px; }.login-page .form-label { font-size:12px; color:#c0c7e2; }.role-tab { font-size:11px; }.login-page .checkbox-row label { font-size:11px; }.login-page .login-submit-btn { font-size:13px; padding:15px; }.login-forgot { font-size:11px; }.login-support .btn-ghost { font-size:11px; }.journey-caption > strong { font-size:12px; }.journey-caption > p { font-size:11px; color:#93a1c4; }.journey-controls button { font-size:11px; }.journey-controls button > span { font-size:9px; }.journey-certificate small { color:#a5afd0; font-size:8px; }.certificate-status { font-size:10px; }.certificate-lines i { background:#99a0cb25; }.journey-chip { font-size:10px; }.sphere-ring { border-color:#a494ec55; }.ring-two { border-color:#7bb8e54a; }
 html.dark .login-page .ambient-backdrop { background:#080e20; }.login-page .theme-toggle:hover { background:#ffffff0c; }
 @media (max-width:479px) { .metric-label { font-size:11px; }.metric-detail { font-size:10px; }.action-tile-copy strong { font-size:12px; }.feed-copy strong { font-size:11px; }.login-page .input { font-size:13px; }.login-heading p { font-size:12px; }.login-brand-panel > p { font-size:13px; } }
+/* The night workspace keeps its aurora visible without reducing data contrast. */
+html.dark .portal-layout .ambient-backdrop { --wash-opacity:.72; }
+html.dark .portal-layout .wash-one { background:radial-gradient(ellipse,#7666de55,transparent 68%); }
+html.dark .portal-layout .wash-two { background:radial-gradient(ellipse,#4d61b94a,transparent 68%); }
+html.dark .portal-layout .wash-three { background:radial-gradient(ellipse,#647fd833,transparent 66%); }
+html.dark .btn-success { color:#0c2d26; }
+html.dark .btn-danger { color:#361120; }
