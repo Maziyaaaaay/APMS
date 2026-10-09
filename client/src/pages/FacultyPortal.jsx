@@ -1,3 +1,4 @@
+import { AmbientBackdrop, WorkspaceHeading, MetricCard } from '../components/DashboardKit';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, logout } from '../utils/auth';
@@ -83,6 +84,7 @@ export default function FacultyPortal() {
 
     return (
         <div className="portal-layout">
+            <AmbientBackdrop />
             {/* Sidebar overlay (mobile) */}
             <div
                 className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`}
@@ -106,6 +108,7 @@ export default function FacultyPortal() {
                         <button
                             key={item.key}
                             className={`nav-item ${tab === item.key ? 'active' : ''}`}
+                            aria-current={tab === item.key ? 'page' : undefined}
                             onClick={() => { setTab(item.key); setSidebarOpen(false); }}
                         >
                             <span className="material-symbols-outlined">{item.icon}</span>
@@ -132,7 +135,7 @@ export default function FacultyPortal() {
                 {/* Top Bar */}
                 <header className="topbar">
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <button className="topbar-menu-btn" onClick={() => setSidebarOpen(o => !o)}>
+                        <button className="topbar-menu-btn" aria-label="Open navigation" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(o => !o)}>
                             <span className="material-symbols-outlined">menu</span>
                         </button>
                         <span className="topbar-title">{PAGE_TITLES[tab]}</span>
@@ -154,7 +157,7 @@ export default function FacultyPortal() {
                 </header>
 
                 {/* Page Content */}
-                <div className="page-content">
+                <div className="page-content" key={tab}>
                     {loadError && <div role="alert" className="alert alert-danger">{loadError} <button onClick={refreshData}>Try again</button></div>}
                     {tab === 'dashboard' && (
                         <DashboardTab
@@ -218,57 +221,14 @@ function DashboardTab({ user, certs, students, pendingCerts, circulars, onGoRevi
 
     return (
         <>
-            {/* Welcome Banner */}
-            <div className="points-banner" style={{ marginBottom: 24 }}>
-                <h3>Welcome back, {user?.name?.split(' ')[0]}!</h3>
-                <div className="points-main" style={{ marginTop: 4 }}>
-                    <span style={{ fontSize: 15, fontWeight: 400, color: 'rgba(255,255,255,0.8)' }}>
-                        {user?.designation || 'Faculty Advisor'} · {user?.department}
-                    </span>
-                </div>
-                <div className="points-footer" style={{ marginTop: 10 }}>
-                    <span className="points-sub">{pendingCerts.length} certificates awaiting your review</span>
-                    {pendingCerts.length > 0 && (
-                        <button
-                            onClick={onGoReviews}
-                            style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 8, color: '#fff', fontSize: 12, fontWeight: 600, padding: '5px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}
-                        >
-                            <span className="material-symbols-outlined" style={{ fontSize: 15 }}>fact_check</span>
-                            Review Now
-                        </button>
-                    )}
-                </div>
+            <WorkspaceHeading eyebrow="GUIDE THE NEXT GENERATION" title={`Welcome back, ${user?.name?.split(' ')[0] || 'Advisor'}.`} description={`${user?.department || 'Your department'} · A focused view of achievements ready for your review.`} action={onGoReviews} actionLabel="Open review queue" icon="fact_check" />
+            <section className="faculty-focus-panel"><div><span className="eyebrow">YOUR NEXT FOCUS</span><h3>{pendingCerts.length ? `${pendingCerts.length} achievements. One thoughtful review at a time.` : 'A clear queue. Room for what’s next.'}</h3><p>{pendingCerts.length ? 'Review student evidence, give clear feedback, and keep their progress moving.' : 'New submissions from your department will appear here when they arrive.'}</p><button className="btn btn-primary" onClick={onGoReviews}>Review submissions <span className="material-symbols-outlined">arrow_forward</span></button></div><div className="faculty-focus-art" aria-hidden="true"><span className="material-symbols-outlined">verified</span><i /><i /></div></section>
+            <div className="metric-grid student-metrics">
+                <MetricCard label="Pending reviews" value={pendingCerts.length} detail="Certificates awaiting a decision" icon="schedule" tone="rose" onClick={onGoReviews} />
+                <MetricCard label="Reviewed & approved" value={approvedThisMonth} detail="Approved this calendar month" icon="verified" tone="violet" />
+                <MetricCard label="Department students" value={students.length} detail="Students in your faculty workspace" icon="groups" tone="blue" />
             </div>
-
-            {/* Stat Cards */}
-            <div className="stat-grid" style={{ marginBottom: 24 }}>
-                <div className="stat-card">
-                    <div className="stat-card-top">
-                        <span className="stat-card-label">Pending Reviews</span>
-                        <span className="stat-card-icon"><span className="material-symbols-outlined" style={{ color: 'var(--warning)' }}>schedule</span></span>
-                    </div>
-                    <div className="stat-card-val" style={{ color: 'var(--warning)' }}>{pendingCerts.length}</div>
-                    <div className="stat-card-sub">Awaiting decision</div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-card-top">
-                        <span className="stat-card-label">Approved This Month</span>
-                        <span className="stat-card-icon"><span className="material-symbols-outlined" style={{ color: 'var(--success)' }}>verified</span></span>
-                    </div>
-                    <div className="stat-card-val" style={{ color: 'var(--success)' }}>{approvedThisMonth}</div>
-                    <div className="stat-card-sub">Certificates verified</div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-card-top">
-                        <span className="stat-card-label">Total Students</span>
-                        <span className="stat-card-icon"><span className="material-symbols-outlined" style={{ color: 'var(--accent)' }}>groups</span></span>
-                    </div>
-                    <div className="stat-card-val" style={{ color: 'var(--accent)' }}>{students.length}</div>
-                    <div className="stat-card-sub">Enrolled students</div>
-                </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 20, alignItems: 'start' }}>
+            <div className="faculty-dashboard-grid">
                 {/* Pending Table */}
                 <div className="table-card">
                     <div className="table-card-header">

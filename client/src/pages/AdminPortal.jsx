@@ -1,3 +1,4 @@
+import { AmbientBackdrop, WorkspaceHeading, MetricCard, ActivityChart, ActionTile, ProgressOrbit } from '../components/DashboardKit';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, logout } from '../utils/auth';
@@ -69,6 +70,7 @@ export default function AdminPortal() {
 
     return (
         <div className="portal-layout">
+            <AmbientBackdrop />
             {/* Sidebar overlay (mobile) */}
             <div className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)} />
 
@@ -89,6 +91,7 @@ export default function AdminPortal() {
                         <button
                             key={item.key}
                             className={`nav-item ${tab === item.key ? 'active' : ''}`}
+                            aria-current={tab === item.key ? 'page' : undefined}
                             onClick={() => { setTab(item.key); setSidebarOpen(false); }}
                         >
                             <span className="material-symbols-outlined">{item.icon}</span>
@@ -114,7 +117,7 @@ export default function AdminPortal() {
             <div className="main-content">
                 <header className="topbar">
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <button className="topbar-menu-btn" onClick={() => setSidebarOpen(o => !o)}>
+                        <button className="topbar-menu-btn" aria-label="Open navigation" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(o => !o)}>
                             <span className="material-symbols-outlined">menu</span>
                         </button>
                         <span className="topbar-title">{PAGE_TITLES[tab]}</span>
@@ -135,9 +138,9 @@ export default function AdminPortal() {
                     </div>
                 </header>
 
-                <div className="page-content">
+                <div className="page-content" key={tab}>
                     {loadError && <div role="alert" className="alert alert-danger">{loadError} <button onClick={refresh}>Try again</button></div>}
-                    {tab === 'dashboard'   && <DashboardTab students={students} faculty={faculty} certs={certs} onNavigate={setTab} />}
+                    {tab === 'dashboard'   && <DashboardTab user={user} users={users} students={students} faculty={faculty} certs={certs} onNavigate={setTab} />}
                     {tab === 'users'       && <UsersTab students={students} faculty={faculty} certs={certs} onRefresh={refresh} currentUser={user} />}
                     {tab === 'reviews' && <ReviewsTab pendingCerts={certs.filter(c => c.status === 'pending')} students={users.filter(u => u.role === 'student')} user={user} onRefresh={refresh} />}
                     {tab === 'approvals'   && <AccountApprovals users={users} onRefresh={refresh} currentUser={user} />}
@@ -249,100 +252,39 @@ function AccountApprovals({ users, onRefresh, currentUser }) {
 /* ═══════════════════════════════════════════════════
    DASHBOARD TAB
 ════════════════════════════════════════════════════ */
-function DashboardTab({ students, faculty, certs, onNavigate }) {
+function DashboardTab({ user, users, students, faculty, certs, onNavigate }) {
+    const [activityFilter, setActivityFilter] = useState('all');
     const totalApproved = certs.filter(c => c.status === 'approved').length;
-    const totalPending  = certs.filter(c => c.status === 'pending').length;
-    const eligible      = students.filter(s => {
-        const sc = certs.filter(c => (c.student_id || c.studentId) === s.id);
-        return calculateStudentSummary(sc, s.student_type || s.studentType || 'regular').eligible;
-    }).length;
-
-    const stats = [
-        { icon: 'school',        label: 'Total Students', val: students.length,  color: 'var(--accent)',   bg: 'rgba(45,91,227,0.1)',  tab: 'users'       },
-        { icon: 'supervisor_account', label: 'Faculty Advisors', val: faculty.length,   color: '#06b6d4',        bg: 'rgba(6,182,212,0.1)',  tab: 'users'       },
-        { icon: 'description',   label: 'Total Certs',   val: certs.length,     color: '#7c3aed',         bg: 'rgba(124,58,237,0.1)', tab: null          },
-        { icon: 'verified',      label: 'Approved',      val: totalApproved,    color: 'var(--success)',  bg: 'rgba(16,185,129,0.1)', tab: null          },
-        { icon: 'schedule',      label: 'Pending',       val: totalPending,     color: 'var(--warning)',  bg: 'rgba(245,158,11,0.1)', tab: null          },
-        { icon: 'military_tech', label: 'At estimated target', val: eligible, color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', tab: null },
-    ];
-
-    const recentCerts = [...certs]
-        .sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt))
-        .slice(0, 8);
-
-    return (
-        <>
-            <section className="workspace-hero">
-                <div><span className="form-eyebrow">CAMPUS AT A GLANCE</span><h2>A little clarity.<br />A lot of possibility.</h2><p>Your people, their progress, and everything that needs your attention.</p><button className="btn btn-primary btn-lg" onClick={() => onNavigate('approvals')}>Review account requests <span className="material-symbols-outlined">arrow_forward</span></button></div>
-                <div className="hero-note"><span className="material-symbols-outlined">auto_awesome</span><strong>{totalPending}</strong><span>submissions awaiting a review</span><button className="btn btn-ghost" onClick={() => onNavigate('reviews')}>Open review queue</button></div>
+    const totalPending = certs.filter(c => c.status === 'pending').length;
+    const accountRequests = users.filter(u => u.account_status === 'pending').length;
+    const eligible = students.filter(s => calculateStudentSummary(certs.filter(c => (c.student_id || c.studentId) === s.id), s.student_type || s.studentType || 'regular').eligible).length;
+    const recent = [...certs].filter(c => activityFilter === 'all' || c.status === activityFilter).sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt)).slice(0, 6);
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+    return <div className="dashboard-composition">
+        <WorkspaceHeading eyebrow="YOUR CAMPUS, CONNECTED" title={`${greeting}, ${user?.name?.split(' ')[0] || 'Admin'}.`} description="A clear view of your campus. A focused space to move it forward." action={() => onNavigate('users')} actionLabel="Manage people" icon="person_add" />
+        <div className="metric-grid">
+            <MetricCard label="Students" value={students.length} detail="Approved student accounts" icon="school" tone="violet" onClick={() => onNavigate('users')} />
+            <MetricCard label="Faculty" value={faculty.length} detail="Approved faculty advisors" icon="supervisor_account" tone="blue" onClick={() => onNavigate('users')} />
+            <MetricCard label="Approved certificates" value={totalApproved} detail={`${certs.length} submissions in total`} icon="verified" tone="cyan" onClick={() => onNavigate('reviews')} />
+            <MetricCard label="Pending reviews" value={totalPending} detail="Certificates awaiting a decision" icon="schedule" tone="rose" onClick={() => onNavigate('reviews')} />
+        </div>
+        <div className="dashboard-bento">
+            <ActivityChart certificates={certs} />
+            <section className="attention-panel glass-panel"><div className="panel-heading"><div><span className="eyebrow">A LITTLE FOCUS GOES A LONG WAY</span><h3>Needs your attention</h3></div><span className="attention-dot" /></div>
+                <ActionTile title="Account requests" detail={accountRequests ? 'New people waiting to join' : 'No accounts waiting for approval'} count={accountRequests} icon="how_to_reg" tone="violet" onClick={() => onNavigate('approvals')} />
+                <ActionTile title="Certificate reviews" detail={totalPending ? 'Evidence ready for a decision' : 'The review queue is clear'} count={totalPending} icon="fact_check" tone="blue" onClick={() => onNavigate('reviews')} />
+                <div className="attention-footer"><span className="material-symbols-outlined">verified_user</span>Account access starts after approval.</div>
             </section>
-            <div className="section-kicker">THE BIG PICTURE <span>Live campus overview</span></div>
-            {/* KPI Stats */}
-            <div className="stat-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', marginBottom: 24 }}>
-                {stats.map(s => (
-                    <div
-                        key={s.label}
-                        className="stat-card"
-                        style={s.tab ? { cursor: 'pointer' } : {}}
-                        onClick={s.tab ? () => onNavigate(s.tab) : undefined}
-                    >
-                        <div className="stat-card-top">
-                            <span className="stat-card-label">{s.label}</span>
-                            <span className="stat-card-icon">
-                                <div style={{ width: 32, height: 32, borderRadius: 8, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <span className="material-symbols-outlined" style={{ color: s.color, fontSize: 18 }}>{s.icon}</span>
-                                </div>
-                            </span>
-                        </div>
-                        <div className="stat-card-val" style={{ color: s.color }}>{s.val}</div>
-                        <div className="stat-card-sub">{s.tab ? 'Click to manage →' : 'Total in system'}</div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Recent Activity Table */}
-            <div className="table-card">
-                <div className="table-card-header">
-                    <h3>Recent Certificate Activity</h3>
-                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Latest 8 submissions</span>
-                </div>
-                {recentCerts.length === 0 ? (
-                    <div className="empty-state">
-                        <span className="material-symbols-outlined">description</span>
-                        <p>No certificate activity yet</p>
-                    </div>
-                ) : (
-                    <div className="table-overflow">
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Activity</th>
-                                    <th>Level</th>
-                                    <th>Submitted</th>
-                                    <th className="td-center">Points</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {recentCerts.map(c => {
-                                    const act = ACTIVITIES[c.activity_id || c.activityId];
-                                    return (
-                                        <tr key={c.id}>
-                                            <td className="td-bold">{act?.name || c.activityName || c.activity_id || c.activityId}</td>
-                                            <td className="td-muted">{c.level_selected || c.selectedLevel || 'N/A'}</td>
-                                            <td className="td-muted">{new Date(c.created_at || c.createdAt).toLocaleDateString('en-IN')}</td>
-                                            <td className="td-center td-bold" style={{ color: 'var(--accent)' }}>{c.points_awarded ?? c.pointsAwarded}</td>
-                                            <td><span className={`badge badge-${c.status}`}>{c.status}</span></td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </div>
-        </>
-    );
+        </div>
+        <div className="dashboard-bottom">
+            <section className="activity-feed glass-panel"><div className="panel-heading"><div><span className="eyebrow">EVERY ACHIEVEMENT HAS A STORY</span><h3>Recent activity</h3></div><div className="segmented-control" aria-label="Filter recent activity">{['all', 'pending', 'approved'].map(f => <button key={f} aria-pressed={activityFilter === f} onClick={() => setActivityFilter(f)}>{f === 'all' ? 'All' : f === 'pending' ? 'Pending' : 'Approved'}</button>)}</div></div>
+                {recent.length ? <div className="feed-list">{recent.map(c => <div className="feed-item" key={c.id}><div className={`feed-icon status-${c.status}`}><span className="material-symbols-outlined">{c.status === 'approved' ? 'verified' : c.status === 'rejected' ? 'close' : 'description'}</span></div><div className="feed-copy"><strong>{ACTIVITIES[c.activity_id || c.activityId]?.name || c.activityName || 'Activity submission'}</strong><span>{new Date(c.created_at || c.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} · {c.level_selected || c.selectedLevel || 'Certificate'}</span></div><span className={`badge badge-${c.status}`}>{c.status}</span></div>)}</div> : <div className="designed-empty"><div className="empty-orbit"><span className="material-symbols-outlined">history_edu</span><i /><i /></div><h4>{activityFilter === 'all' ? 'The story starts here.' : `No ${activityFilter} submissions.`}</h4><p>{activityFilter === 'all' ? 'Student achievements will appear here as they arrive. Start by welcoming your campus.' : 'Choose another filter to explore the activity feed.'}</p>{activityFilter === 'all' && <button className="btn btn-ghost" onClick={() => onNavigate('approvals')}>Open account requests <span className="material-symbols-outlined">arrow_forward</span></button>}</div>}
+            </section>
+            <section className="campus-progress glass-panel"><div className="panel-heading"><div><span className="eyebrow">LOOKING AHEAD</span><h3>Student progress</h3></div><span className="material-symbols-outlined">north_east</span></div><ProgressOrbit value={eligible} max={students.length} label="students at target" compact /><p>Provisional point estimates.<br />Handbook eligibility still needs verification.</p><button className="btn btn-ghost" onClick={() => onNavigate('points')}>Explore point catalog <span className="material-symbols-outlined">arrow_forward</span></button></section>
+        </div>
+        <div className="workspace-links"><ActionTile title="Campus structure" detail="Manage your departments" icon="account_tree" tone="blue" onClick={() => onNavigate('departments')} /><ActionTile title="Keep everyone in the loop" detail="Share guidelines and KTU circulars" icon="campaign" tone="violet" onClick={() => onNavigate('circulars')} /></div>
+    </div>;
 }
 
 /* ═══════════════════════════════════════════════════

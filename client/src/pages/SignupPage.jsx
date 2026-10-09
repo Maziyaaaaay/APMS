@@ -1,3 +1,4 @@
+import { AmbientBackdrop } from '../components/DashboardKit';
 import AchievementScene from '../components/AchievementScene';
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
@@ -91,6 +92,7 @@ export default function SignupPage() {
 
   return (
     <div className="login-page">
+            <AmbientBackdrop />
       {/* ── Left branded panel (desktop only) ── */}
       <div className="login-brand-panel">
         <div className="login-brand-logo">
@@ -100,7 +102,7 @@ export default function SignupPage() {
           <h1>KTU APMS</h1>
         </div>
 
-        <div className="brand-eyebrow">MORE THAN A CLASSROOM.</div><h2>Make it count.<br /><em>Make it yours.</em></h2>
+        <div className="brand-eyebrow">YOUR NEXT CHAPTER.</div><h2>A world to explore.<br /><em>A journey to own.</em></h2>
         <p>
           Join the KTU Activity Point Management System to track your achievements,
           manage certificates, and stay on top of your academic goals.

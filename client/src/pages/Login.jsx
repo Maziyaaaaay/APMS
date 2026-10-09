@@ -1,3 +1,4 @@
+import { AmbientBackdrop } from '../components/DashboardKit';
 import AchievementScene from '../components/AchievementScene';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
@@ -56,6 +57,7 @@ export default function Login() {
 
     return (
         <div className="login-page">
+            <AmbientBackdrop />
             {/* ── Left branded panel (desktop only) ── */}
             <div className="login-brand-panel">
                 <div className="login-brand-logo">
@@ -65,8 +67,8 @@ export default function Login() {
                     <h1>KTU APMS</h1>
                 </div>
 
-                <div className="brand-eyebrow">YOUR CAMPUS. YOUR POSSIBILITIES.</div>
-                <h2>Small steps.<br /><em>Big achievements.</em></h2>
+                <div className="brand-eyebrow">BEYOND THE CLASSROOM.</div>
+                <h2>Your experiences.<br /><em>In a new light.</em></h2>
                 <p>
                     Every experience counts. Collect your achievements, follow your progress,
                     and make your campus journey your own.
@@ -94,7 +96,7 @@ export default function Login() {
                     </div>
                 </div>
 
-                <div className="login-brand-footer">Made for every step of your campus journey.</div>
+                <div className="login-brand-footer">KTU APMS · Your campus, connected.</div>
             </div>
 
             {/* ── Right form panel ── */}
@@ -123,7 +125,7 @@ export default function Login() {
                     </div>
 
                     <div className="login-heading">
-                        <div className="form-eyebrow">LET’S PICK UP WHERE YOU LEFT OFF</div><h2>Your next chapter<br />starts here.</h2>
+                        <div className="form-eyebrow">YOUR SPACE TO GROW</div><h2>Welcome to<br />your next chapter.</h2>
                         <p>Please select your role and enter your credentials.</p>
                     </div>
 

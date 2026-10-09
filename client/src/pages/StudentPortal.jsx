@@ -1,3 +1,4 @@
+import { AmbientBackdrop, WorkspaceHeading, ProgressOrbit, MetricCard } from '../components/DashboardKit';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, logout } from '../utils/auth';
@@ -74,6 +75,7 @@ export default function StudentPortal() {
 
     return (
         <div className="portal-layout">
+            <AmbientBackdrop />
             {/* ── Sidebar overlay (mobile) ── */}
             <div
                 className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`}
@@ -97,6 +99,7 @@ export default function StudentPortal() {
                         <button
                             key={item.key}
                             className={`nav-item ${tab === item.key ? 'active' : ''}`}
+                            aria-current={tab === item.key ? 'page' : undefined}
                             onClick={() => { setTab(item.key); setSidebarOpen(false); }}
                         >
                             <span className="material-symbols-outlined">{item.icon}</span>
@@ -127,7 +130,7 @@ export default function StudentPortal() {
                 {/* Top Bar */}
                 <header className="topbar">
                     <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-                        <button className="topbar-menu-btn" onClick={() => setSidebarOpen(o => !o)}>
+                        <button className="topbar-menu-btn" aria-label="Open navigation" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(o => !o)}>
                             <span className="material-symbols-outlined">menu</span>
                         </button>
                         <span className="topbar-title">{PAGE_TITLES[tab]}</span>
@@ -149,7 +152,7 @@ export default function StudentPortal() {
                 </header>
 
                 {/* Page Content */}
-                <div className="page-content">
+                <div className="page-content" key={tab}>
                     {loadError && <div role="alert" className="alert alert-danger">{loadError} <button onClick={refreshCerts}>Try again</button></div>}
                     {tab === 'dashboard'   && <DashboardTab   user={user} certs={certs} summary={summary} req={req} onSubmit={() => setTab('submit')} onViewAll={() => setTab('submissions')} />}
                     {tab === 'submit'      && <SubmitTab      user={user} onSuccess={() => { refreshCerts(); setTab('submissions'); }} />}
@@ -166,7 +169,7 @@ export default function StudentPortal() {
 /* ═══════════════════════════════════════════════════
    DASHBOARD TAB
 ═══════════════════════════════════════════════════ */
-function DashboardTab({ certs, summary, req, onSubmit, onViewAll }) {
+function DashboardTab({ user, certs, summary, req, onSubmit, onViewAll }) {
     const pct     = (v, m) => Math.min((v / m) * 100, 100).toFixed(1);
     const pending  = certs.filter(c => c.status === 'pending').length;
     const approved = certs.filter(c => c.status === 'approved').length;
@@ -175,53 +178,17 @@ function DashboardTab({ certs, summary, req, onSubmit, onViewAll }) {
 
     return (
         <>
-            {/* Points Summary Banner */}
-            <div className="points-banner">
-                <h3>Activity Points Summary</h3>
-                <div className="td-muted" style={{ fontSize: 12, marginTop: -6, marginBottom: 12 }}>Provisional 2024-scheme estimate · only approved submissions count</div>
-                <div className="points-main">
-                    <span className="points-val">{summary.total}</span>
-                    <span className="points-total">/ {req.total} points earned</span>
-                </div>
-                <div className="points-track">
-                    <div className="points-fill" style={{ width: `${pct(summary.total, req.total)}%` }} />
-                </div>
-                <div className="points-footer">
-                    <span className="points-sub">{Math.max(0, req.total - summary.total)} points remaining to reach graduation goal</span>
-                    <span className={`eligibility-pill ${summary.eligible ? 'eligible' : 'in-progress'}`}>
-                        {summary.eligible ? '✓ Estimate meets target' : 'Estimated progress'}
-                    </span>
-                </div>
+            <WorkspaceHeading eyebrow="MAKE ROOM FOR WHAT’S NEXT" title={`Your journey, ${user?.name?.split(' ')[0] || 'in motion'}.`} description="Every approved achievement brings your next milestone closer." action={onSubmit} actionLabel="Add an achievement" icon="add" />
+            <section className="student-progress-panel glass-panel">
+                <div className="student-progress-copy"><span className="eyebrow">YOUR ACTIVITY POINTS</span><h3>A little progress.<br /><span className="gradient-text">Every single day.</span></h3><p>{Math.max(0, req.total - summary.total)} points left to your estimated target. Explore your group progress below to see where to focus next.</p><span className={`badge ${summary.eligible ? 'badge-approved' : 'badge-info'}`}>{summary.eligible ? 'Estimate meets target' : 'Your journey is in progress'}</span><small>Provisional 2024-scheme estimate · approved submissions only</small></div>
+                <ProgressOrbit value={summary.total} max={req.total} />
+            </section>
+            <div className="metric-grid student-metrics">
+                <MetricCard label="Awaiting review" value={pending} detail="Faculty is reviewing your evidence" icon="schedule" tone="blue" onClick={onViewAll} />
+                <MetricCard label="Approved" value={approved} detail="Achievements counted in your progress" icon="verified" tone="violet" onClick={onViewAll} />
+                <MetricCard label="Needs attention" value={rejected} detail="Review the feedback on your submissions" icon="feedback" tone="rose" onClick={onViewAll} />
             </div>
-
-            {/* Stat Cards */}
-            <div className="stat-grid" style={{ marginBottom: 24 }}>
-                <div className="stat-card">
-                    <div className="stat-card-top">
-                        <span className="stat-card-label">Pending</span>
-                        <span className="stat-card-icon"><span className="material-symbols-outlined" style={{ color:'var(--warning)' }}>schedule</span></span>
-                    </div>
-                    <div className="stat-card-val" style={{ color:'var(--warning)' }}>{pending}</div>
-                    <div className="stat-card-sub">Awaiting review</div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-card-top">
-                        <span className="stat-card-label">Approved</span>
-                        <span className="stat-card-icon"><span className="material-symbols-outlined" style={{ color:'var(--success)' }}>check_circle</span></span>
-                    </div>
-                    <div className="stat-card-val" style={{ color:'var(--success)' }}>{approved}</div>
-                    <div className="stat-card-sub">Points counted</div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-card-top">
-                        <span className="stat-card-label">Rejected</span>
-                        <span className="stat-card-icon"><span className="material-symbols-outlined" style={{ color:'var(--danger)' }}>cancel</span></span>
-                    </div>
-                    <div className="stat-card-val" style={{ color:'var(--danger)' }}>{rejected}</div>
-                    <div className="stat-card-sub">Needs attention</div>
-                </div>
-            </div>
-
+            <div className="section-title"><div><span className="eyebrow">THREE PATHS. ONE JOURNEY.</span><h3>Your group progress</h3></div><span className="section-hint">Each group has its own minimum</span></div>
             {/* Group Cards */}
             <div className="group-grid">
                 {GROUP_META.map(g => {
@@ -249,14 +216,6 @@ function DashboardTab({ certs, summary, req, onSubmit, onViewAll }) {
                         </div>
                     );
                 })}
-            </div>
-
-            {/* Submit Button */}
-            <div style={{ marginBottom: 24 }}>
-                <button className="btn btn-primary btn-lg" onClick={onSubmit} style={{ width:'100%', padding:14, fontSize:15 }}>
-                    <span className="material-symbols-outlined">post_add</span>
-                    Submit New Activity
-                </button>
             </div>
 
             {/* Recent Submissions Table */}
