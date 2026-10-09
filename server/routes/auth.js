@@ -1,15 +1,15 @@
-import express from 'express';
+import { createRouter } from '../lib/router.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import supabase from '../db/supabase.js';
-import { authMiddleware } from '../middleware/auth.js';
 
-const router = express.Router();
+const router = createRouter();
 
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
-  const { username, password, role } = req.body;
-  if (!username || !password || !role) {
+  const { password, role } = req.body;
+  const username = typeof req.body.username === 'string' ? req.body.username.trim().toLowerCase() : '';
+  if (!username || typeof password !== 'string' || !password || !['student', 'faculty', 'admin'].includes(role)) {
     return res.status(400).json({ error: 'username, password, and role are required' });
   }
 
@@ -33,7 +33,7 @@ router.post('/login', async (req, res) => {
         .from('users')
         .select('*')
         .eq('role', role)
-        .eq('roll_no', username)
+        .eq('roll_no', username.toUpperCase())
         .limit(1);
       if (err2) return res.status(500).json({ error: err2.message });
       if (data2 && data2.length > 0) {
@@ -49,11 +49,19 @@ router.post('/login', async (req, res) => {
   if (!valid) {
     return res.status(401).json({ error: 'Invalid username or password.' });
   }
+  if (user.account_status && user.account_status !== 'approved') {
+    const message = user.account_status === 'pending'
+      ? 'Your account is waiting for administrator approval.'
+      : 'This account is not currently approved for access. Contact an administrator.';
+    return res.status(403).json({ error: message, accountStatus: user.account_status });
+  }
 
   const safeUser = {
     id:            user.id,
+    sessionVersion: user.session_version,
     role:          user.role,
     isSuperAdmin:  user.is_super_admin,
+    accountStatus: user.account_status || 'approved',
     username:      user.username,
     name:          user.name,
     email:         user.email,
@@ -84,17 +92,28 @@ router.post('/signup', async (req, res) => {
   if (!['student', 'faculty'].includes(role)) {
     return res.status(400).json({ error: 'Invalid role. Must be student or faculty.' });
   }
-  if (password.length < 6) {
-    return res.status(400).json({ error: 'Password must be at least 6 characters.' });
+  if (!department) {
+    return res.status(400).json({ error: 'A department is required for student and faculty accounts.' });
+  }
+  if (typeof password !== 'string' || password.length < 12 || Buffer.byteLength(password) > 72) {
+    return res.status(400).json({ error: 'Password must have at least 12 characters and at most 72 UTF-8 bytes.' });
   }
 
+  if (typeof username !== 'string' || !/^[a-z0-9][a-z0-9._-]{2,63}$/i.test(username.trim())) return res.status(400).json({ error: 'Use 3–64 letters, numbers, dots, underscores, or hyphens for your username.' });
+  if (typeof name !== 'string' || !name.trim() || name.trim().length > 150) return res.status(400).json({ error: 'Enter your full name (up to 150 characters).' });
   const password_hash = await bcrypt.hash(password, 12);
 
+  const { data: departmentRow, error: departmentError } = await supabase.from('departments')
+    .select('id, name').eq('name', department).maybeSingle();
+  if (departmentError) return res.status(500).json({ error: departmentError.message });
+  if (!departmentRow) return res.status(400).json({ error: 'Choose a valid department.' });
+
   const insertData = {
-    role, username, password_hash, name, email: email || null,
+    role, account_status: 'pending', username, password_hash, name, email: email || null,
     profile_url:  profileUrl || null,
     roll_no:      role === 'student' ? (rollNo || null) : null,
     department:   department || null,
+    department_id: departmentRow.id,
     year:         role === 'student' ? (year ? parseInt(year) : null) : null,
     student_type: role === 'student' ? (studentType || 'regular') : null,
     designation:  role === 'faculty' ? (designation || null) : null,
@@ -103,7 +122,7 @@ router.post('/signup', async (req, res) => {
   const { data, error } = await supabase
     .from('users')
     .insert(insertData)
-    .select('id, role, username, name, email, roll_no, department, student_type, designation')
+    .select('id, role, account_status, username, name, email, roll_no, department, student_type, designation')
     .single();
 
   if (error) {

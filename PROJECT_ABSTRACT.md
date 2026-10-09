@@ -83,3 +83,4 @@ Under the 2024 scheme, activity points are organized into **three groups**, and 
 ---
 
 *APJ Abdul Kalam Technological University — Activity Points Handbook, 2024 Scheme*
+

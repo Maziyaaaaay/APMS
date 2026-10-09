@@ -1,11 +1,13 @@
+import { AmbientBackdrop } from '../components/DashboardKit';
+import AchievementScene from '../components/AchievementScene';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { login } from '../utils/auth';
 
 const ROLES = [
-    { key: 'student',  label: 'Student',        hint: 'student1 / pass123' },
-    { key: 'faculty',  label: 'Faculty Advisor', hint: 'faculty1 / pass123' },
-    { key: 'admin',    label: 'Admin',           hint: 'admin / admin123'   },
+    { key: 'student',  label: 'Student' },
+    { key: 'faculty',  label: 'Faculty Advisor' },
+    { key: 'admin',    label: 'Admin' },
 ];
 
 export default function Login() {
@@ -47,7 +49,7 @@ export default function Login() {
             } else {
                 setError(result.message);
             }
-        } catch (err) {
+        } catch {
             setError('Connection error — make sure the server is running.');
         }
         setLoading(false);
@@ -55,6 +57,7 @@ export default function Login() {
 
     return (
         <div className="login-page">
+            <AmbientBackdrop />
             {/* ── Left branded panel (desktop only) ── */}
             <div className="login-brand-panel">
                 <div className="login-brand-logo">
@@ -64,13 +67,14 @@ export default function Login() {
                     <h1>KTU APMS</h1>
                 </div>
 
-                <h2>Activity Point<br />Management System</h2>
+                <div className="brand-eyebrow">BEYOND THE CLASSROOM.</div>
+                <h2>Your experiences.<br /><em>In a new light.</em></h2>
                 <p>
-                    A professional platform for tracking student achievements and managing
-                    activity points efficiently within the KTU ecosystem. Streamline your
-                    academic journey with real-time tracking.
+                    Every experience counts. Collect your achievements, follow your progress,
+                    and make your campus journey your own.
                 </p>
 
+                <AchievementScene />
                 <div className="login-features">
                     <div className="login-feature-item">
                         <div className="login-feature-dot">
@@ -82,7 +86,7 @@ export default function Login() {
                         <div className="login-feature-dot">
                             <span className="material-symbols-outlined">analytics</span>
                         </div>
-                        <span>Real-time Credit Calculation</span>
+                        <span>Follow your point journey</span>
                     </div>
                     <div className="login-feature-item">
                         <div className="login-feature-dot">
@@ -92,7 +96,7 @@ export default function Login() {
                     </div>
                 </div>
 
-                <div className="login-brand-footer">© 2024 KTU APMS. All rights reserved.</div>
+                <div className="login-brand-footer">KTU APMS · Your campus, connected.</div>
             </div>
 
             {/* ── Right form panel ── */}
@@ -121,7 +125,7 @@ export default function Login() {
                     </div>
 
                     <div className="login-heading">
-                        <h2>Welcome Back</h2>
+                        <div className="form-eyebrow">YOUR SPACE TO GROW</div><h2>Welcome to<br />your next chapter.</h2>
                         <p>Please select your role and enter your credentials.</p>
                     </div>
 

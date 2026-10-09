@@ -1,197 +1,38 @@
-# APMS — Database Schema & ER Diagram
+# APMS v2 database structure
 
-## ER Diagram
+The owner chose a fresh rebuild without a live backup on 2026-10-07. This supersedes the earlier migration-and-backup plan. No live database operation has been performed from this workspace.
 
-```mermaid
-erDiagram
-    USERS {
-        uuid id PK
-        text role "student | faculty | admin"
-        boolean is_super_admin
-        text username UK
-        text password_hash
-        text name
-        text email
-        text profile_url
-        text roll_no "Student only"
-        text department "Student/Faculty"
-        text class "Student only"
-        integer year "Student only"
-        integer semester "Student only"
-        text student_type "regular | lateral | pwd"
-        text designation "Faculty only"
-        timestamptz created_at
-    }
+## Installation
 
-    DEPARTMENTS {
-        uuid id PK
-        text name UK
-        timestamptz created_at
-    }
+Run `server/db/rebuild.sql` once in the SQL Editor for KTU APMS (`xikqrthyuuqhptunigde`). The same browser-ready file is provided in `outputs/APMS_REBUILD.sql` outside this repository. It drops only the named APMS tables and rebuilds them in a single transaction. Unexpected external dependencies cause a rollback; it does not use `CASCADE` to remove unrelated objects.
 
-    CERTIFICATES {
-        uuid id PK
-        uuid student_id FK
-        text activity_id
-        text status "pending | approved | rejected"
-        integer points_awarded
-        text level_selected
-        numeric hours
-        text description
-        text notes
-        text file_url
-        timestamptz created_at
-        timestamptz reviewed_at
-        uuid reviewed_by FK
-    }
+`server/db/schema.sql` is the complete baseline for an empty database. Do not run the historical migration 001 after the v2 baseline. The snapshot and migration remain historical reference files, not part of the v2 deployment path.
 
-    CIRCULARS {
-        uuid id PK
-        text title
-        text content
-        timestamptz created_at
-    }
+## Data and access
 
-    POINT_OVERRIDES {
-        text activity_id PK
-        jsonb override
-        timestamptz updated_at
-    }
+- `departments`: canonical department IDs and names. Faculty scope uses IDs. The legacy display name on users is populated by a database trigger and follows department renames.
+- `users`: bcrypt password hash, role, approval status, department ID, student category, profile, and session version. New accounts default to pending. All student/faculty accounts require a department. Usernames are case normalized and unique; non-empty roll numbers are case normalized and unique.
+- `certificates`: private file path and metadata, event/date, immutable activity snapshot and catalog version, provisional points, review state, reviewer, and explanation. Submissions must be from approved students. Faculty reviews are restricted by department in the API and database. Completed reviews cannot be overwritten or deleted through the API.
+- `account_review_events` and `certificate_review_events`: audit records created by triggers within the same transaction as the decision. The service role can insert/read but cannot update/delete audit entries.
+- `circulars`: admin-authored notices with optional official URL and issue date.
+- `point_overrides`: legacy table name retained for administrator notes only. A database constraint rejects scoring overrides.
 
-    USERS ||--o{ CERTIFICATES : "submits (student_id)"
-    USERS ||--o{ CERTIFICATES : "reviews (reviewed_by)"
-```
+RLS is enabled on every app table. Anonymous and authenticated Supabase browser roles have no direct access. All app access goes through the Express API using a server-only Supabase key. A restrictive Storage policy prevents old permissive policies from granting browser roles access to the private certificate bucket. Files are served using short-lived signed URLs.
 
----
+## One owner
 
-## Table Details
+Before provisioning, the database intentionally has no owner. The hosted startup provisions the first one from secret environment values when `APMS_BOOTSTRAP_ADMIN=true`. A unique index permits only one super admin; an active-admin constraint prevents disabling that owner; a deferred constraint requires an owner to remain after any ownership change. The password-confirmed handover endpoint calls one database transaction to demote the former owner and promote an existing approved admin. Both sessions are invalidated. The former owner remains a regular admin.
 
-### 1. `users`
-Central table storing all user accounts. The `role` field determines portal access.
+Additional admins can be created or promoted by the super admin. Password, role, approval, and ownership changes increment the session version, so existing tokens lose access immediately.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | UUID | PK, auto-generated | Unique user identifier |
-| `role` | TEXT | NOT NULL, CHECK | `student`, `faculty`, or `admin` |
-| `is_super_admin` | BOOLEAN | NOT NULL, default `false` | Super admin flag |
-| `username` | TEXT | NOT NULL, UNIQUE | Login username |
-| `password_hash` | TEXT | NOT NULL | Bcrypt hashed password |
-| `name` | TEXT | NOT NULL | Full display name |
-| `email` | TEXT | — | Email address |
-| `profile_url` | TEXT | — | Profile picture URL |
-| `roll_no` | TEXT | — | Student roll number |
-| `department` | TEXT | — | Department name |
-| `class` | TEXT | — | Class/section |
-| `year` | INTEGER | — | Current year of study |
-| `semester` | INTEGER | — | Current semester |
-| `student_type` | TEXT | CHECK | `regular`, `lateral`, or `pwd` |
-| `designation` | TEXT | — | Faculty designation |
-| `created_at` | TIMESTAMPTZ | default `now()` | Account creation time |
+## Storage cleanup and portability
 
----
+Rebuilding Postgres does not remove stored certificate bytes. Empty the APMS certificate bucket through Supabase Storage before reopening registrations. Do not delete `storage.objects` rows using SQL: that does not reliably remove the stored files. The guarded storage cleanup script remains an alternative for hosted administrators.
 
-### 2. `departments`
-List of academic departments managed by admins.
+Supabase Auth's managed accounts are not used by this app and are not touched. This reset concerns APMS users in `public.users`. The schema, migrations, and private object paths are maintained in the repository; a later platform migration needs an explicit database export and object-copy process, not just a provider switch.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | UUID | PK, auto-generated | Unique department ID |
-| `name` | TEXT | NOT NULL, UNIQUE | Department name |
-| `created_at` | TIMESTAMPTZ | default `now()` | Creation timestamp |
+## Validation and remaining work
 
----
+The complete SQL has been executed against an isolated PostgreSQL runtime with stand-ins for Supabase roles/storage tables. Checks cover repeated rebuild, owner uniqueness and handover, account approval audit, session invalidation, faculty department scope, review immutability, transaction rollback on audit failure, table access, and restrictive bucket policy. These checks do not replace verification against the live Supabase environment.
 
-### 3. `certificates`
-Core table — each row is a student's activity certificate submission.
-
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | UUID | PK, auto-generated | Unique certificate ID |
-| `student_id` | UUID | FK → `users.id`, ON DELETE CASCADE | Submitting student |
-| `activity_id` | TEXT | NOT NULL | Activity category identifier |
-| `status` | TEXT | NOT NULL, default `pending`, CHECK | `pending`, `approved`, or `rejected` |
-| `points_awarded` | INTEGER | — | Points given after review |
-| `level_selected` | TEXT | — | Level (College/State/National/etc.) |
-| `hours` | NUMERIC | — | Hours spent on activity |
-| `description` | TEXT | — | Activity description |
-| `notes` | TEXT | — | Faculty review notes |
-| `file_url` | TEXT | — | Uploaded certificate file URL |
-| `created_at` | TIMESTAMPTZ | default `now()` | Submission time |
-| `reviewed_at` | TIMESTAMPTZ | — | Review timestamp |
-| `reviewed_by` | UUID | FK → `users.id` | Reviewing faculty |
-
----
-
-### 4. `circulars`
-Announcements and notices posted by admins.
-
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | UUID | PK, auto-generated | Unique circular ID |
-| `title` | TEXT | NOT NULL | Circular title |
-| `content` | TEXT | NOT NULL | Circular body |
-| `created_at` | TIMESTAMPTZ | default `now()` | Post timestamp |
-
----
-
-### 5. `point_overrides`
-Admin-configurable overrides for default activity point values.
-
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `activity_id` | TEXT | PK | Activity category identifier |
-| `override` | JSONB | NOT NULL | Custom point rules as JSON |
-| `updated_at` | TIMESTAMPTZ | default `now()` | Last updated timestamp |
-
----
-
-## Relationships Summary
-
-| Relationship | Type | Description |
-|---|---|---|
-| `users` → `certificates` (student_id) | One-to-Many | A student submits many certificates |
-| `users` → `certificates` (reviewed_by) | One-to-Many | A faculty member reviews many certificates |
-
----
-
-## Indexes
-
-| Index | Table | Column(s) | Purpose |
-|-------|-------|-----------|---------|
-| `idx_certificates_student_id` | certificates | student_id | Fast lookup of a student's submissions |
-| `idx_certificates_status` | certificates | status | Quick filtering by review status |
-| `idx_users_username` | users | username | Fast login lookups |
-| `idx_users_role` | users | role | Quick role-based queries |
-| `idx_users_department` | users | department | Department-based filtering |
-
----
-
-## Security
-
-All tables have **Row Level Security (RLS)** enabled. The backend uses the Supabase `service_role` key, which bypasses RLS for server-side operations.
-
----
-
-## Prompt for AI Image Generator (Google Gemini / etc.)
-
-> **Copy-paste this prompt to generate a visual ER diagram:**
->
-> Create a clean, professional Entity-Relationship (ER) diagram for a database with the following 5 tables:
->
-> 1. **users** — columns: id (UUID, PK), role (text: student/faculty/admin), is_super_admin (boolean), username (text, unique), password_hash (text), name (text), email (text), profile_url (text), roll_no (text), department (text), class (text), year (integer), semester (integer), student_type (text: regular/lateral/pwd), designation (text), created_at (timestamptz)
->
-> 2. **certificates** — columns: id (UUID, PK), student_id (UUID, FK → users.id), activity_id (text), status (text: pending/approved/rejected), points_awarded (integer), level_selected (text), hours (numeric), description (text), notes (text), file_url (text), created_at (timestamptz), reviewed_at (timestamptz), reviewed_by (UUID, FK → users.id)
->
-> 3. **departments** — columns: id (UUID, PK), name (text, unique), created_at (timestamptz)
->
-> 4. **circulars** — columns: id (UUID, PK), title (text), content (text), created_at (timestamptz)
->
-> 5. **point_overrides** — columns: activity_id (text, PK), override (jsonb), updated_at (timestamptz)
->
-> Relationships:
-> - users (1) ──→ (many) certificates via student_id (a student submits many certificates)
-> - users (1) ──→ (many) certificates via reviewed_by (a faculty reviews many certificates)
-> - departments and circulars are standalone tables managed by admins
-> - point_overrides is a standalone config table
->
-> Use a light background, rounded table boxes, primary keys highlighted, foreign keys shown with arrows. Use a modern, clean diagram style suitable for a college project report.
+The KTU catalog remains provisional pending full reconciliation of evidence eligibility, academic-year/segment limits, and current official circulars. A snapshot prevents a later catalog edit from silently changing a saved submission's activity definition. Multiple regulation schemes and cross-version equivalence still need explicit policy. Email verification, password recovery, MFA, and deployment abuse controls remain future public-release work.

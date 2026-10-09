@@ -1,7 +1,26 @@
--- APMS v2: complete schema for a CLEAN database, not an upgrade migration.
--- Browser rebuild: use outputs/APMS_REBUILD.sql (drops only the named APMS tables).
--- No account credentials are embedded here. The API's one-time seed creates the owner.
+-- APMS REBUILD — KTU APMS (xikqrthyuuqhptunigde)
+-- User requested a fresh structure without a backup.
+-- DESTRUCTIVE: removes APMS accounts, activity records, review history, notices,
+-- department definitions, and admin notes. Run once in the correct project's SQL Editor.
+-- Storage file bytes must be cleared separately through Storage; never via SQL.
+-- Only named APMS tables/functions are dropped. Unexpected dependencies abort the transaction.
 begin;
+drop table if exists public.certificate_review_events;
+drop table if exists public.account_review_events;
+drop table if exists public.certificates;
+drop table if exists public.circulars;
+drop table if exists public.point_overrides;
+drop table if exists public.users;
+drop table if exists public.departments;
+drop function if exists public.protect_last_super_admin();
+drop function if exists public.apms_prepare_user();
+drop function if exists public.apms_audit_user();
+drop function if exists public.apms_require_owner();
+drop function if exists public.apms_sync_department_name();
+drop function if exists public.apms_validate_certificate();
+drop function if exists public.apms_audit_certificate();
+drop function if exists public.apms_transfer_super_admin(uuid, uuid);
+
 
 create table public.departments (
   id uuid primary key default gen_random_uuid(),

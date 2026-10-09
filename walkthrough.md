@@ -1,91 +1,13 @@
-# APMS Deployment Walkthrough
+# APMS rebuild and web deployment
 
-## Changes Made
+The owner requested rebuilding without a backup. Homebrew, Docker, and local PostgreSQL are not required for the browser setup.
 
-| File | Change |
-|------|--------|
-| [api.js](file:///c:/Users/91702/Desktop/Activity%20point%20Management%20System/client/src/utils/api.js) | `BASE_URL` now reads from `VITE_API_URL` env var, falls back to `/api` for local dev |
-| [index.js](file:///c:/Users/91702/Desktop/Activity%20point%20Management%20System/server/index.js) | CORS origins now read from `CORS_ORIGINS` env var, falls back to localhost |
-| [.gitignore](file:///c:/Users/91702/Desktop/Activity%20point%20Management%20System/.gitignore) | Prevents [.env](file:///c:/Users/91702/Desktop/Activity%20point%20Management%20System/server/.env), `node_modules/`, `dist/`, and zip files from being pushed |
-| [render.yaml](file:///c:/Users/91702/Desktop/Activity%20point%20Management%20System/render.yaml) | Optional Render blueprint for one-click backend deploy |
+1. Open the existing **KTU APMS** project (`xikqrthyuuqhptunigde`) in Supabase. In **SQL Editor**, create a new query, paste `server/db/rebuild.sql`, and run it once. This deletes APMS records and creates the new structure atomically. Do not apply historical migration 001 after this script.
+2. In **Storage**, empty old APMS certificate files from the `apms-certificates` bucket before enabling the new app. The SQL leaves file bytes in place and makes the bucket private. Other buckets are outside this reset's scope.
+3. Put the updated repository on the chosen GitHub branch. This local workspace has not been pushed yet.
+4. Create the web service using `render.yaml`. It builds both the client and server and serves them from one public origin. The frontend uses `/api`, so a separate frontend host is unnecessary.
+5. In the hosting provider's private environment settings, set `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, a random `JWT_SECRET` of at least 32 characters, and `CORS_ORIGINS` to the app's public origin. Configure `APMS_BOOTSTRAP_ADMIN=true`, `SUPER_ADMIN_USERNAME`, `SUPER_ADMIN_PASSWORD` (12+ characters, at most 72 UTF-8 bytes), and `SUPER_ADMIN_NAME`. Email is optional. The username uses 3–64 letters/numbers/dots/underscores/hyphens. Never use a browser `VITE_` variable for server secrets.
+6. On the first hosted startup, the API creates one super admin from those environment values. Failed initialization stops startup. After the first successful login, set `APMS_BOOTSTRAP_ADMIN=false` and remove the `SUPER_ADMIN_PASSWORD` environment value. Restarting does not replace an existing admin's credentials.
+7. Register one faculty member and one student, approve them as admin, then verify submission, private file preview, approval/rejection, and department scope on the actual deployed app before inviting others.
 
-> [!IMPORTANT]
-> Local development still works exactly the same — no changes needed. These changes only add production support.
-
----
-
-## Step-by-Step Deployment Guide
-
-### Step 1 — Push to GitHub
-
-```bash
-cd "c:\Users\91702\Desktop\Activity point Management System"
-git init
-git add .
-git commit -m "Initial commit - APMS"
-```
-
-Then create a repo on [github.com/new](https://github.com/new) and follow their instructions to push.
-
----
-
-### Step 2 — Deploy Backend on Render
-
-1. Go to [render.com](https://render.com) → Sign up with GitHub
-2. Click **New → Web Service** → Connect your GitHub repo
-3. Configure:
-   - **Name**: `apms-api`
-   - **Root Directory**: `server`
-   - **Build Command**: `npm install`
-   - **Start Command**: `node index.js`
-   - **Instance Type**: Free
-4. Add **Environment Variables**:
-
-| Key | Value |
-|-----|-------|
-| `SUPABASE_URL` | `https://xikqrthyuuqhptunigde.supabase.co` |
-| `SUPABASE_SERVICE_KEY` | *(copy from your .env file)* |
-| `JWT_SECRET` | *(copy from your .env file — use a stronger one for production!)* |
-| `CORS_ORIGINS` | *(leave blank for now, add Vercel URL after Step 3)* |
-
-5. Click **Deploy** → wait for it to go live
-6. Note your backend URL (e.g., `https://apms-api.onrender.com`)
-
----
-
-### Step 3 — Deploy Frontend on Vercel
-
-1. Go to [vercel.com](https://vercel.com) → Sign up with GitHub
-2. Click **Import Project** → Select your repo
-3. Configure:
-   - **Framework Preset**: Vite
-   - **Root Directory**: `client`
-4. Add **Environment Variable**:
-
-| Key | Value |
-|-----|-------|
-| `VITE_API_URL` | `https://apms-api.onrender.com/api` |
-
-5. Click **Deploy** → wait for it to go live
-6. Note your frontend URL (e.g., `https://apms.vercel.app`)
-
----
-
-### Step 4 — Link them together
-
-Go back to **Render Dashboard → apms-api → Environment**:
-
-| Key | Value |
-|-----|-------|
-| `CORS_ORIGINS` | `https://apms.vercel.app` |
-
-Click **Save** — Render will redeploy automatically.
-
----
-
-### Step 5 — Test! 🎉
-
-Open your Vercel URL on any device (phone, laptop, anywhere) and log in.
-
-> [!TIP]
-> **Render free tier** spins down after 15 minutes of inactivity. The first request after a cold start takes ~30 seconds. If this is for a demo/presentation, hit the backend URL a minute before to warm it up.
+The reset has not been run on Supabase. The production client build, isolated database checks, and startup/page/API smoke checks passed. Startup checks used dummy database credentials and made no live Supabase requests. KTU totals remain provisional, and broad public rollout still needs password recovery, email verification, MFA decisions, abuse controls, and completed official-rule reconciliation.

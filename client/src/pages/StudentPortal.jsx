@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import { AmbientBackdrop, WorkspaceHeading, ProgressOrbit, MetricCard } from '../components/DashboardKit';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, logout } from '../utils/auth';
-import { getCertificatesByStudent, addCertificate, updateUser } from '../utils/storage';
+import { getCertificatesByStudent, addCertificate, uploadCertificate, updateUser, getCertificateFileUrl } from '../utils/storage';
 import { compressImage } from '../utils/imageCompressor';
 import { ACTIVITIES, getActivitiesByGroup, calculatePoints, calculateStudentSummary, STUDENT_TYPES } from '../utils/points';
 
 const KTU_RULES = [
-    "Only the highest level of achievement counts for the same activity.",
-    "Participation & Winner points cannot be combined for the same event.",
-    "Each activity has a maximum point cap — points beyond the cap are ignored.",
-    "Maximum 40 points counted per group (30 for Lateral Entry, 20 for PwD).",
+    "Only the highest achievement level for the same event is counted.",
+    "Participation and winner points cannot be combined for the same event.",
+    "Each activity has its own maximum; the handbook also caps each group at 40 points.",
+    "Regular students need 40 points per group; Lateral Entry students need 30 and PwD students need 20.",
     "Activities must be completed during the programme period.",
     "Only KTU/University-approved skilling courses are eligible.",
     "Activity Points do NOT affect SGPA or CGPA.",
@@ -40,29 +41,18 @@ export default function StudentPortal() {
     const [showGuidelines, setShowGuidelines] = useState(false);
     const [dark,         setDark]         = useState(() => document.documentElement.classList.contains('dark'));
 
+    const [loadError, setLoadError] = useState('');
+    const refreshCerts = useCallback(async () => {
+        try { setCerts(await getCertificatesByStudent()); setLoadError(''); }
+        catch (err) { setLoadError(err.message); }
+    }, []);
     useEffect(() => {
         if (!user) { navigate('/'); return; }
-        getCertificatesByStudent(user.id).then(setCerts).catch(console.error);
-    }, []);
-
-    // Re-fetch certs whenever the student switches to dashboard or submissions tab
-    useEffect(() => {
-        if (!user) return;
-        if (tab === 'dashboard' || tab === 'submissions') {
-            getCertificatesByStudent(user.id).then(setCerts).catch(console.error);
-        }
-    }, [tab]);
-
-    // Auto-refresh every 30s while on dashboard to pick up newly approved certs
-    useEffect(() => {
-        if (!user || tab !== 'dashboard') return;
-        const interval = setInterval(() => {
-            getCertificatesByStudent(user.id).then(setCerts).catch(console.error);
-        }, 30000);
+        Promise.resolve().then(refreshCerts);
+        const interval = setInterval(refreshCerts, 30000);
         return () => clearInterval(interval);
-    }, [tab]);
+    }, [user, navigate, tab, refreshCerts]);
 
-    const refreshCerts = () => getCertificatesByStudent(user.id).then(setCerts).catch(console.error);
     const summary = calculateStudentSummary(certs, user?.studentType || user?.student_type || 'regular');
     const req     = STUDENT_TYPES[user?.studentType || user?.student_type || 'regular'];
 
@@ -85,6 +75,7 @@ export default function StudentPortal() {
 
     return (
         <div className="portal-layout">
+            <AmbientBackdrop />
             {/* ── Sidebar overlay (mobile) ── */}
             <div
                 className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`}
@@ -108,6 +99,7 @@ export default function StudentPortal() {
                         <button
                             key={item.key}
                             className={`nav-item ${tab === item.key ? 'active' : ''}`}
+                            aria-current={tab === item.key ? 'page' : undefined}
                             onClick={() => { setTab(item.key); setSidebarOpen(false); }}
                         >
                             <span className="material-symbols-outlined">{item.icon}</span>
@@ -138,7 +130,7 @@ export default function StudentPortal() {
                 {/* Top Bar */}
                 <header className="topbar">
                     <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-                        <button className="topbar-menu-btn" onClick={() => setSidebarOpen(o => !o)}>
+                        <button className="topbar-menu-btn" aria-label="Open navigation" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(o => !o)}>
                             <span className="material-symbols-outlined">menu</span>
                         </button>
                         <span className="topbar-title">{PAGE_TITLES[tab]}</span>
@@ -160,7 +152,8 @@ export default function StudentPortal() {
                 </header>
 
                 {/* Page Content */}
-                <div className="page-content">
+                <div className="page-content" key={tab}>
+                    {loadError && <div role="alert" className="alert alert-danger">{loadError} <button onClick={refreshCerts}>Try again</button></div>}
                     {tab === 'dashboard'   && <DashboardTab   user={user} certs={certs} summary={summary} req={req} onSubmit={() => setTab('submit')} onViewAll={() => setTab('submissions')} />}
                     {tab === 'submit'      && <SubmitTab      user={user} onSuccess={() => { refreshCerts(); setTab('submissions'); }} />}
                     {tab === 'submissions' && <SubmissionsTab certs={certs} />}
@@ -185,52 +178,17 @@ function DashboardTab({ user, certs, summary, req, onSubmit, onViewAll }) {
 
     return (
         <>
-            {/* Points Summary Banner */}
-            <div className="points-banner">
-                <h3>Activity Points Summary</h3>
-                <div className="points-main">
-                    <span className="points-val">{summary.total}</span>
-                    <span className="points-total">/ {req.total} points earned</span>
-                </div>
-                <div className="points-track">
-                    <div className="points-fill" style={{ width: `${pct(summary.total, req.total)}%` }} />
-                </div>
-                <div className="points-footer">
-                    <span className="points-sub">{Math.max(0, req.total - summary.total)} points remaining to reach graduation goal</span>
-                    <span className={`eligibility-pill ${summary.eligible ? 'eligible' : 'in-progress'}`}>
-                        {summary.eligible ? '✓ Graduation Eligible' : 'Graduation Eligibility: In Progress'}
-                    </span>
-                </div>
+            <WorkspaceHeading eyebrow="MAKE ROOM FOR WHAT’S NEXT" title={`Your journey, ${user?.name?.split(' ')[0] || 'in motion'}.`} description="Every approved achievement brings your next milestone closer." action={onSubmit} actionLabel="Add an achievement" icon="add" />
+            <section className="student-progress-panel glass-panel">
+                <div className="student-progress-copy"><span className="eyebrow">YOUR ACTIVITY POINTS</span><h3>A little progress.<br /><span className="gradient-text">Every single day.</span></h3><p>{Math.max(0, req.total - summary.total)} points left to your estimated target. Explore your group progress below to see where to focus next.</p><span className={`badge ${summary.eligible ? 'badge-approved' : 'badge-info'}`}>{summary.eligible ? 'Estimate meets target' : 'Your journey is in progress'}</span><small>Provisional 2024-scheme estimate · approved submissions only</small></div>
+                <ProgressOrbit value={summary.total} max={req.total} />
+            </section>
+            <div className="metric-grid student-metrics">
+                <MetricCard label="Awaiting review" value={pending} detail="Faculty is reviewing your evidence" icon="schedule" tone="blue" onClick={onViewAll} />
+                <MetricCard label="Approved" value={approved} detail="Achievements counted in your progress" icon="verified" tone="violet" onClick={onViewAll} />
+                <MetricCard label="Needs attention" value={rejected} detail="Review the feedback on your submissions" icon="feedback" tone="rose" onClick={onViewAll} />
             </div>
-
-            {/* Stat Cards */}
-            <div className="stat-grid" style={{ marginBottom: 24 }}>
-                <div className="stat-card">
-                    <div className="stat-card-top">
-                        <span className="stat-card-label">Pending</span>
-                        <span className="stat-card-icon"><span className="material-symbols-outlined" style={{ color:'var(--warning)' }}>schedule</span></span>
-                    </div>
-                    <div className="stat-card-val" style={{ color:'var(--warning)' }}>{pending}</div>
-                    <div className="stat-card-sub">Awaiting review</div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-card-top">
-                        <span className="stat-card-label">Approved</span>
-                        <span className="stat-card-icon"><span className="material-symbols-outlined" style={{ color:'var(--success)' }}>check_circle</span></span>
-                    </div>
-                    <div className="stat-card-val" style={{ color:'var(--success)' }}>{approved}</div>
-                    <div className="stat-card-sub">Points counted</div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-card-top">
-                        <span className="stat-card-label">Rejected</span>
-                        <span className="stat-card-icon"><span className="material-symbols-outlined" style={{ color:'var(--danger)' }}>cancel</span></span>
-                    </div>
-                    <div className="stat-card-val" style={{ color:'var(--danger)' }}>{rejected}</div>
-                    <div className="stat-card-sub">Needs attention</div>
-                </div>
-            </div>
-
+            <div className="section-title"><div><span className="eyebrow">THREE PATHS. ONE JOURNEY.</span><h3>Your group progress</h3></div><span className="section-hint">Each group has its own minimum</span></div>
             {/* Group Cards */}
             <div className="group-grid">
                 {GROUP_META.map(g => {
@@ -252,17 +210,12 @@ function DashboardTab({ user, certs, summary, req, onSubmit, onViewAll }) {
                             <div className="progress-track">
                                 <div className="progress-fill" style={{ width:`${pctVal}%`, background: g.fillColor }} />
                             </div>
+                            <div className="td-muted" style={{ fontSize: 11, marginTop: 7 }}>
+                                {val >= req.perGroup ? 'Minimum reached in this estimate' : `${req.perGroup - val} more points to meet the group minimum`}
+                            </div>
                         </div>
                     );
                 })}
-            </div>
-
-            {/* Submit Button */}
-            <div style={{ marginBottom: 24 }}>
-                <button className="btn btn-primary btn-lg" onClick={onSubmit} style={{ width:'100%', padding:14, fontSize:15 }}>
-                    <span className="material-symbols-outlined">post_add</span>
-                    Submit New Activity
-                </button>
             </div>
 
             {/* Recent Submissions Table */}
@@ -320,6 +273,7 @@ function SubmitTab({ user, onSuccess }) {
     const [selectedLevel, setSelectedLevel] = useState('');
     const [hours,         setHours]         = useState('');
     const [description,   setDescription]   = useState('');
+    const [eventName,     setEventName]     = useState('');
     const [activityDate,  setActivityDate]  = useState('');
     const [uploadedFile,  setUploadedFile]  = useState(null);
     const [submitting,    setSubmitting]    = useState(false);
@@ -349,26 +303,9 @@ function SubmitTab({ user, onSuccess }) {
         setSubmitting(true);
         setSubmitError('');
 
-        // Compress images to reduce base64 size; leave PDFs as-is
-        let fileData = '';
-        if (uploadedFile) {
-            try {
-                if (uploadedFile.type.startsWith('image/')) {
-                    fileData = await compressImage(uploadedFile, 800, 0.75);
-                } else {
-                    fileData = await new Promise((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onload = ev => resolve(ev.target.result);
-                        reader.onerror = () => reject(new Error('Failed to read file'));
-                        reader.readAsDataURL(uploadedFile);
-                    });
-                }
-            } catch {
-                setSubmitError('Failed to process the uploaded file. Please try a different file.');
-                setSubmitting(false);
-                return;
-            }
-        }
+        let uploadReceipt;
+        try { uploadReceipt = await uploadCertificate(uploadedFile); }
+        catch (err) { setSubmitError(err.message); setSubmitting(false); return; }
 
         try {
             await addCertificate({
@@ -378,8 +315,10 @@ function SubmitTab({ user, onSuccess }) {
                 levelSelected: selectedLevel,
                 hours: activity.type === 'hours' ? parseFloat(hours) : null,
                 description,
-                activityDate: activityDate || null,
-                fileUrl: fileData,
+                eventName: eventName.trim(),
+                activityDate,
+                uploadReceipt,
+                fileName: uploadedFile?.name || null,
                 pointsAwarded: calculatePoints(activityId, selectedLevel, hours),
             });
             setSubmitting(false);
@@ -540,18 +479,23 @@ function SubmitTab({ user, onSuccess }) {
                                             </>
                                         )}
                                     </div>
-                                    <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                    <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png"
                                         style={{ display:'none' }} onChange={handleFileChange} required />
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Event / Activity Name <span className="required">*</span></label>
+                                    <input className="input" value={eventName}
+                                        onChange={e => setEventName(e.target.value)} maxLength={180}
+                                        placeholder="e.g. KTU Tech Fest 2025" required />
+                                    <div className="form-hint">Use the same event name across related certificates. The event year distinguishes annual editions.</div>
                                 </div>
 
                                 {/* Activity Date */}
                                 <div className="form-group">
-                                    <label className="form-label">
-                                        Activity Date
-                                        <span style={{ color:'var(--text-muted)', fontWeight:400, marginLeft:6, fontSize:10, textTransform:'none' }}>(optional)</span>
-                                    </label>
-                                    <input className="input" type="date" value={activityDate}
-                                        onChange={e => setActivityDate(e.target.value)} />
+                                    <label className="form-label">Activity Date <span className="required">*</span></label>
+                                    <input className="input" type="date" max={new Date().toISOString().slice(0, 10)} value={activityDate}
+                                        onChange={e => setActivityDate(e.target.value)} required />
                                 </div>
 
                                 {/* Description */}
@@ -698,6 +642,7 @@ function SubmissionsTab({ certs }) {
                                         <th>Submitted</th>
                                         <th className="td-center">Points</th>
                                         <th>Status</th>
+                                        <th>Document</th>
                                         <th>Remarks</th>
                                     </tr>
                                 </thead>
@@ -706,12 +651,13 @@ function SubmissionsTab({ certs }) {
                                         const act = ACTIVITIES[c.activity_id || c.activityId];
                                         return (
                                             <tr key={c.id}>
-                                                <td className="td-bold">{act?.name || c.activityName}</td>
+                                                <td className="td-bold">{act?.name || c.activityName}<div className="td-muted" style={{fontSize:11,fontWeight:400}}>{c.event_name || 'Legacy submission'}</div></td>
                                                 <td className="td-muted">Group {act?.group || '—'}</td>
                                                 <td className="td-muted">{c.level_selected || c.selectedLevel || '—'}</td>
                                                 <td className="td-muted">{new Date(c.created_at || c.createdAt).toLocaleDateString('en-IN')}</td>
                                                 <td className="td-center td-bold" style={{ color:'var(--accent)' }}>{c.points_awarded ?? c.pointsAwarded}</td>
                                                 <td><span className={`badge badge-${c.status}`}>{c.status}</span></td>
+                                                <td>{c.file_url ? <CertificateFileButton certificateId={c.id} /> : '—'}</td>
                                                 <td className="td-muted" style={{ maxWidth:160, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
                                                     {c.notes || c.facultyRemark || (c.status === 'pending' ? 'Under review' : c.status === 'approved' ? 'Verified' : '—')}
                                                 </td>
@@ -731,6 +677,26 @@ function SubmissionsTab({ certs }) {
     );
 }
 
+function CertificateFileButton({ certificateId }) {
+    const [busy, setBusy] = useState(false);
+    const openFile = async () => {
+        const popup = window.open('about:blank', '_blank');
+        if (popup) popup.opener = null;
+        setBusy(true);
+        try {
+            const { url } = await getCertificateFileUrl(certificateId);
+            if (popup) popup.location.href = url;
+            else window.location.href = url;
+        } catch (err) {
+            popup?.close();
+            alert(err.message);
+        } finally { setBusy(false); }
+    };
+    return <button className="btn btn-ghost btn-sm" disabled={busy} onClick={openFile}>
+        <span className="material-symbols-outlined" style={{ fontSize: 15 }}>attach_file</span>{busy ? 'Opening…' : 'View'}
+    </button>;
+}
+
 /* ═══════════════════════════════════════════════════
    PROFILE TAB
 ═══════════════════════════════════════════════════ */
@@ -743,15 +709,8 @@ function ProfileTab({ user, summary, req, onLogout, onGuidelines, onUpdateUser }
     const [editName, setEditName] = useState(user?.name || '');
     const [editEmail, setEditEmail] = useState(user?.email || '');
     const [editRollNo, setEditRollNo] = useState(user?.rollNo || '');
-    const [editDept, setEditDept] = useState(user?.department || '');
     const [editYear, setEditYear] = useState(user?.year || '');
     const fileInputRef = React.useRef();
-
-    const DEPARTMENTS = [
-        'Computer Science', 'Information Technology',
-        'Electronics and Communication Engineering', 'Electrical Engineering',
-        'Civil Engineering', 'Mechanical Engineering', 'Electrical and Computer Science',
-    ];
 
     const handlePhotoChange = async (e) => {
         const f = e.target.files[0];
@@ -761,8 +720,8 @@ function ProfileTab({ user, summary, req, onLogout, onGuidelines, onUpdateUser }
             const fileData = await compressImage(f);
             const updated = await updateUser({ ...user, profileUrl: fileData });
             onUpdateUser(updated);
-        } catch (err) { 
-            alert(err.message); 
+        } catch (err) {
+            alert(err.message);
         }
         setUploading(false);
     };
@@ -782,7 +741,6 @@ function ProfileTab({ user, summary, req, onLogout, onGuidelines, onUpdateUser }
                 name: editName,
                 email: editEmail,
                 rollNo: editRollNo,
-                department: editDept,
                 year: editYear ? parseInt(editYear) : null,
             });
             onUpdateUser(updated);
@@ -796,7 +754,6 @@ function ProfileTab({ user, summary, req, onLogout, onGuidelines, onUpdateUser }
         setEditName(user?.name || '');
         setEditEmail(user?.email || '');
         setEditRollNo(user?.rollNo || '');
-        setEditDept(user?.department || '');
         setEditYear(user?.year || '');
         setEditing(true);
     };
@@ -865,7 +822,7 @@ function ProfileTab({ user, summary, req, onLogout, onGuidelines, onUpdateUser }
                                     ['Year',        user?.year ? `Year ${user.year}` : 'N/A', 'calendar_month'],
                                     ['Username',    user?.username,    'person'],
                                     ['Student Type', user?.studentType || 'Regular', 'category'],
-                                ].map(([label, val, icon]) => (
+                                ].map(([label, val]) => (
                                     <div className="profile-info-item" key={label}>
                                         <label>{label}</label>
                                         <p>{val || 'N/A'}</p>
@@ -885,13 +842,6 @@ function ProfileTab({ user, summary, req, onLogout, onGuidelines, onUpdateUser }
                                 <div className="form-group" style={{ marginBottom:0 }}>
                                     <label className="form-label">Roll Number</label>
                                     <input className="input" placeholder="e.g. KTU21CS001" value={editRollNo} onChange={e => setEditRollNo(e.target.value)} />
-                                </div>
-                                <div className="form-group" style={{ marginBottom:0 }}>
-                                    <label className="form-label">Department</label>
-                                    <select className="input" value={editDept} onChange={e => setEditDept(e.target.value)}>
-                                        <option value="">— Select Department —</option>
-                                        {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
-                                    </select>
                                 </div>
                                 <div className="form-group" style={{ marginBottom:0 }}>
                                     <label className="form-label">Year of Study</label>

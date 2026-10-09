@@ -1,19 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import { AmbientBackdrop, WorkspaceHeading, MetricCard, ActivityChart, ActionTile, ProgressOrbit } from '../components/DashboardKit';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, logout } from '../utils/auth';
 import {
-    getUsers, getCertificates, addUser, deleteUser, updateUser,
+    getUsers, getCertificates, addUser, deleteUser, updateUser, reviewAccount,
     getDepartmentsWithIds, addDepartment, removeDepartment,
     getCirculars, addCircular, deleteCircular,
     getPointOverrides, savePointOverride, deletePointOverride,
-    promoteToAdmin,
+    promoteToAdmin, transferOwnership,
 } from '../utils/storage';
+import { ReviewsTab } from './FacultyPortal';
 import { compressImage } from '../utils/imageCompressor';
 import { ACTIVITIES, calculateStudentSummary } from '../utils/points';
 
 const NAV_ITEMS = [
     { key: 'dashboard',    icon: 'dashboard',          label: 'Dashboard'     },
     { key: 'users',        icon: 'manage_accounts',    label: 'Manage Users'  },
+    { key: 'reviews', icon: 'fact_check', label: 'Submission Reviews' },
+    { key: 'approvals',    icon: 'how_to_reg',         label: 'Account Requests' },
     { key: 'departments',  icon: 'account_balance',    label: 'Departments'   },
     { key: 'circulars',    icon: 'campaign',           label: 'Circulars'     },
     { key: 'points',       icon: 'analytics',          label: 'Point Grading' },
@@ -29,17 +33,18 @@ export default function AdminPortal() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'));
 
-    useEffect(() => {
-        if (!user) { navigate('/'); return; }
-        refresh();
-    }, []);
-
-    const refresh = async () => {
+    const [loadError, setLoadError] = useState('');
+    const refresh = useCallback(async () => {
         try {
             const [usersData, certsData] = await Promise.all([getUsers(), getCertificates()]);
-            setUsers(usersData); setCerts(certsData);
-        } catch (err) { console.error('Failed to load:', err); }
-    };
+            setUsers(usersData); setCerts(certsData); setLoadError('');
+        } catch (err) { setLoadError(err.message); }
+    }, []);
+    useEffect(() => {
+        if (!user) { navigate('/'); return; }
+        Promise.resolve().then(refresh);
+    }, [user, navigate, refresh]);
+
     const handleLogout = () => { logout(); navigate('/'); };
     const toggleDark = () => {
         const next = !dark;
@@ -48,13 +53,15 @@ export default function AdminPortal() {
         localStorage.setItem('theme', next ? 'dark' : 'light');
     };
 
-    const students = users.filter(u => u.role === 'student');
-    const faculty  = users.filter(u => u.role === 'faculty');
+    const students = users.filter(u => u.role === 'student' && (u.account_status || 'approved') === 'approved');
+    const faculty  = users.filter(u => u.role === 'faculty' && (u.account_status || 'approved') === 'approved');
     const initials = user?.name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'AD';
 
     const PAGE_TITLES = {
         dashboard:   'Dashboard',
         users:       'Manage Users',
+        approvals:   'Account Requests',
+        reviews: 'Submission Reviews',
         departments: 'Departments',
         circulars:   'Circulars & Announcements',
         points:      'Activity Point Grading',
@@ -63,6 +70,7 @@ export default function AdminPortal() {
 
     return (
         <div className="portal-layout">
+            <AmbientBackdrop />
             {/* Sidebar overlay (mobile) */}
             <div className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)} />
 
@@ -83,6 +91,7 @@ export default function AdminPortal() {
                         <button
                             key={item.key}
                             className={`nav-item ${tab === item.key ? 'active' : ''}`}
+                            aria-current={tab === item.key ? 'page' : undefined}
                             onClick={() => { setTab(item.key); setSidebarOpen(false); }}
                         >
                             <span className="material-symbols-outlined">{item.icon}</span>
@@ -108,7 +117,7 @@ export default function AdminPortal() {
             <div className="main-content">
                 <header className="topbar">
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <button className="topbar-menu-btn" onClick={() => setSidebarOpen(o => !o)}>
+                        <button className="topbar-menu-btn" aria-label="Open navigation" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(o => !o)}>
                             <span className="material-symbols-outlined">menu</span>
                         </button>
                         <span className="topbar-title">{PAGE_TITLES[tab]}</span>
@@ -129,9 +138,12 @@ export default function AdminPortal() {
                     </div>
                 </header>
 
-                <div className="page-content">
-                    {tab === 'dashboard'   && <DashboardTab students={students} faculty={faculty} certs={certs} onNavigate={setTab} />}
+                <div className="page-content" key={tab}>
+                    {loadError && <div role="alert" className="alert alert-danger">{loadError} <button onClick={refresh}>Try again</button></div>}
+                    {tab === 'dashboard'   && <DashboardTab user={user} users={users} students={students} faculty={faculty} certs={certs} onNavigate={setTab} />}
                     {tab === 'users'       && <UsersTab students={students} faculty={faculty} certs={certs} onRefresh={refresh} currentUser={user} />}
+                    {tab === 'reviews' && <ReviewsTab pendingCerts={certs.filter(c => c.status === 'pending')} students={users.filter(u => u.role === 'student')} user={user} onRefresh={refresh} />}
+                    {tab === 'approvals'   && <AccountApprovals users={users} onRefresh={refresh} currentUser={user} />}
                     {tab === 'departments' && <DepartmentsTab />}
                     {tab === 'circulars'   && <CircularsTab />}
                     {tab === 'points'      && <PointGradingTab />}
@@ -142,98 +154,137 @@ export default function AdminPortal() {
     );
 }
 
+function AccountApprovals({ users, onRefresh, currentUser }) {
+    const [busyId, setBusyId] = useState(null);
+    const [transferTarget, setTransferTarget] = useState(null);
+    const [transferPassword, setTransferPassword] = useState('');
+    const [transferError, setTransferError] = useState('');
+    const pending = users.filter(u => ['student', 'faculty'].includes(u.role) && ['pending', 'rejected', 'disabled'].includes(u.account_status));
+    const decide = async (account, status) => {
+        setBusyId(account.id);
+        try {
+            await reviewAccount(account.id, status);
+            await onRefresh();
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            setBusyId(null);
+        }
+    };
+    const disableAdmin = async (account) => {
+        if (!window.confirm(`Disable admin account ${account.name}?`)) return;
+        setBusyId(account.id);
+        try { await deleteUser(account.id); await onRefresh(); }
+        catch (err) { alert(err.message); }
+        finally { setBusyId(null); }
+    };
+    const handover = async (event) => {
+        event.preventDefault();
+        setBusyId(transferTarget.id);
+        setTransferError('');
+        try {
+            await transferOwnership(transferTarget.id, transferPassword);
+            setTransferPassword('');
+            logout();
+            window.location.assign('/');
+        } catch (err) { setTransferError(err.message); }
+        finally { setBusyId(null); }
+    };
+    const administrators = users.filter(u => u.role === 'admin' && !u.is_super_admin);
+    return (
+        <>
+        <section className="card">
+            <div className="card-header"><h3>Student and faculty access</h3><span className="badge badge-pending">{pending.length} waiting</span></div>
+            <div className="card-body">
+                <p className="td-muted" style={{ marginTop: 0 }}>New registrations stay locked until an administrator approves them.</p>
+                {pending.length === 0 ? <div className="empty-state"><span className="material-symbols-outlined">task_alt</span><p>No accounts are waiting for approval.</p></div> : (
+                    <div className="table-overflow"><table className="data-table">
+                        <thead><tr><th>Name</th><th>Role</th><th>Department</th><th>Status / requested</th><th>Decision</th></tr></thead>
+                        <tbody>{pending.map(account => <tr key={account.id}>
+                            <td><div className="td-bold">{account.name}</div><div className="td-muted">{account.email || account.username}</div></td>
+                            <td>{account.role === 'faculty' ? 'Faculty' : 'Student'}</td>
+                            <td>{account.department || '—'}</td>
+                            <td>{account.account_status}<br />{account.created_at ? new Date(account.created_at).toLocaleDateString('en-IN') : '—'}</td>
+                            <td><div style={{ display: 'flex', gap: 8 }}>
+                                <button className="btn btn-primary btn-sm" disabled={busyId === account.id} onClick={() => decide(account, 'approved')}>Approve</button>
+                                <button className="btn btn-danger btn-sm" disabled={busyId === account.id} onClick={() => decide(account, 'rejected')}>Reject</button>
+                            </div></td>
+                        </tr>)}</tbody>
+                    </table></div>
+                )}
+            </div>
+        </section>
+        {currentUser?.isSuperAdmin && <section className="card" style={{ marginTop: 20 }}>
+            <div className="card-header"><h3>Admin access</h3><span className="td-muted">Super admin controls</span></div>
+            <div className="card-body">
+                {administrators.length === 0 ? <p className="td-muted">No additional admins yet. Promote a trusted user from Manage Users.</p> :
+                    <div className="table-overflow"><table className="data-table">
+                        <thead><tr><th>Admin</th><th>Username</th><th>Access</th></tr></thead>
+                        <tbody>{administrators.map(account => <tr key={account.id}>
+                            <td>{account.name}</td><td>@{account.username}</td>
+                            <td><div style={{ display: 'flex', gap: 8 }}>
+                                <button className="btn btn-danger btn-sm" disabled={busyId === account.id} onClick={() => disableAdmin(account)}>Disable</button>
+                                {account.account_status === 'approved' && <button className="btn btn-outline btn-sm" disabled={Boolean(busyId)} onClick={() => { setTransferTarget(account); setTransferPassword(''); setTransferError(''); }}>Transfer ownership</button>}
+                            </div></td>
+                        </tr>)}</tbody>
+                    </table></div>}
+            </div>
+        </section>}
+        {transferTarget && <div className="modal-overlay" role="presentation">
+            <section className="modal" role="dialog" aria-modal="true" aria-labelledby="handover-title">
+                <div className="modal-header"><h3 id="handover-title">Transfer super admin access</h3></div>
+                <form onSubmit={handover} className="modal-body">
+                    <p>{transferTarget.name} will become the only super admin. You will remain an admin. Both accounts will need to sign in again.</p>
+                    {transferError && <div className="alert alert-error" role="alert">{transferError}</div>}
+                    <label className="form-label" htmlFor="handover-password">Your current password</label>
+                    <input id="handover-password" className="input" type="password" autoComplete="current-password" required value={transferPassword} onChange={e => setTransferPassword(e.target.value)} />
+                    <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                        <button type="button" className="btn btn-outline" disabled={Boolean(busyId)} onClick={() => { setTransferTarget(null); setTransferPassword(''); }}>Cancel</button>
+                        <button type="submit" className="btn btn-primary" disabled={Boolean(busyId)}>{busyId ? 'Transferring…' : 'Transfer ownership'}</button>
+                    </div>
+                </form>
+            </section>
+        </div>}
+        </>
+    );
+}
+
 /* ═══════════════════════════════════════════════════
    DASHBOARD TAB
 ════════════════════════════════════════════════════ */
-function DashboardTab({ students, faculty, certs, onNavigate }) {
+function DashboardTab({ user, users, students, faculty, certs, onNavigate }) {
+    const [activityFilter, setActivityFilter] = useState('all');
     const totalApproved = certs.filter(c => c.status === 'approved').length;
-    const totalPending  = certs.filter(c => c.status === 'pending').length;
-    const eligible      = students.filter(s => {
-        const sc = certs.filter(c => (c.student_id || c.studentId) === s.id);
-        return calculateStudentSummary(sc, s.student_type || s.studentType || 'regular').eligible;
-    }).length;
-
-    const stats = [
-        { icon: 'school',        label: 'Total Students', val: students.length,  color: 'var(--accent)',   bg: 'rgba(45,91,227,0.1)',  tab: 'users'       },
-        { icon: 'supervisor_account', label: 'Faculty Advisors', val: faculty.length,   color: '#06b6d4',        bg: 'rgba(6,182,212,0.1)',  tab: 'users'       },
-        { icon: 'description',   label: 'Total Certs',   val: certs.length,     color: '#7c3aed',         bg: 'rgba(124,58,237,0.1)', tab: null          },
-        { icon: 'verified',      label: 'Approved',      val: totalApproved,    color: 'var(--success)',  bg: 'rgba(16,185,129,0.1)', tab: null          },
-        { icon: 'schedule',      label: 'Pending',       val: totalPending,     color: 'var(--warning)',  bg: 'rgba(245,158,11,0.1)', tab: null          },
-        { icon: 'military_tech', label: 'Eligible',      val: eligible,         color: '#f59e0b',         bg: 'rgba(245,158,11,0.1)', tab: null          },
-    ];
-
-    const recentCerts = [...certs]
-        .sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt))
-        .slice(0, 8);
-
-    return (
-        <>
-            {/* KPI Stats */}
-            <div className="stat-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', marginBottom: 24 }}>
-                {stats.map(s => (
-                    <div
-                        key={s.label}
-                        className="stat-card"
-                        style={s.tab ? { cursor: 'pointer' } : {}}
-                        onClick={s.tab ? () => onNavigate(s.tab) : undefined}
-                    >
-                        <div className="stat-card-top">
-                            <span className="stat-card-label">{s.label}</span>
-                            <span className="stat-card-icon">
-                                <div style={{ width: 32, height: 32, borderRadius: 8, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <span className="material-symbols-outlined" style={{ color: s.color, fontSize: 18 }}>{s.icon}</span>
-                                </div>
-                            </span>
-                        </div>
-                        <div className="stat-card-val" style={{ color: s.color }}>{s.val}</div>
-                        <div className="stat-card-sub">{s.tab ? 'Click to manage →' : 'Total in system'}</div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Recent Activity Table */}
-            <div className="table-card">
-                <div className="table-card-header">
-                    <h3>Recent Certificate Activity</h3>
-                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Latest 8 submissions</span>
-                </div>
-                {recentCerts.length === 0 ? (
-                    <div className="empty-state">
-                        <span className="material-symbols-outlined">description</span>
-                        <p>No certificate activity yet</p>
-                    </div>
-                ) : (
-                    <div className="table-overflow">
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Activity</th>
-                                    <th>Level</th>
-                                    <th>Submitted</th>
-                                    <th className="td-center">Points</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {recentCerts.map(c => {
-                                    const act = ACTIVITIES[c.activity_id || c.activityId];
-                                    return (
-                                        <tr key={c.id}>
-                                            <td className="td-bold">{act?.name || c.activityName || c.activity_id || c.activityId}</td>
-                                            <td className="td-muted">{c.level_selected || c.selectedLevel || 'N/A'}</td>
-                                            <td className="td-muted">{new Date(c.created_at || c.createdAt).toLocaleDateString('en-IN')}</td>
-                                            <td className="td-center td-bold" style={{ color: 'var(--accent)' }}>{c.points_awarded ?? c.pointsAwarded}</td>
-                                            <td><span className={`badge badge-${c.status}`}>{c.status}</span></td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </div>
-        </>
-    );
+    const totalPending = certs.filter(c => c.status === 'pending').length;
+    const accountRequests = users.filter(u => u.account_status === 'pending').length;
+    const eligible = students.filter(s => calculateStudentSummary(certs.filter(c => (c.student_id || c.studentId) === s.id), s.student_type || s.studentType || 'regular').eligible).length;
+    const recent = [...certs].filter(c => activityFilter === 'all' || c.status === activityFilter).sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt)).slice(0, 6);
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+    return <div className="dashboard-composition">
+        <WorkspaceHeading eyebrow="YOUR CAMPUS, CONNECTED" title={`${greeting}, ${user?.name?.split(' ')[0] || 'Admin'}.`} description="A clear view of your campus. A focused space to move it forward." action={() => onNavigate('users')} actionLabel="Manage people" icon="person_add" />
+        <div className="metric-grid">
+            <MetricCard label="Students" value={students.length} detail="Approved student accounts" icon="school" tone="violet" onClick={() => onNavigate('users')} />
+            <MetricCard label="Faculty" value={faculty.length} detail="Approved faculty advisors" icon="supervisor_account" tone="blue" onClick={() => onNavigate('users')} />
+            <MetricCard label="Approved certificates" value={totalApproved} detail={`${certs.length} submissions in total`} icon="verified" tone="cyan" onClick={() => onNavigate('reviews')} />
+            <MetricCard label="Pending reviews" value={totalPending} detail="Certificates awaiting a decision" icon="schedule" tone="rose" onClick={() => onNavigate('reviews')} />
+        </div>
+        <div className="dashboard-bento">
+            <ActivityChart certificates={certs} />
+            <section className="attention-panel glass-panel"><div className="panel-heading"><div><span className="eyebrow">A LITTLE FOCUS GOES A LONG WAY</span><h3>Needs your attention</h3></div><span className="attention-dot" /></div>
+                <ActionTile title="Account requests" detail={accountRequests ? 'New people waiting to join' : 'No accounts waiting for approval'} count={accountRequests} icon="how_to_reg" tone="violet" onClick={() => onNavigate('approvals')} />
+                <ActionTile title="Certificate reviews" detail={totalPending ? 'Evidence ready for a decision' : 'The review queue is clear'} count={totalPending} icon="fact_check" tone="blue" onClick={() => onNavigate('reviews')} />
+                <div className="attention-footer"><span className="material-symbols-outlined">verified_user</span>Account access starts after approval.</div>
+            </section>
+        </div>
+        <div className="dashboard-bottom">
+            <section className="activity-feed glass-panel"><div className="panel-heading"><div><span className="eyebrow">EVERY ACHIEVEMENT HAS A STORY</span><h3>Recent activity</h3></div><div className="segmented-control" aria-label="Filter recent activity">{['all', 'pending', 'approved'].map(f => <button key={f} aria-pressed={activityFilter === f} onClick={() => setActivityFilter(f)}>{f === 'all' ? 'All' : f === 'pending' ? 'Pending' : 'Approved'}</button>)}</div></div>
+                {recent.length ? <div className="feed-list">{recent.map(c => <div className="feed-item" key={c.id}><div className={`feed-icon status-${c.status}`}><span className="material-symbols-outlined">{c.status === 'approved' ? 'verified' : c.status === 'rejected' ? 'close' : 'description'}</span></div><div className="feed-copy"><strong>{ACTIVITIES[c.activity_id || c.activityId]?.name || c.activityName || 'Activity submission'}</strong><span>{new Date(c.created_at || c.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} · {c.level_selected || c.selectedLevel || 'Certificate'}</span></div><span className={`badge badge-${c.status}`}>{c.status}</span></div>)}</div> : <div className="designed-empty"><div className="empty-orbit"><span className="material-symbols-outlined">history_edu</span><i /><i /></div><h4>{activityFilter === 'all' ? 'The story starts here.' : `No ${activityFilter} submissions.`}</h4><p>{activityFilter === 'all' ? 'Student achievements will appear here as they arrive. Start by welcoming your campus.' : 'Choose another filter to explore the activity feed.'}</p>{activityFilter === 'all' && <button className="btn btn-ghost" onClick={() => onNavigate('approvals')}>Open account requests <span className="material-symbols-outlined">arrow_forward</span></button>}</div>}
+            </section>
+            <section className="campus-progress glass-panel"><div className="panel-heading"><div><span className="eyebrow">LOOKING AHEAD</span><h3>Student progress</h3></div><span className="material-symbols-outlined">north_east</span></div><ProgressOrbit value={eligible} max={students.length} label="students at target" compact /><p>Provisional point estimates.<br />Handbook eligibility still needs verification.</p><button className="btn btn-ghost" onClick={() => onNavigate('points')}>Explore point catalog <span className="material-symbols-outlined">arrow_forward</span></button></section>
+        </div>
+        <div className="workspace-links"><ActionTile title="Campus structure" detail="Manage your departments" icon="account_tree" tone="blue" onClick={() => onNavigate('departments')} /><ActionTile title="Keep everyone in the loop" detail="Share guidelines and KTU circulars" icon="campaign" tone="violet" onClick={() => onNavigate('circulars')} /></div>
+    </div>;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -437,8 +488,8 @@ function UsersTab({ students, faculty, certs, onRefresh, currentUser }) {
                                             {userType === 'student' && (
                                                 <td>
                                                     {summary?.eligible
-                                                        ? <span className="badge badge-approved">Eligible</span>
-                                                        : <span className="badge badge-pending">In Progress</span>
+                                                        ? <span className="badge badge-approved">Estimate meets target</span>
+                                                        : <span className="badge badge-pending">Estimated in progress</span>
                                                     }
                                                 </td>
                                             )}
@@ -569,6 +620,8 @@ function CircularsTab() {
     const [circulars, setCirculars] = useState([]);
     const [title, setTitle] = useState('');
     const [body, setBody] = useState('');
+    const [sourceUrl, setSourceUrl] = useState('');
+    const [issuedOn, setIssuedOn] = useState('');
     const [priority, setPri] = useState('normal');
     const [showForm, setShowForm] = useState(false);
 
@@ -582,9 +635,9 @@ function CircularsTab() {
 
     const handlePost = async () => {
         if (!title.trim() || !body.trim()) return;
-        try { await addCircular({ title: title.trim(), content: body.trim() }); } catch (err) { alert(err.message); return; }
+        try { await addCircular({ title: title.trim(), content: body.trim(), sourceUrl: sourceUrl.trim(), issuedOn: issuedOn || null }); } catch (err) { alert(err.message); return; }
         getCirculars().then(setCirculars);
-        setTitle(''); setBody(''); setPri('normal'); setShowForm(false);
+        setTitle(''); setBody(''); setSourceUrl(''); setIssuedOn(''); setPri('normal'); setShowForm(false);
     };
 
     const handleDelete = async (id) => {
@@ -621,6 +674,17 @@ function CircularsTab() {
                             <textarea className="input" rows={4} placeholder="Write the full announcement here..."
                                 value={body} onChange={e => setBody(e.target.value)} style={{ resize: 'vertical' }} />
                         </div>
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label className="form-label">Official source link</label>
+                                <input className="input" type="url" placeholder="https://ktu.edu.in/..."
+                                    value={sourceUrl} onChange={e => setSourceUrl(e.target.value)} />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Circular issue date</label>
+                                <input className="input" type="date" value={issuedOn} onChange={e => setIssuedOn(e.target.value)} />
+                            </div>
+                        </div>
                         <div className="form-group">
                             <label className="form-label">Priority</label>
                             <div style={{ display: 'flex', gap: 8 }}>
@@ -655,7 +719,7 @@ function CircularsTab() {
                                             {circ.priority || 'normal'}
                                         </span>
                                         <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                                            {new Date(circ.created_at || circ.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                        {(circ.issued_on ? new Date(`${circ.issued_on}T00:00:00`) : new Date(circ.created_at || circ.createdAt)).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                                         </span>
                                     </div>
                                     <button className="btn btn-danger btn-sm" style={{ fontSize: 11, padding: '3px 10px' }}
@@ -665,6 +729,9 @@ function CircularsTab() {
                                 </div>
                                 <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)', marginBottom: 6 }}>{circ.title}</div>
                                 <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{circ.content || circ.body}</div>
+                                {circ.source_url && <a href={circ.source_url} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm" style={{ marginTop: 10 }}>
+                                    <span className="material-symbols-outlined" style={{ fontSize: 15 }}>open_in_new</span>View official source
+                                </a>}
                             </div>
                         );
                     })}
@@ -683,7 +750,6 @@ function PointGradingTab() {
     const [searchAct, setSearchAct] = useState('');
     const [groupFilter, setGroupFilter] = useState(0);
     const [editNote, setEditNote] = useState('');
-    const [editMax, setEditMax] = useState('');
 
     useEffect(() => { getPointOverrides().then(setOverrides).catch(console.error); }, []);
 
@@ -697,14 +763,12 @@ function PointGradingTab() {
     const startEdit = (a) => {
         const ov = overrides[a.id] || {};
         setEditNote(ov.note || '');
-        setEditMax(ov.maxPoints !== undefined ? String(ov.maxPoints) : '');
         setEditing(a.id);
     };
 
     const saveEdit = async (activityId) => {
         const newOv = {};
         if (editNote.trim()) newOv.note = editNote.trim();
-        if (editMax !== '' && !isNaN(editMax)) newOv.maxPoints = parseInt(editMax);
         try {
             if (Object.keys(newOv).length > 0) { await savePointOverride(activityId, newOv); }
             else { await deletePointOverride(activityId); }
@@ -723,7 +787,7 @@ function PointGradingTab() {
             <div className="alert" style={{ background: 'rgba(45,91,227,0.06)', border: '1px solid rgba(45,91,227,0.15)', marginBottom: 20 }}>
                 <span className="material-symbols-outlined" style={{ fontSize: 16, color: 'var(--accent)' }}>info</span>
                 <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-                    Base values come from the official KTU 2024 handbook. You can add admin notes or adjust max point caps per activity.
+                    Official KTU point values and caps are locked to the current handbook catalog. Admins can attach internal clarification notes without changing calculated points.
                 </span>
             </div>
 
@@ -757,11 +821,8 @@ function PointGradingTab() {
                                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>
                                         Group {a.group} · {a.category} ·
                                         <span style={{ color: 'var(--accent)', fontWeight: 700, marginLeft: 4 }}>
-                                            Max {ov?.maxPoints !== undefined ? ov.maxPoints : a.maxPoints} pts
+                                            Max {a.maxPoints} pts
                                         </span>
-                                        {ov?.maxPoints !== undefined && (
-                                            <span style={{ color: 'var(--text-muted)', marginLeft: 4 }}>(base: {a.maxPoints})</span>
-                                        )}
                                     </div>
                                     {ov?.note && !isEditing && (
                                         <div style={{ fontSize: 12, color: '#06b6d4', marginTop: 5, fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -787,17 +848,10 @@ function PointGradingTab() {
 
                             {isEditing && (
                                 <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
-                                    <div className="form-row">
-                                        <div className="form-group" style={{ marginBottom: 0 }}>
-                                            <label className="form-label">Override Max Points</label>
-                                            <input className="input" type="number" placeholder={`Default: ${a.maxPoints}`}
-                                                value={editMax} onChange={e => setEditMax(e.target.value)} />
-                                        </div>
-                                        <div className="form-group" style={{ marginBottom: 0 }}>
-                                            <label className="form-label">Admin Note</label>
-                                            <input className="input" placeholder="e.g. Only applicable from S3 onwards"
-                                                value={editNote} onChange={e => setEditNote(e.target.value)} />
-                                        </div>
+                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                        <label className="form-label">Admin Note</label>
+                                        <input className="input" placeholder="Add an internal clarification note"
+                                            value={editNote} onChange={e => setEditNote(e.target.value)} />
                                     </div>
                                     <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                                         <button className="btn btn-ghost btn-sm" style={{ flex: 1 }} onClick={() => setEditing(null)}>Cancel</button>
@@ -832,8 +886,8 @@ function ProfileTab({ user, onLogout, onUpdateUser }) {
             const fileData = await compressImage(f);
             const updated = await updateUser({ ...user, profileUrl: fileData });
             onUpdateUser(updated);
-        } catch (err) { 
-            alert(err.message); 
+        } catch (err) {
+            alert(err.message);
         }
         setUploading(false);
     };
