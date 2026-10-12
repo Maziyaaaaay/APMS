@@ -71,7 +71,7 @@ export default function AdminPortal() {
     };
 
     return (
-        <div className="portal-layout">
+        <div className="portal-layout admin-portal">
             <AmbientBackdrop />
             {/* Sidebar overlay (mobile) */}
             <div className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)} />
@@ -263,13 +263,13 @@ function DashboardTab({ user, users, students, faculty, certs, onNavigate }) {
         <div className="campus-hero"><WorkspaceHeading eyebrow="YOUR CAMPUS" title="Keep campus moving." description={`${greeting}, ${user?.name?.split(' ')[0] || 'Admin'}.`} /><div className="campus-hero-art" aria-hidden="true"><InterfaceIcon name="school" style={{width:72,height:72}} /></div></div>
         <section className="work-queue" aria-labelledby="queue-title">
             <div className="section-intro"><h3 id="queue-title">Your next actions</h3><span>{accountRequests + totalPending} waiting</span></div>
-            <ActionTile title="Approve account requests" detail={accountRequests ? 'Waiting for access' : 'All caught up'} count={accountRequests} onClick={() => onNavigate('approvals')} />
-            <ActionTile title="Review certificates" detail={totalPending ? 'Ready for a decision' : 'All caught up'} count={totalPending} onClick={() => onNavigate('reviews')} />
+            <ActionTile title="Approve account requests" detail={accountRequests ? 'Waiting for access' : 'All caught up'} count={accountRequests} icon="person_check" tone="rose" onClick={() => onNavigate('approvals')} />
+            <ActionTile title="Review certificates" detail={totalPending ? 'Ready for a decision' : 'All caught up'} count={totalPending} icon="workspace_premium" tone="amber" onClick={() => onNavigate('reviews')} />
         </section>
         <section className="campus-register"><div className="section-intro"><h3>Campus at a glance</h3></div><div className="metric-grid">
-            <MetricCard label="Students" value={students.length} detail="Approved accounts" onClick={() => onNavigate('users')} />
-            <MetricCard label="Faculty" value={faculty.length} detail="Approved advisors" onClick={() => onNavigate('users')} />
-            <MetricCard label="Certificates approved" value={totalApproved} detail={`${certs.length} submitted overall`} onClick={() => onNavigate('reviews')} />
+            <MetricCard label="Students" value={students.length} detail="Approved accounts" icon="school" tone="rose" onClick={() => onNavigate('users')} />
+            <MetricCard label="Faculty" value={faculty.length} detail="Approved advisors" icon="groups" tone="violet" onClick={() => onNavigate('users')} />
+            <MetricCard label="Certificates approved" value={totalApproved} detail={`${certs.length} submitted overall`} icon="workspace_premium" tone="amber" onClick={() => onNavigate('reviews')} />
         </div></section>
         <section className="activity-feed"><div className="panel-heading"><h3>Latest submissions</h3><div className="segmented-control" aria-label="Filter recent activity">{['all', 'pending', 'approved'].map(f => <button key={f} aria-pressed={activityFilter === f} onClick={() => setActivityFilter(f)}>{f[0].toUpperCase() + f.slice(1)}</button>)}</div></div>
             {recent.length ? <div className="feed-list">{recent.map(c => <div className="feed-item" key={c.id}><div className="feed-copy"><strong>{ACTIVITIES[c.activity_id || c.activityId]?.name || c.activityName || 'Activity submission'}</strong><span>{new Date(c.created_at || c.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span></div><span className={`badge badge-${c.status}`}>{c.status}</span></div>)}</div> : <div className="designed-empty"><h4>No {activityFilter === 'all' ? '' : activityFilter + ' '}submissions yet.</h4><p>{activityFilter === 'all' ? 'Once students upload certificates, their latest submissions will appear here.' : 'Try another status to see the rest of the submissions.'}</p></div>}
