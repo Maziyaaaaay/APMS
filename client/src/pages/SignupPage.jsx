@@ -137,7 +137,7 @@ export default function SignupPage() {
       <div className="login-form-panel">
         <div className="login-form-inner" style={{ maxWidth: 480 }}>
 
-          {/* Theme toggle — top right */}
+          {/* Theme toggle  /  top right */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
             <button
               className="theme-toggle"
@@ -215,7 +215,7 @@ export default function SignupPage() {
               <div className="form-group">
                 <label className="form-label">Department</label>
                 <select className="input" value={form.department} onChange={set('department')} required disabled={departmentsLoading}>
-                  <option value="">— Select Department —</option>
+                  <option value=""> /  Select Department  / </option>
                   {departments.map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
               </div>
@@ -260,7 +260,7 @@ export default function SignupPage() {
                   <div className="form-group">
                     <label className="form-label">Year of Study</label>
                     <select className="input" value={form.year} onChange={set('year')}>
-                      <option value="">— Select Year —</option>
+                      <option value=""> /  Select Year  / </option>
                       <option value="1">First Year</option>
                       <option value="2">Second Year</option>
                       <option value="3">Third Year</option>

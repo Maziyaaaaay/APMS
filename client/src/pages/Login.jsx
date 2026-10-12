@@ -50,7 +50,7 @@ export default function Login() {
                 setError(result.message);
             }
         } catch {
-            setError('Connection error — make sure the server is running.');
+            setError('Connection error  /  make sure the server is running.');
         }
         setLoading(false);
     };
@@ -68,7 +68,7 @@ export default function Login() {
                 </div>
 
                 <div className="brand-eyebrow">BEYOND THE CLASSROOM.</div>
-                <h2>Your experiences.<br /><em>In a new light.</em></h2>
+                <h2>Make it count.<br /><em>Keep the record.</em></h2>
                 <p>
                     Every experience counts. Collect your achievements, follow your progress,
                     and make your campus journey your own.
@@ -103,7 +103,7 @@ export default function Login() {
             <div className="login-form-panel">
                 <div className="login-form-inner">
 
-                    {/* Theme toggle — top right */}
+                    {/* Theme toggle  /  top right */}
                     <div style={{ display:'flex', justifyContent:'flex-end', marginBottom: 16 }}>
                         <button
                             className="theme-toggle"
@@ -125,7 +125,7 @@ export default function Login() {
                     </div>
 
                     <div className="login-heading">
-                        <div className="form-eyebrow">YOUR SPACE TO GROW</div><h2>Welcome to<br />your next chapter.</h2>
+                        <div className="form-eyebrow">YOUR SPACE TO GROW</div><h2>Your campus.<br />Your record.</h2>
                         <p>Please select your role and enter your credentials.</p>
                     </div>
 

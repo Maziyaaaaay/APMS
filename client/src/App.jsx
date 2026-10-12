@@ -31,7 +31,7 @@ function ProtectedRoute({ children, requiredRole }) {
 export default function App() {
   return (
     <BrowserRouter>
-      <Suspense fallback={<div role="status" className="page-content">Loading your workspace…</div>}><Routes>
+      <Suspense fallback={<div role="status" className="workspace-skeleton" aria-label="Loading workspace"><span className="skeleton-title" /><span /><span /><span /><p>Loading your workspace…</p></div>}><Routes>
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/student" element={

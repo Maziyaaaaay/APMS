@@ -203,8 +203,8 @@ function AccountApprovals({ users, onRefresh, currentUser }) {
                         <tbody>{pending.map(account => <tr key={account.id}>
                             <td><div className="td-bold">{account.name}</div><div className="td-muted">{account.email || account.username}</div></td>
                             <td>{account.role === 'faculty' ? 'Faculty' : 'Student'}</td>
-                            <td>{account.department || '—'}</td>
-                            <td>{account.account_status}<br />{account.created_at ? new Date(account.created_at).toLocaleDateString('en-IN') : '—'}</td>
+                            <td>{account.department || ' / '}</td>
+                            <td>{account.account_status}<br />{account.created_at ? new Date(account.created_at).toLocaleDateString('en-IN') : ' / '}</td>
                             <td><div style={{ display: 'flex', gap: 8 }}>
                                 <button className="btn btn-primary btn-sm" disabled={busyId === account.id} onClick={() => decide(account, 'approved')}>Approve</button>
                                 <button className="btn btn-danger btn-sm" disabled={busyId === account.id} onClick={() => decide(account, 'rejected')}>Reject</button>
@@ -262,28 +262,22 @@ function DashboardTab({ user, users, students, faculty, certs, onNavigate }) {
     const hour = new Date().getHours();
     const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
     return <div className="dashboard-composition">
-        <WorkspaceHeading eyebrow="YOUR CAMPUS, CONNECTED" title={`${greeting}, ${user?.name?.split(' ')[0] || 'Admin'}.`} description="A clear view of your campus. A focused space to move it forward." action={() => onNavigate('users')} actionLabel="Manage people" icon="person_add" />
-        <div className="metric-grid">
-            <MetricCard label="Students" value={students.length} detail="Approved student accounts" icon="school" tone="violet" onClick={() => onNavigate('users')} />
-            <MetricCard label="Faculty" value={faculty.length} detail="Approved faculty advisors" icon="supervisor_account" tone="blue" onClick={() => onNavigate('users')} />
-            <MetricCard label="Approved certificates" value={totalApproved} detail={`${certs.length} submissions in total`} icon="verified" tone="cyan" onClick={() => onNavigate('reviews')} />
-            <MetricCard label="Pending reviews" value={totalPending} detail="Certificates awaiting a decision" icon="schedule" tone="rose" onClick={() => onNavigate('reviews')} />
-        </div>
-        <div className="dashboard-bento">
-            <ActivityChart certificates={certs} />
-            <section className="attention-panel glass-panel"><div className="panel-heading"><div><span className="eyebrow">A LITTLE FOCUS GOES A LONG WAY</span><h3>Needs your attention</h3></div><span className="attention-dot" /></div>
-                <ActionTile title="Account requests" detail={accountRequests ? 'New people waiting to join' : 'No accounts waiting for approval'} count={accountRequests} icon="how_to_reg" tone="violet" onClick={() => onNavigate('approvals')} />
-                <ActionTile title="Certificate reviews" detail={totalPending ? 'Evidence ready for a decision' : 'The review queue is clear'} count={totalPending} icon="fact_check" tone="blue" onClick={() => onNavigate('reviews')} />
-                <div className="attention-footer"><span className="material-symbols-outlined">verified_user</span>Account access starts after approval.</div>
-            </section>
-        </div>
-        <div className="dashboard-bottom">
-            <section className="activity-feed glass-panel"><div className="panel-heading"><div><span className="eyebrow">EVERY ACHIEVEMENT HAS A STORY</span><h3>Recent activity</h3></div><div className="segmented-control" aria-label="Filter recent activity">{['all', 'pending', 'approved'].map(f => <button key={f} aria-pressed={activityFilter === f} onClick={() => setActivityFilter(f)}>{f === 'all' ? 'All' : f === 'pending' ? 'Pending' : 'Approved'}</button>)}</div></div>
-                {recent.length ? <div className="feed-list">{recent.map(c => <div className="feed-item" key={c.id}><div className={`feed-icon status-${c.status}`}><span className="material-symbols-outlined">{c.status === 'approved' ? 'verified' : c.status === 'rejected' ? 'close' : 'description'}</span></div><div className="feed-copy"><strong>{ACTIVITIES[c.activity_id || c.activityId]?.name || c.activityName || 'Activity submission'}</strong><span>{new Date(c.created_at || c.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} · {c.level_selected || c.selectedLevel || 'Certificate'}</span></div><span className={`badge badge-${c.status}`}>{c.status}</span></div>)}</div> : <div className="designed-empty"><div className="empty-orbit"><span className="material-symbols-outlined">history_edu</span><i /><i /></div><h4>{activityFilter === 'all' ? 'The story starts here.' : `No ${activityFilter} submissions.`}</h4><p>{activityFilter === 'all' ? 'Student achievements will appear here as they arrive. Start by welcoming your campus.' : 'Choose another filter to explore the activity feed.'}</p>{activityFilter === 'all' && <button className="btn btn-ghost" onClick={() => onNavigate('approvals')}>Open account requests <span className="material-symbols-outlined">arrow_forward</span></button>}</div>}
-            </section>
-            <section className="campus-progress glass-panel"><div className="panel-heading"><div><span className="eyebrow">LOOKING AHEAD</span><h3>Student progress</h3></div><span className="material-symbols-outlined">north_east</span></div><ProgressOrbit value={eligible} max={students.length} label="students at target" compact /><p>Provisional point estimates.<br />Handbook eligibility still needs verification.</p><button className="btn btn-ghost" onClick={() => onNavigate('points')}>Explore point catalog <span className="material-symbols-outlined">arrow_forward</span></button></section>
-        </div>
-        <div className="workspace-links"><ActionTile title="Campus structure" detail="Manage your departments" icon="account_tree" tone="blue" onClick={() => onNavigate('departments')} /><ActionTile title="Keep everyone in the loop" detail="Share guidelines and KTU circulars" icon="campaign" tone="violet" onClick={() => onNavigate('circulars')} /></div>
+        <WorkspaceHeading eyebrow="CAMPUS OFFICE" title="Keep campus moving." description={`${greeting}, ${user?.name?.split(' ')[0] || 'Admin'}. Start with the people and submissions waiting for you.`} />
+        <section className="work-queue" aria-labelledby="queue-title">
+            <div className="section-intro"><span className="section-number">01</span><h3 id="queue-title">Your next actions</h3><span>{accountRequests + totalPending} waiting</span></div>
+            <ActionTile title="Approve account requests" detail={accountRequests ? 'Student and faculty registrations ready to review.' : 'Nobody is waiting for access right now.'} count={accountRequests} onClick={() => onNavigate('approvals')} />
+            <ActionTile title="Review certificates" detail={totalPending ? 'Check evidence and give students a clear decision.' : 'All submitted certificates have been reviewed.'} count={totalPending} onClick={() => onNavigate('reviews')} />
+        </section>
+        <section className="campus-register"><div className="section-intro"><span className="section-number">02</span><h3>Campus at a glance</h3></div><div className="metric-grid">
+            <MetricCard label="Students" value={students.length} detail="Approved accounts" onClick={() => onNavigate('users')} />
+            <MetricCard label="Faculty" value={faculty.length} detail="Approved advisors" onClick={() => onNavigate('users')} />
+            <MetricCard label="Certificates approved" value={totalApproved} detail={`${certs.length} submitted overall`} onClick={() => onNavigate('reviews')} />
+        </div></section>
+        <section className="activity-feed"><div className="panel-heading"><h3>Latest submissions</h3><div className="segmented-control" aria-label="Filter recent activity">{['all', 'pending', 'approved'].map(f => <button key={f} aria-pressed={activityFilter === f} onClick={() => setActivityFilter(f)}>{f[0].toUpperCase() + f.slice(1)}</button>)}</div></div>
+            {recent.length ? <div className="feed-list">{recent.map(c => <div className="feed-item" key={c.id}><div className="feed-copy"><strong>{ACTIVITIES[c.activity_id || c.activityId]?.name || c.activityName || 'Activity submission'}</strong><span>{new Date(c.created_at || c.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span></div><span className={`badge badge-${c.status}`}>{c.status}</span></div>)}</div> : <div className="designed-empty"><h4>No {activityFilter === 'all' ? '' : activityFilter + ' '}submissions yet.</h4><p>{activityFilter === 'all' ? 'Once students upload certificates, their latest submissions will appear here.' : 'Try another status to see the rest of the submissions.'}</p></div>}
+        </section>
+        <details className="campus-insights"><summary>Explore activity and estimated progress</summary><ActivityChart certificates={certs} /><section className="campus-progress"><h3>Students at estimated target</h3><ProgressOrbit value={eligible} max={students.length} label="students at target" compact /><p>Provisional estimates. Handbook eligibility still needs verification.</p><button className="btn btn-outline" onClick={() => onNavigate('points')}>View point catalog</button></section></details>
+        <nav className="workspace-links" aria-label="Campus administration"><button onClick={() => onNavigate('users')}>Manage people</button><button onClick={() => onNavigate('departments')}>Departments</button><button onClick={() => onNavigate('circulars')}>University circulars</button></nav>
     </div>;
 }
 
@@ -395,7 +389,7 @@ function UsersTab({ students, faculty, certs, onRefresh, currentUser }) {
                             <div className="form-group">
                                 <label className="form-label">Department</label>
                                 <select className="input" value={newUser.department} onChange={e => setNewUser(p => ({ ...p, department: e.target.value }))}>
-                                    <option value="">— Select Department —</option>
+                                    <option value=""> /  Select Department  / </option>
                                     {departments.map(d => <option key={d.id || d.name || d} value={d.name || d}>{d.name || d}</option>)}
                                 </select>
                             </div>
@@ -481,8 +475,8 @@ function UsersTab({ students, faculty, certs, onRefresh, currentUser }) {
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="td-muted">{u.roll_no || u.rollNo || u.designation || '—'}</td>
-                                            <td className="td-muted">{u.department || '—'}</td>
+                                            <td className="td-muted">{u.roll_no || u.rollNo || u.designation || ' / '}</td>
+                                            <td className="td-muted">{u.department || ' / '}</td>
                                             <td className="td-muted">@{u.username}</td>
                                             {userType === 'student' && <td className="td-center td-bold" style={{ color: 'var(--accent)' }}>{summary?.total}</td>}
                                             {userType === 'student' && (

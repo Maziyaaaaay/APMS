@@ -1,39 +1,8 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useState } from 'react';
 
-export function AmbientBackdrop() {
-    const ref = useRef(null);
-    useEffect(() => {
-        if (!window.matchMedia('(pointer: fine) and (prefers-reduced-motion: no-preference)').matches) return;
-        let frame;
-        const move = event => {
-            cancelAnimationFrame(frame);
-            frame = requestAnimationFrame(() => {
-                ref.current?.style.setProperty('--pointer-x', `${event.clientX}px`);
-                ref.current?.style.setProperty('--pointer-y', `${event.clientY}px`);
-            });
-        };
-        window.addEventListener('pointermove', move, { passive: true });
-        return () => { window.removeEventListener('pointermove', move); cancelAnimationFrame(frame); };
-    }, []);
-    return <div className="ambient-backdrop" ref={ref} aria-hidden="true"><i className="ambient-wash wash-one" /><i className="ambient-wash wash-two" /><i className="ambient-wash wash-three" /><div className="ambient-pointer" /></div>;
-}
+export function AmbientBackdrop() { return null; }
 
-export function AnimatedValue({ value }) {
-    const [display, setDisplay] = useState(value);
-    useEffect(() => {
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-        let frame;
-        const start = performance.now();
-        const animate = now => {
-            const progress = Math.min((now - start) / 700, 1);
-            setDisplay(Math.round(value * (1 - (1 - progress) ** 3)));
-            if (progress < 1) frame = requestAnimationFrame(animate);
-        };
-        frame = requestAnimationFrame(animate);
-        return () => cancelAnimationFrame(frame);
-    }, [value]);
-    return <span aria-label={String(value)}>{display.toLocaleString('en-IN')}</span>;
-}
+export function AnimatedValue({ value }) { return <span>{value.toLocaleString('en-IN')}</span>; }
 
 export function WorkspaceHeading({ eyebrow, title, description, action, actionLabel, icon = 'arrow_forward' }) {
     return <div className="workspace-heading">
@@ -48,11 +17,10 @@ export function MetricCard({ label, value, detail, icon, tone = 'violet', onClic
 }
 
 export function ProgressOrbit({ value, max, label = 'points earned', compact = false }) {
-    const id = useId().replace(/:/g, '');
     const progress = Math.max(0, Math.min(value / Math.max(max, 1), 1));
-    return <div className={`progress-orbit ${compact ? 'compact' : ''}`} role="img" aria-label={`${value} of ${max} ${label}`}>
-        <svg viewBox="0 0 220 220" aria-hidden="true"><defs><linearGradient id={id} x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#8d79ff" /><stop offset="60%" stopColor="#679cff" /><stop offset="100%" stopColor="#6de0ec" /></linearGradient></defs><circle className="orbit-track" cx="110" cy="110" r="92" /><circle className="orbit-value" cx="110" cy="110" r="92" pathLength="100" stroke={`url(#${id})`} strokeDasharray={`${progress * 100} 100`} /></svg>
-        <div className="orbit-copy"><strong><AnimatedValue value={value} /></strong><span>of {max} {label}</span></div>
+    return <div className={`progress-orbit ${compact ? 'compact' : ''}`}>
+        <div className="orbit-copy"><strong>{value}</strong><span>of {max} {label}</span></div>
+        <progress value={progress} max="1" aria-label={`${value} of ${max} ${label}`} />
     </div>;
 }
 

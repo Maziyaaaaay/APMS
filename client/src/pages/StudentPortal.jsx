@@ -180,7 +180,7 @@ function DashboardTab({ user, certs, summary, req, onSubmit, onViewAll }) {
         <>
             <WorkspaceHeading eyebrow="MAKE ROOM FOR WHAT’S NEXT" title={`Your journey, ${user?.name?.split(' ')[0] || 'in motion'}.`} description="Every approved achievement brings your next milestone closer." action={onSubmit} actionLabel="Add an achievement" icon="add" />
             <section className="student-progress-panel glass-panel">
-                <div className="student-progress-copy"><span className="eyebrow">YOUR ACTIVITY POINTS</span><h3>A little progress.<br /><span className="gradient-text">Every single day.</span></h3><p>{Math.max(0, req.total - summary.total)} points left to your estimated target. Explore your group progress below to see where to focus next.</p><span className={`badge ${summary.eligible ? 'badge-approved' : 'badge-info'}`}>{summary.eligible ? 'Estimate meets target' : 'Your journey is in progress'}</span><small>Provisional 2024-scheme estimate · approved submissions only</small></div>
+                <div className="student-progress-copy"><span className="eyebrow">YOUR ACTIVITY POINTS</span><h3>Your points.<br /><span>What comes next?</span></h3><p>{Math.max(0, req.total - summary.total)} points left to your estimated target. Explore your group progress below to see where to focus next.</p><span className={`badge ${summary.eligible ? 'badge-approved' : 'badge-info'}`}>{summary.eligible ? 'Estimate meets target' : 'Your journey is in progress'}</span><small>Provisional 2024-scheme estimate · approved submissions only</small></div>
                 <ProgressOrbit value={summary.total} max={req.total} />
             </section>
             <div className="metric-grid student-metrics">
@@ -247,7 +247,7 @@ function DashboardTab({ user, certs, summary, req, onSubmit, onViewAll }) {
                                     return (
                                         <tr key={c.id}>
                                             <td className="td-bold">{act?.name || c.activityName}</td>
-                                            <td className="td-muted">Group {act?.group || '—'}</td>
+                                            <td className="td-muted">Group {act?.group || ' / '}</td>
                                             <td className="td-muted">{new Date(c.created_at || c.createdAt).toLocaleDateString('en-IN')}</td>
                                             <td className="td-center td-bold">{c.points_awarded ?? c.pointsAwarded}</td>
                                             <td><span className={`badge badge-${c.status}`}>{c.status}</span></td>
@@ -435,7 +435,7 @@ function SubmitTab({ user, onSuccess }) {
                                             onChange={e => setSelectedLevel(e.target.value)} required
                                             style={{ borderColor: !selectedLevel ? 'var(--danger)' : '' }}
                                         >
-                                            <option value="">— Select a level to continue —</option>
+                                            <option value=""> /  Select a level to continue  / </option>
                                             {activity.levels.map(l => (
                                                 <option key={l.label} value={l.label}>{l.label} ({l.points} pts)</option>
                                             ))}
@@ -652,14 +652,14 @@ function SubmissionsTab({ certs }) {
                                         return (
                                             <tr key={c.id}>
                                                 <td className="td-bold">{act?.name || c.activityName}<div className="td-muted" style={{fontSize:11,fontWeight:400}}>{c.event_name || 'Legacy submission'}</div></td>
-                                                <td className="td-muted">Group {act?.group || '—'}</td>
-                                                <td className="td-muted">{c.level_selected || c.selectedLevel || '—'}</td>
+                                                <td className="td-muted">Group {act?.group || ' / '}</td>
+                                                <td className="td-muted">{c.level_selected || c.selectedLevel || ' / '}</td>
                                                 <td className="td-muted">{new Date(c.created_at || c.createdAt).toLocaleDateString('en-IN')}</td>
                                                 <td className="td-center td-bold" style={{ color:'var(--accent)' }}>{c.points_awarded ?? c.pointsAwarded}</td>
                                                 <td><span className={`badge badge-${c.status}`}>{c.status}</span></td>
-                                                <td>{c.file_url ? <CertificateFileButton certificateId={c.id} /> : '—'}</td>
+                                                <td>{c.file_url ? <CertificateFileButton certificateId={c.id} /> : ' / '}</td>
                                                 <td className="td-muted" style={{ maxWidth:160, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                                                    {c.notes || c.facultyRemark || (c.status === 'pending' ? 'Under review' : c.status === 'approved' ? 'Verified' : '—')}
+                                                    {c.notes || c.facultyRemark || (c.status === 'pending' ? 'Under review' : c.status === 'approved' ? 'Verified' : ' / ')}
                                                 </td>
                                             </tr>
                                         );
@@ -846,7 +846,7 @@ function ProfileTab({ user, summary, req, onLogout, onGuidelines, onUpdateUser }
                                 <div className="form-group" style={{ marginBottom:0 }}>
                                     <label className="form-label">Year of Study</label>
                                     <select className="input" value={editYear} onChange={e => setEditYear(e.target.value)}>
-                                        <option value="">— Select Year —</option>
+                                        <option value=""> /  Select Year  / </option>
                                         <option value="1">First Year</option>
                                         <option value="2">Second Year</option>
                                         <option value="3">Third Year</option>
@@ -944,7 +944,7 @@ function GuidelinesModal({ onClose }) {
                         <span className="material-symbols-outlined" style={{ color:'var(--accent)' }}>menu_book</span>
                         <h2>KTU 2024 Activity Point Rules</h2>
                     </div>
-                    <p style={{ fontSize:12, color:'var(--text-muted)', marginTop:4 }}>APJ Abdul Kalam Technological University — Official Guidelines</p>
+                    <p style={{ fontSize:12, color:'var(--text-muted)', marginTop:4 }}>APJ Abdul Kalam Technological University  /  Official Guidelines</p>
                 </div>
                 <div className="modal-body">
                     {KTU_RULES.map((rule, i) => (

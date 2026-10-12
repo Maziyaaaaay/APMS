@@ -392,11 +392,11 @@ export function ReviewsTab({ pendingCerts, students, user, onRefresh }) {
                                                 )}
                                             </td>
                                             <td>
-                                                <div style={{ fontSize: 13, fontWeight: 600 }}>{student?.name || '—'}</div>
+                                                <div style={{ fontSize: 13, fontWeight: 600 }}>{student?.name || ' / '}</div>
                                                 <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{student?.roll_no || student?.rollNo} · {student?.department}</div>
                                             </td>
-                                            <td className="td-muted">Group {act?.group || '—'}</td>
-                                            <td className="td-muted">{cert.level_selected || cert.selectedLevel || '—'}</td>
+                                            <td className="td-muted">Group {act?.group || ' / '}</td>
+                                            <td className="td-muted">{cert.level_selected || cert.selectedLevel || ' / '}</td>
                                             <td className="td-muted">{new Date(cert.created_at || cert.createdAt).toLocaleDateString('en-IN')}</td>
                                             <td className="td-center td-bold">{cert.points_awarded ?? cert.pointsAwarded}</td>
                                             <td>
@@ -534,12 +534,12 @@ function ReviewModal({ cert, student, faculty, onClose, onRefresh }) {
                     <div style={{ display: 'grid', gap: 0, marginBottom: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
                         {[
                             ['Activity', activity?.name || cert.activityName || 'Unknown Activity'],
-                            ['Event', cert.event_name || '—'],
+                            ['Event', cert.event_name || ' / '],
                             ['Group', `Group ${activity?.group || '?'}`],
-                            ['Category', activity?.category || '—'],
+                            ['Category', activity?.category || ' / '],
                             ['Level', cert.level_selected || cert.selectedLevel || 'N/A'],
                             ['Activity date', cert.activity_date || cert.activityDate ? new Date(`${cert.activity_date || cert.activityDate}T00:00:00`).toLocaleDateString('en-IN') : 'N/A'],
-                            ['Description', cert.description || '—'],
+                            ['Description', cert.description || ' / '],
                         ].map(([label, val]) => (
                             <div key={label} style={{ display: 'flex', gap: 10, fontSize: 13, padding: '9px 14px', borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}>
                                 <span style={{ color: 'var(--text-muted)', width: 90, flexShrink: 0, fontSize: 12 }}>{label}</span>
@@ -732,7 +732,7 @@ function StudentsTab({ certs, students }) {
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                         <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{student.name}</div>
                                         <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                                            {student.roll_no || student.rollNo || '—'} · {student.department || '—'}
+                                            {student.roll_no || student.rollNo || ' / '} · {student.department || ' / '}
                                         </div>
                                     </div>
                                     {summary.eligible
