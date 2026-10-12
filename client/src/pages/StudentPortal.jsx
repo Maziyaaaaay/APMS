@@ -1,3 +1,4 @@
+import BrandLogo from '../components/BrandLogo';
 import { AmbientBackdrop, WorkspaceHeading, ProgressOrbit, MetricCard } from '../components/DashboardKit';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -84,12 +85,7 @@ export default function StudentPortal() {
 
             {/* ── Sidebar ── */}
             <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-                <div className="sidebar-brand">
-                    <div className="sidebar-brand-icon">
-                        <span className="material-symbols-outlined">school</span>
-                    </div>
-                    <div className="sidebar-brand-text">
-                        <h1>KTU APMS</h1>
+                <div className="sidebar-brand"><BrandLogo /><div className="sidebar-brand-text">
                         <p>Student Portal</p>
                     </div>
                 </div>
@@ -178,17 +174,17 @@ function DashboardTab({ user, certs, summary, req, onSubmit, onViewAll }) {
 
     return (
         <>
-            <WorkspaceHeading eyebrow="MAKE ROOM FOR WHAT’S NEXT" title={`Your journey, ${user?.name?.split(' ')[0] || 'in motion'}.`} description="Every approved achievement brings your next milestone closer." action={onSubmit} actionLabel="Add an achievement" icon="add" />
+            <WorkspaceHeading eyebrow="STUDENT WORKSPACE" title={`Hey ${user?.name?.split(' ')[0] || 'there'}. What’s next?`} description="Your points, certificates, and next steps." action={onSubmit} actionLabel="Upload certificate" icon="add" />
             <section className="student-progress-panel glass-panel">
-                <div className="student-progress-copy"><span className="eyebrow">YOUR ACTIVITY POINTS</span><h3>Your points.<br /><span>What comes next?</span></h3><p>{Math.max(0, req.total - summary.total)} points left to your estimated target. Explore your group progress below to see where to focus next.</p><span className={`badge ${summary.eligible ? 'badge-approved' : 'badge-info'}`}>{summary.eligible ? 'Estimate meets target' : 'Your journey is in progress'}</span><small>Provisional 2024-scheme estimate · approved submissions only</small></div>
+                <div className="student-progress-copy"><span className="eyebrow">YOUR ACTIVITY POINTS</span><h3>Your progress.</h3><p>{Math.max(0, req.total - summary.total)} points left to your estimated target.</p><span className={`badge ${summary.eligible ? 'badge-approved' : 'badge-info'}`}>{summary.eligible ? 'Estimate meets target' : 'Your journey is in progress'}</span><small>Provisional 2024-scheme estimate · approved submissions only</small></div>
                 <ProgressOrbit value={summary.total} max={req.total} />
             </section>
             <div className="metric-grid student-metrics">
-                <MetricCard label="Awaiting review" value={pending} detail="Faculty is reviewing your evidence" icon="schedule" tone="blue" onClick={onViewAll} />
-                <MetricCard label="Approved" value={approved} detail="Achievements counted in your progress" icon="verified" tone="violet" onClick={onViewAll} />
-                <MetricCard label="Needs attention" value={rejected} detail="Review the feedback on your submissions" icon="feedback" tone="rose" onClick={onViewAll} />
+                <MetricCard label="Awaiting review" value={pending} detail="With your faculty" icon="schedule" tone="blue" onClick={onViewAll} />
+                <MetricCard label="Approved" value={approved} detail="Points counted" icon="verified" tone="violet" onClick={onViewAll} />
+                <MetricCard label="Needs attention" value={rejected} detail="Read faculty feedback" icon="feedback" tone="rose" onClick={onViewAll} />
             </div>
-            <div className="section-title"><div><span className="eyebrow">THREE PATHS. ONE JOURNEY.</span><h3>Your group progress</h3></div><span className="section-hint">Each group has its own minimum</span></div>
+            <div className="section-title"><div><h3>Your group progress</h3></div><span className="section-hint">Each group has its own minimum</span></div>
             {/* Group Cards */}
             <div className="group-grid">
                 {GROUP_META.map(g => {

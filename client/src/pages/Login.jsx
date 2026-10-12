@@ -1,3 +1,5 @@
+import BrandLogo from '../components/BrandLogo';
+import InterfaceIcon from '../components/InterfaceIcon';
 import { AmbientBackdrop } from '../components/DashboardKit';
 import AchievementScene from '../components/AchievementScene';
 import React, { useState, useEffect } from 'react';
@@ -60,42 +62,13 @@ export default function Login() {
             <AmbientBackdrop />
             {/* ── Left branded panel (desktop only) ── */}
             <div className="login-brand-panel">
-                <div className="login-brand-logo">
-                    <div className="login-brand-logo-icon">
-                        <span className="material-symbols-outlined">account_balance</span>
-                    </div>
-                    <h1>KTU APMS</h1>
+                <div className="login-brand-logo"><BrandLogo />
                 </div>
 
                 <div className="brand-eyebrow">BEYOND THE CLASSROOM.</div>
                 <h2>Make it count.<br /><em>Keep the record.</em></h2>
-                <p>
-                    Every experience counts. Collect your achievements, follow your progress,
-                    and make your campus journey your own.
-                </p>
-
+                <p>Your achievements. All in one place.</p>
                 <AchievementScene />
-                <div className="login-features">
-                    <div className="login-feature-item">
-                        <div className="login-feature-dot">
-                            <span className="material-symbols-outlined">verified</span>
-                        </div>
-                        <span>Verified Certificate Submissions</span>
-                    </div>
-                    <div className="login-feature-item">
-                        <div className="login-feature-dot">
-                            <span className="material-symbols-outlined">analytics</span>
-                        </div>
-                        <span>Follow your point journey</span>
-                    </div>
-                    <div className="login-feature-item">
-                        <div className="login-feature-dot">
-                            <span className="material-symbols-outlined">security</span>
-                        </div>
-                        <span>Secure Institutional Access</span>
-                    </div>
-                </div>
-
                 <div className="login-brand-footer">KTU APMS · Your campus, connected.</div>
             </div>
 
@@ -117,16 +90,12 @@ export default function Login() {
                     </div>
 
                     {/* Mobile logo */}
-                    <div className="login-mobile-logo">
-                        <div className="login-mobile-logo-icon">
-                            <span className="material-symbols-outlined">account_balance</span>
-                        </div>
-                        <h1>KTU APMS</h1>
+                    <div className="login-mobile-logo"><BrandLogo />
                     </div>
 
                     <div className="login-heading">
-                        <div className="form-eyebrow">YOUR SPACE TO GROW</div><h2>Your campus.<br />Your record.</h2>
-                        <p>Please select your role and enter your credentials.</p>
+                        <h2>Welcome back.</h2>
+                        <p>Choose your role to sign in.</p>
                     </div>
 
                     {/* Role tabs */}
@@ -149,9 +118,7 @@ export default function Login() {
                         <div className="form-group">
                             <label className="form-label" htmlFor="username">Username / Email</label>
                             <div className="input-icon-wrap">
-                                <span className="input-icon">
-                                    <span className="material-symbols-outlined">mail</span>
-                                </span>
+
                                 <input
                                     className="input"
                                     id="username"
@@ -169,9 +136,7 @@ export default function Login() {
                         <div className="form-group">
                             <label className="form-label" htmlFor="password">Password</label>
                             <div className="input-icon-wrap input-action-wrap" style={{ position:'relative' }}>
-                                <span className="input-icon">
-                                    <span className="material-symbols-outlined">lock</span>
-                                </span>
+
                                 <input
                                     className="input"
                                     id="password"
@@ -181,17 +146,16 @@ export default function Login() {
                                     onChange={e => setPassword(e.target.value)}
                                     required
                                     autoComplete="current-password"
-                                    style={{ paddingLeft: 42, paddingRight: 44 }}
+                                    style={{ paddingLeft: 16, paddingRight: 52 }}
                                 />
                                 <button
                                     type="button"
                                     className="input-action-btn"
                                     onClick={() => setShowPw(v => !v)}
-                                    tabIndex={-1}
+                                    aria-label={showPw ? "Hide password" : "Show password"}
+                                    aria-pressed={showPw}
                                 >
-                                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
-                                        {showPw ? 'visibility_off' : 'visibility'}
-                                    </span>
+                                    <InterfaceIcon name={showPw ? 'visibility_off' : 'visibility'} />
                                 </button>
                             </div>
                         </div>
@@ -210,7 +174,7 @@ export default function Login() {
                         {/* Registration success banner */}
                         {justRegistered && !error && (
                             <div className="alert alert-success" style={{ marginBottom: 16 }}>
-                                <span className="material-symbols-outlined" style={{ fontSize:18, flexShrink:0 }}>check_circle</span>
+                                <InterfaceIcon name="check_circle" />
                                 Account created successfully! Please log in with your credentials.
                             </div>
                         )}
@@ -218,7 +182,7 @@ export default function Login() {
                         {/* Error */}
                         {error && (
                             <div className="alert alert-error" style={{ marginBottom: 16 }}>
-                                <span className="material-symbols-outlined" style={{ fontSize:18, flexShrink:0 }}>error_outline</span>
+                                <InterfaceIcon name="error_outline" />
                                 {error}
                             </div>
                         )}
@@ -231,13 +195,13 @@ export default function Login() {
                         >
                             {loading ? (
                                 <>
-                                    <span className="material-symbols-outlined" style={{ fontSize:18, animation:'spin 1s linear infinite' }}>progress_activity</span>
+                                    <InterfaceIcon name="progress_activity" />
                                     Signing in...
                                 </>
                             ) : (
                                 <>
                                     Login to Dashboard
-                                    <span className="material-symbols-outlined" style={{ fontSize:18 }}>arrow_forward</span>
+                                    <InterfaceIcon name="arrow_forward" />
                                 </>
                             )}
                         </button>
@@ -256,11 +220,11 @@ export default function Login() {
                         <p>Support Resources</p>
                         <div className="login-support-links">
                             <button onClick={() => setShowHelp(true)} className="btn-ghost" style={{ border:'none', background:'none', padding:0, cursor:'pointer', display:'flex', alignItems:'center', gap:6, color:'var(--text-muted)' }}>
-                                <span className="material-symbols-outlined">help_outline</span>
+                                <InterfaceIcon name="help_outline" />
                                 Help Center
                             </button>
                             <button onClick={() => setShowGuide(true)} className="btn-ghost" style={{ border:'none', background:'none', padding:0, cursor:'pointer', display:'flex', alignItems:'center', gap:6, color:'var(--text-muted)' }}>
-                                <span className="material-symbols-outlined">menu_book</span>
+                                <InterfaceIcon name="menu_book" />
                                 User Guide
                             </button>
                         </div>
@@ -274,11 +238,11 @@ export default function Login() {
                     <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 500 }}>
                         <div className="modal-header">
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                <span className="material-symbols-outlined" style={{ color: 'var(--accent)', fontSize: 24 }}>support_agent</span>
+                                <InterfaceIcon name="support_agent" />
                                 <h2>Help Center</h2>
                             </div>
                             <button className="btn-icon" onClick={() => setShowHelp(false)}>
-                                <span className="material-symbols-outlined">close</span>
+                                <InterfaceIcon name="close" />
                             </button>
                         </div>
                         <div className="modal-body" style={{ lineHeight: '1.6' }}>
@@ -306,11 +270,11 @@ export default function Login() {
                     <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 500 }}>
                         <div className="modal-header">
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                <span className="material-symbols-outlined" style={{ color: 'var(--primary)', fontSize: 24 }}>menu_book</span>
+                                <InterfaceIcon name="menu_book" />
                                 <h2>System User Guide</h2>
                             </div>
                             <button className="btn-icon" onClick={() => setShowGuide(false)}>
-                                <span className="material-symbols-outlined">close</span>
+                                <InterfaceIcon name="close" />
                             </button>
                         </div>
                         <div className="modal-body" style={{ lineHeight: '1.6' }}>

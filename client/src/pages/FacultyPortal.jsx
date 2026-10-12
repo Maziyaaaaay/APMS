@@ -1,3 +1,4 @@
+import BrandLogo from '../components/BrandLogo';
 import { AmbientBackdrop, WorkspaceHeading, MetricCard } from '../components/DashboardKit';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -93,12 +94,7 @@ export default function FacultyPortal() {
 
             {/* Sidebar */}
             <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-                <div className="sidebar-brand">
-                    <div className="sidebar-brand-icon">
-                        <span className="material-symbols-outlined">school</span>
-                    </div>
-                    <div className="sidebar-brand-text">
-                        <h1>KTU APMS</h1>
+                <div className="sidebar-brand"><BrandLogo /><div className="sidebar-brand-text">
                         <p>Faculty Portal</p>
                     </div>
                 </div>
@@ -221,12 +217,12 @@ function DashboardTab({ user, certs, students, pendingCerts, circulars, onGoRevi
 
     return (
         <>
-            <WorkspaceHeading eyebrow="GUIDE THE NEXT GENERATION" title={`Welcome back, ${user?.name?.split(' ')[0] || 'Advisor'}.`} description={`${user?.department || 'Your department'} · A focused view of achievements ready for your review.`} action={onGoReviews} actionLabel="Open review queue" icon="fact_check" />
-            <section className="faculty-focus-panel"><div><span className="eyebrow">YOUR NEXT FOCUS</span><h3>{pendingCerts.length ? `${pendingCerts.length} achievements. One thoughtful review at a time.` : 'A clear queue. Room for what’s next.'}</h3><p>{pendingCerts.length ? 'Review student evidence, give clear feedback, and keep their progress moving.' : 'New submissions from your department will appear here when they arrive.'}</p><button className="btn btn-primary" onClick={onGoReviews}>Review submissions <span className="material-symbols-outlined">arrow_forward</span></button></div><div className="faculty-focus-art" aria-hidden="true"><span className="material-symbols-outlined">verified</span><i /><i /></div></section>
+            <WorkspaceHeading eyebrow="FACULTY WORKSPACE" title={`Welcome back, ${user?.name?.split(' ')[0] || 'Advisor'}.`} description={`${user?.department || 'Your department'}`}  />
+            <section className="faculty-focus-panel"><div><h3>{pendingCerts.length ? `${pendingCerts.length} submissions to review` : 'You’re up to date.'}</h3><p>{pendingCerts.length ? 'Check certificates and share feedback.' : 'New submissions will appear here.'}</p><button className="btn btn-primary" onClick={onGoReviews}>Review submissions <span className="material-symbols-outlined">arrow_forward</span></button></div><div className="faculty-focus-art" aria-hidden="true"><span className="material-symbols-outlined">verified</span><i /><i /></div></section>
             <div className="metric-grid student-metrics">
-                <MetricCard label="Pending reviews" value={pendingCerts.length} detail="Certificates awaiting a decision" icon="schedule" tone="rose" onClick={onGoReviews} />
+                <MetricCard label="Pending reviews" value={pendingCerts.length} detail="Awaiting your decision" icon="schedule" tone="rose" onClick={onGoReviews} />
                 <MetricCard label="Reviewed & approved" value={approvedThisMonth} detail="Approved this calendar month" icon="verified" tone="violet" />
-                <MetricCard label="Department students" value={students.length} detail="Students in your faculty workspace" icon="groups" tone="blue" />
+                <MetricCard label="Department students" value={students.length} detail="In your department" icon="groups" tone="blue" />
             </div>
             <div className="faculty-dashboard-grid">
                 {/* Pending Table */}

@@ -1,3 +1,5 @@
+import BrandLogo from '../components/BrandLogo';
+import InterfaceIcon from '../components/InterfaceIcon';
 import { AmbientBackdrop, WorkspaceHeading, MetricCard, ActivityChart, ActionTile, ProgressOrbit } from '../components/DashboardKit';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -76,12 +78,7 @@ export default function AdminPortal() {
 
             {/* Sidebar */}
             <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-                <div className="sidebar-brand">
-                    <div className="sidebar-brand-icon">
-                        <span className="material-symbols-outlined">admin_panel_settings</span>
-                    </div>
-                    <div className="sidebar-brand-text">
-                        <h1>KTU APMS</h1>
+                <div className="sidebar-brand"><BrandLogo /><div className="sidebar-brand-text">
                         <p>Admin Panel</p>
                     </div>
                 </div>
@@ -139,6 +136,7 @@ export default function AdminPortal() {
                 </header>
 
                 <div className="page-content" key={tab}>
+                    {tab !== 'dashboard' && <WorkspaceHeading title={PAGE_TITLES[tab]} description={{users: 'Find students and faculty, manage their accounts, and keep campus access organised.', reviews: 'Check submitted evidence and give each student a clear decision.', approvals: 'Review registrations before students and faculty enter the platform.', departments: 'Keep your campus departments organised.', circulars: 'Publish university updates and guidance for your campus.', points: 'Explore activity categories and provisional point rules.', profile: 'Manage your details and account.'}[tab]} />}
                     {loadError && <div role="alert" className="alert alert-danger">{loadError} <button onClick={refresh}>Try again</button></div>}
                     {tab === 'dashboard'   && <DashboardTab user={user} users={users} students={students} faculty={faculty} certs={certs} onNavigate={setTab} />}
                     {tab === 'users'       && <UsersTab students={students} faculty={faculty} certs={certs} onRefresh={refresh} currentUser={user} />}
@@ -262,13 +260,13 @@ function DashboardTab({ user, users, students, faculty, certs, onNavigate }) {
     const hour = new Date().getHours();
     const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
     return <div className="dashboard-composition">
-        <WorkspaceHeading eyebrow="CAMPUS OFFICE" title="Keep campus moving." description={`${greeting}, ${user?.name?.split(' ')[0] || 'Admin'}. Start with the people and submissions waiting for you.`} />
+        <div className="campus-hero"><WorkspaceHeading eyebrow="YOUR CAMPUS" title="Keep campus moving." description={`${greeting}, ${user?.name?.split(' ')[0] || 'Admin'}.`} /><div className="campus-hero-art" aria-hidden="true"><InterfaceIcon name="school" style={{width:72,height:72}} /></div></div>
         <section className="work-queue" aria-labelledby="queue-title">
-            <div className="section-intro"><span className="section-number">01</span><h3 id="queue-title">Your next actions</h3><span>{accountRequests + totalPending} waiting</span></div>
-            <ActionTile title="Approve account requests" detail={accountRequests ? 'Student and faculty registrations ready to review.' : 'Nobody is waiting for access right now.'} count={accountRequests} onClick={() => onNavigate('approvals')} />
-            <ActionTile title="Review certificates" detail={totalPending ? 'Check evidence and give students a clear decision.' : 'All submitted certificates have been reviewed.'} count={totalPending} onClick={() => onNavigate('reviews')} />
+            <div className="section-intro"><h3 id="queue-title">Your next actions</h3><span>{accountRequests + totalPending} waiting</span></div>
+            <ActionTile title="Approve account requests" detail={accountRequests ? 'Waiting for access' : 'All caught up'} count={accountRequests} onClick={() => onNavigate('approvals')} />
+            <ActionTile title="Review certificates" detail={totalPending ? 'Ready for a decision' : 'All caught up'} count={totalPending} onClick={() => onNavigate('reviews')} />
         </section>
-        <section className="campus-register"><div className="section-intro"><span className="section-number">02</span><h3>Campus at a glance</h3></div><div className="metric-grid">
+        <section className="campus-register"><div className="section-intro"><h3>Campus at a glance</h3></div><div className="metric-grid">
             <MetricCard label="Students" value={students.length} detail="Approved accounts" onClick={() => onNavigate('users')} />
             <MetricCard label="Faculty" value={faculty.length} detail="Approved advisors" onClick={() => onNavigate('users')} />
             <MetricCard label="Certificates approved" value={totalApproved} detail={`${certs.length} submitted overall`} onClick={() => onNavigate('reviews')} />

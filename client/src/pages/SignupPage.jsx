@@ -1,3 +1,4 @@
+import BrandLogo from '../components/BrandLogo';
 import { AmbientBackdrop } from '../components/DashboardKit';
 import AchievementScene from '../components/AchievementScene';
 import React, { useState, useEffect, useRef } from 'react';
@@ -95,18 +96,11 @@ export default function SignupPage() {
             <AmbientBackdrop />
       {/* ── Left branded panel (desktop only) ── */}
       <div className="login-brand-panel">
-        <div className="login-brand-logo">
-          <div className="login-brand-logo-icon">
-            <span className="material-symbols-outlined">account_balance</span>
-          </div>
-          <h1>KTU APMS</h1>
+        <div className="login-brand-logo"><BrandLogo />
         </div>
 
         <div className="brand-eyebrow">YOUR NEXT CHAPTER.</div><h2>A world to explore.<br /><em>A journey to own.</em></h2>
-        <p>
-          Join the KTU Activity Point Management System to track your achievements,
-          manage certificates, and stay on top of your academic goals.
-        </p>
+        <p>Your achievements. All in one place.</p>
 
         <AchievementScene />
         <div className="login-features">
@@ -151,11 +145,7 @@ export default function SignupPage() {
           </div>
 
           {/* Mobile logo */}
-          <div className="login-mobile-logo">
-            <div className="login-mobile-logo-icon">
-              <span className="material-symbols-outlined">account_balance</span>
-            </div>
-            <h1>KTU APMS</h1>
+          <div className="login-mobile-logo"><BrandLogo />
           </div>
 
           <div className="login-heading">
