@@ -4,6 +4,8 @@ import jwt from 'jsonwebtoken';
 import supabase from '../db/supabase.js';
 
 const router = createRouter();
+const validEmail = value => typeof value === 'string' && value.trim().length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+const validPhone = value => typeof value === 'string' && /^\+?[0-9][0-9\s().-]{7,19}$/.test(value.trim());
 
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
@@ -51,7 +53,7 @@ router.post('/login', async (req, res) => {
   }
   if (user.account_status && user.account_status !== 'approved') {
     const message = user.account_status === 'pending'
-      ? 'Your account is waiting for administrator approval.'
+      ? (user.role === 'student' ? 'Your account is waiting for your department faculty advisor to approve it.' : 'Your account is waiting for administrator approval.')
       : 'This account is not currently approved for access. Contact an administrator.';
     return res.status(403).json({ error: message, accountStatus: user.account_status });
   }
@@ -65,6 +67,7 @@ router.post('/login', async (req, res) => {
     username:      user.username,
     name:          user.name,
     email:         user.email,
+    phone:         user.phone,
     rollNo:        user.roll_no,
     department:    user.department,
     class:         user.class,
@@ -81,10 +84,12 @@ router.post('/login', async (req, res) => {
 });
 
 router.post('/signup', async (req, res) => {
-  const { role, username, password, name, email, rollNo, department, studentType, designation, year, profileUrl } = req.body;
+  const { role, password, name, email, phone, rollNo, department, studentType, designation, year, profileUrl } = req.body;
+  const registrationNo = role === 'student' ? String(rollNo || '').trim().toUpperCase() : '';
+  const username = role === 'student' ? registrationNo : (typeof req.body.username === 'string' ? req.body.username.trim().toLowerCase() : '');
 
-  if (!username || !password || !name || !role) {
-    return res.status(400).json({ error: 'username, password, name, and role are required' });
+  if (!username || !password || !name || !role || !email || !phone) {
+    return res.status(400).json({ error: 'Name, email, phone number, and password are required.' });
   }
   if (role === 'admin') {
     return res.status(403).json({ error: 'Admin accounts cannot be self-registered. Contact the system administrator.' });
@@ -95,11 +100,13 @@ router.post('/signup', async (req, res) => {
   if (!department) {
     return res.status(400).json({ error: 'A department is required for student and faculty accounts.' });
   }
+  if (!validEmail(email)) return res.status(400).json({ error: 'Enter a valid email address.' });
+  if (!validPhone(phone)) return res.status(400).json({ error: 'Enter a valid phone number, including the country code if needed.' });
   if (typeof password !== 'string' || password.length < 12 || Buffer.byteLength(password) > 72) {
     return res.status(400).json({ error: 'Password must have at least 12 characters and at most 72 UTF-8 bytes.' });
   }
 
-  if (typeof username !== 'string' || !/^[a-z0-9][a-z0-9._-]{2,63}$/i.test(username.trim())) return res.status(400).json({ error: 'Use 3–64 letters, numbers, dots, underscores, or hyphens for your username.' });
+  if (typeof username !== 'string' || !/^[a-z0-9][a-z0-9._-]{2,63}$/i.test(username.trim())) return res.status(400).json({ error: role === 'student' ? 'Enter a valid KTU registration number.' : 'Use 3–64 letters, numbers, dots, underscores, or hyphens for your username.' });
   if (typeof name !== 'string' || !name.trim() || name.trim().length > 150) return res.status(400).json({ error: 'Enter your full name (up to 150 characters).' });
   const password_hash = await bcrypt.hash(password, 12);
 
@@ -109,9 +116,9 @@ router.post('/signup', async (req, res) => {
   if (!departmentRow) return res.status(400).json({ error: 'Choose a valid department.' });
 
   const insertData = {
-    role, account_status: 'pending', username, password_hash, name, email: email || null,
+    role, account_status: 'pending', username, password_hash, name: name.trim(), email: email.trim().toLowerCase(), phone: phone.trim(),
     profile_url:  profileUrl || null,
-    roll_no:      role === 'student' ? (rollNo || null) : null,
+    roll_no:      role === 'student' ? registrationNo : null,
     department:   department || null,
     department_id: departmentRow.id,
     year:         role === 'student' ? (year ? parseInt(year) : null) : null,
@@ -122,12 +129,12 @@ router.post('/signup', async (req, res) => {
   const { data, error } = await supabase
     .from('users')
     .insert(insertData)
-    .select('id, role, account_status, username, name, email, roll_no, department, student_type, designation')
+    .select('id, role, account_status, username, name, email, phone, roll_no, department, student_type, designation')
     .single();
 
   if (error) {
     if (error.message.includes('unique') || error.code === '23505') {
-      return res.status(409).json({ error: 'Username already taken. Please choose another.' });
+      return res.status(409).json({ error: role === 'student' ? 'That KTU registration number is already registered.' : 'Username already taken. Please choose another.' });
     }
     return res.status(400).json({ error: error.message });
   }

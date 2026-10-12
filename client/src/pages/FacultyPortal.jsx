@@ -3,7 +3,7 @@ import { AmbientBackdrop, WorkspaceHeading, MetricCard } from '../components/Das
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, logout } from '../utils/auth';
-import { getCertificates, getUsers, updateCertificate, updateUser, getCirculars, getCertificateFileUrl } from '../utils/storage';
+import { getCertificates, getUsers, getAccountRequests, reviewAccount, updateCertificate, updateUser, getCirculars, getCertificateFileUrl } from '../utils/storage';
 import { compressImage } from '../utils/imageCompressor';
 import { ACTIVITIES, calculateStudentSummary } from '../utils/points';
 import { generateApprovalPDF } from '../utils/pdfGenerator';
@@ -11,6 +11,7 @@ import { generateApprovalPDF } from '../utils/pdfGenerator';
 const NAV_ITEMS = [
     { key: 'dashboard',  icon: 'dashboard',      label: 'Dashboard'       },
     { key: 'reviews',    icon: 'fact_check',      label: 'Pending Reviews' },
+    { key: 'approvals',  icon: 'how_to_reg',      label: 'Student Requests' },
     { key: 'students',   icon: 'groups',          label: 'My Students'     },
     { key: 'profile',    icon: 'person',          label: 'Profile'         },
 ];
@@ -41,6 +42,7 @@ export default function FacultyPortal() {
     const [tab, setTab] = useState('dashboard');
     const [certs, setCerts] = useState([]);
     const [students, setStudents] = useState([]);
+    const [accountRequests, setAccountRequests] = useState([]);
     const [circulars, setCirculars] = useState([]);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'));
@@ -48,14 +50,15 @@ export default function FacultyPortal() {
     const [loadError, setLoadError] = useState('');
     const refreshData = useCallback(async () => {
         try {
-            const [certsData, usersData, circsData] = await Promise.all([
+            const [certsData, usersData, circsData, requestsData] = await Promise.all([
                 getCertificates(),
                 getUsers(),
                 getCirculars(),
+                getAccountRequests(),
             ]);
             setCerts(certsData);
             setStudents(usersData.filter(u => u.role === 'student'));
-            setCirculars(circsData); setLoadError('');
+            setCirculars(circsData); setAccountRequests(requestsData); setLoadError('');
         } catch (err) {
             setLoadError(err.message);
         }
@@ -79,6 +82,7 @@ export default function FacultyPortal() {
     const PAGE_TITLES = {
         dashboard: 'Dashboard',
         reviews:   'Pending Reviews',
+        approvals: 'Student Requests',
         students:  'My Students',
         profile:   'Profile',
     };
@@ -161,9 +165,11 @@ export default function FacultyPortal() {
                             certs={certs}
                             students={students}
                             pendingCerts={pendingCerts}
+                            pendingAccounts={accountRequests}
                             circulars={circulars}
                             onRefresh={refreshData}
                             onGoReviews={() => setTab('reviews')}
+                            onGoApprovals={() => setTab('approvals')}
                         />
                     )}
                     {tab === 'reviews' && (
@@ -174,6 +180,7 @@ export default function FacultyPortal() {
                             onRefresh={refreshData}
                         />
                     )}
+                    {tab === 'approvals' && <StudentApprovalsTab requests={accountRequests} onRefresh={refreshData} />}
                     {tab === 'students' && (
                         <StudentsTab certs={certs} students={students} />
                     )}
@@ -186,10 +193,44 @@ export default function FacultyPortal() {
     );
 }
 
+function StudentApprovalsTab({ requests, onRefresh }) {
+    const [busyId, setBusyId] = useState(null);
+    const decide = async (account, status) => {
+        const note = status === 'rejected' ? window.prompt('Add a short reason for rejecting this student request:') : '';
+        if (status === 'rejected' && note === null) return;
+        if (status === 'rejected' && !note.trim()) { window.alert('Please add a reason so the student knows what to correct.'); return; }
+        setBusyId(account.id);
+        try { await reviewAccount(account.id, status, note || ''); await onRefresh(); }
+        catch (error) { window.alert(error.message); }
+        finally { setBusyId(null); }
+    };
+
+    return <section className="card">
+        <div className="card-header"><h3>Student registrations</h3><span className="badge badge-pending">{requests.length} waiting</span></div>
+        <div className="card-body">
+            <p className="td-muted" style={{ marginTop: 0 }}>Approve students from your department before they can sign in and submit activity records.</p>
+            {requests.length === 0 ? <div className="empty-state"><span className="material-symbols-outlined">task_alt</span><p>No student registrations are waiting.</p></div> :
+                <div className="table-overflow"><table className="data-table">
+                    <thead><tr><th>Student</th><th>KTU Registration No.</th><th>Contact</th><th>Year</th><th>Decision</th></tr></thead>
+                    <tbody>{requests.map(account => <tr key={account.id}>
+                        <td><div className="td-bold">{account.name}</div><div className="td-muted">{account.department}</div></td>
+                        <td>{account.roll_no || account.username}</td>
+                        <td><div>{account.email}</div><div className="td-muted">{account.phone}</div></td>
+                        <td>{account.year ? `Year ${account.year}` : 'Not provided'}</td>
+                        <td><div style={{ display: 'flex', gap: 8 }}>
+                            <button className="btn btn-primary btn-sm" disabled={busyId === account.id} onClick={() => decide(account, 'approved')}>Approve</button>
+                            <button className="btn btn-danger btn-sm" disabled={busyId === account.id} onClick={() => decide(account, 'rejected')}>Reject</button>
+                        </div></td>
+                    </tr>)}</tbody>
+                </table></div>}
+        </div>
+    </section>;
+}
+
 /* ═══════════════════════════════════════════════════
    DASHBOARD TAB
 ════════════════════════════════════════════════════ */
-function DashboardTab({ user, certs, students, pendingCerts, circulars, onGoReviews }) {
+function DashboardTab({ user, certs, students, pendingCerts, pendingAccounts, circulars, onGoReviews, onGoApprovals }) {
     const now = new Date();
     const thisMonth = now.getMonth();
     const thisYear = now.getFullYear();
@@ -218,9 +259,10 @@ function DashboardTab({ user, certs, students, pendingCerts, circulars, onGoRevi
     return (
         <>
             <WorkspaceHeading eyebrow="FACULTY WORKSPACE" title={`Welcome back, ${user?.name?.split(' ')[0] || 'Advisor'}.`} description={`${user?.department || 'Your department'}`}  />
-            <section className="faculty-focus-panel"><div><h3>{pendingCerts.length ? `${pendingCerts.length} submissions to review` : 'You’re up to date.'}</h3><p>{pendingCerts.length ? 'Check certificates and share feedback.' : 'New submissions will appear here.'}</p><button className="btn btn-primary" onClick={onGoReviews}>Review submissions <span className="material-symbols-outlined">arrow_forward</span></button></div><div className="faculty-focus-art" aria-hidden="true"><span className="material-symbols-outlined">verified</span><i /><i /></div></section>
+            <section className="faculty-focus-panel"><div><h3>{pendingCerts.length ? `${pendingCerts.length} submissions to review` : 'You’re up to date.'}</h3><p>{pendingCerts.length ? 'Check certificates and share feedback.' : 'New submissions will appear here.'}</p><button className="btn btn-primary" onClick={onGoReviews}>Review submissions <span className="material-symbols-outlined">arrow_forward</span></button>{pendingAccounts.length > 0 && <button className="btn btn-outline" style={{ marginLeft: 10 }} onClick={onGoApprovals}>Approve students ({pendingAccounts.length})</button>}</div><div className="faculty-focus-art" aria-hidden="true"><span className="material-symbols-outlined">verified</span><i /><i /></div></section>
             <div className="metric-grid student-metrics">
                 <MetricCard label="Pending reviews" value={pendingCerts.length} detail="Awaiting your decision" icon="schedule" tone="rose" onClick={onGoReviews} />
+                <MetricCard label="Student requests" value={pendingAccounts.length} detail="Waiting for your approval" icon="how_to_reg" tone="amber" onClick={onGoApprovals} />
                 <MetricCard label="Reviewed & approved" value={approvedThisMonth} detail="Approved this calendar month" icon="verified" tone="violet" />
                 <MetricCard label="Department students" value={students.length} detail="In your department" icon="groups" tone="blue" />
             </div>
@@ -774,6 +816,7 @@ function ProfileTab({ user, onLogout, onRefresh, onUpdateUser }) {
     const [editing, setEditing] = useState(false);
     const [name, setName] = useState(user?.name || '');
     const [email, setEmail] = useState(user?.email || '');
+    const [phone, setPhone] = useState(user?.phone || '');
     const [designation, setDesignation] = useState(user?.designation || '');
     const [saved, setSaved] = useState(false);
     const [uploading, setUploading] = useState(false);
@@ -783,7 +826,7 @@ function ProfileTab({ user, onLogout, onRefresh, onUpdateUser }) {
 
     const handleSave = async () => {
         try {
-            const updated = await updateUser({ ...user, name, email, designation });
+            const updated = await updateUser({ ...user, name, email, phone, designation });
             onUpdateUser(updated);
             setSaved(true);
             setEditing(false);
@@ -795,6 +838,7 @@ function ProfileTab({ user, onLogout, onRefresh, onUpdateUser }) {
     const startEditing = () => {
         setName(user?.name || '');
         setEmail(user?.email || '');
+        setPhone(user?.phone || '');
         setDesignation(user?.designation || '');
         setEditing(true);
     };
@@ -871,6 +915,7 @@ function ProfileTab({ user, onLogout, onRefresh, onUpdateUser }) {
                             {[
                                 ['Name', user?.name, 'person'],
                                 ['Email', user?.email, 'email'],
+                                ['Phone', user?.phone, 'call'],
                                 ['Designation', user?.designation, 'badge'],
                                 ['Department', user?.department, 'school'],
                                 ['Username', user?.username, 'alternate_email'],
@@ -890,6 +935,10 @@ function ProfileTab({ user, onLogout, onRefresh, onUpdateUser }) {
                             <div className="form-group" style={{ marginBottom: 0 }}>
                                 <label className="form-label">Email</label>
                                 <input className="input" type="email" value={email} onChange={e => setEmail(e.target.value)} />
+                            </div>
+                            <div className="form-group" style={{ marginBottom: 0 }}>
+                                <label className="form-label">Phone Number</label>
+                                <input className="input" type="tel" value={phone} onChange={e => setPhone(e.target.value)} />
                             </div>
                             <div className="form-group" style={{ marginBottom: 0 }}>
                                 <label className="form-label">Designation</label>

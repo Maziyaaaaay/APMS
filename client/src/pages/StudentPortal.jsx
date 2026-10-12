@@ -704,6 +704,7 @@ function ProfileTab({ user, summary, req, onLogout, onGuidelines, onUpdateUser }
     const [saved, setSaved] = useState(false);
     const [editName, setEditName] = useState(user?.name || '');
     const [editEmail, setEditEmail] = useState(user?.email || '');
+    const [editPhone, setEditPhone] = useState(user?.phone || '');
     const [editRollNo, setEditRollNo] = useState(user?.rollNo || '');
     const [editYear, setEditYear] = useState(user?.year || '');
     const fileInputRef = React.useRef();
@@ -736,6 +737,7 @@ function ProfileTab({ user, summary, req, onLogout, onGuidelines, onUpdateUser }
                 ...user,
                 name: editName,
                 email: editEmail,
+                phone: editPhone,
                 rollNo: editRollNo,
                 year: editYear ? parseInt(editYear) : null,
             });
@@ -749,6 +751,7 @@ function ProfileTab({ user, summary, req, onLogout, onGuidelines, onUpdateUser }
     const startEditing = () => {
         setEditName(user?.name || '');
         setEditEmail(user?.email || '');
+        setEditPhone(user?.phone || '');
         setEditRollNo(user?.rollNo || '');
         setEditYear(user?.year || '');
         setEditing(true);
@@ -813,6 +816,7 @@ function ProfileTab({ user, summary, req, onLogout, onGuidelines, onUpdateUser }
                             <div className="profile-info-grid">
                                 {[
                                     ['Email',       user?.email,      'email'],
+                                    ['Phone',       user?.phone,      'call'],
                                     ['Department',  user?.department,  'school'],
                                     ['Roll Number', user?.rollNo,      'badge'],
                                     ['Year',        user?.year ? `Year ${user.year}` : 'N/A', 'calendar_month'],
@@ -836,7 +840,11 @@ function ProfileTab({ user, summary, req, onLogout, onGuidelines, onUpdateUser }
                                     <input className="input" type="email" value={editEmail} onChange={e => setEditEmail(e.target.value)} />
                                 </div>
                                 <div className="form-group" style={{ marginBottom:0 }}>
-                                    <label className="form-label">Roll Number</label>
+                                    <label className="form-label">Phone Number</label>
+                                    <input className="input" type="tel" value={editPhone} onChange={e => setEditPhone(e.target.value)} />
+                                </div>
+                                <div className="form-group" style={{ marginBottom:0 }}>
+                                    <label className="form-label">KTU Registration Number</label>
                                     <input className="input" placeholder="e.g. KTU21CS001" value={editRollNo} onChange={e => setEditRollNo(e.target.value)} />
                                 </div>
                                 <div className="form-group" style={{ marginBottom:0 }}>

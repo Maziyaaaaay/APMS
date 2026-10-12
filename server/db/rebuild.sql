@@ -40,6 +40,7 @@ create table public.users (
   session_version integer not null default 1 check (session_version > 0),
   name text not null check (length(trim(name)) between 1 and 150),
   email text,
+  phone text,
   profile_url text,
   department_id uuid references public.departments(id) on delete restrict,
   department text, -- compatibility display value; a trigger derives this from department_id
@@ -242,11 +243,10 @@ begin
     if new.status not in ('approved', 'rejected') then raise exception 'Choose an approval or rejection decision.'; end if;
     select * into reviewer from public.users where id = new.reviewed_by;
     select * into student from public.users where id = new.student_id;
-    if reviewer.id is null or reviewer.account_status <> 'approved' or reviewer.role not in ('admin', 'faculty') then
-      raise exception 'An approved faculty member or admin must review the submission.';
+    if reviewer.id is null or reviewer.account_status <> 'approved' or reviewer.role <> 'faculty' then
+      raise exception 'An approved faculty advisor must review the submission.';
     end if;
-    if reviewer.role = 'faculty' and (student.account_status <> 'approved'
-      or reviewer.department_id is distinct from student.department_id) then
+    if student.account_status <> 'approved' or reviewer.department_id is distinct from student.department_id then
       raise exception 'Faculty may only review approved students in their department.';
     end if;
     if new.points_awarded <> old.points_awarded and length(trim(coalesce(new.notes, ''))) = 0 then

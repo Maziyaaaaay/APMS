@@ -13,6 +13,10 @@ export async function getUsers() {
   return api.get('/users');
 }
 
+export async function getAccountRequests() {
+  return api.get('/users/approval-requests');
+}
+
 export async function getUserById(id) {
   return api.get(`/users/${id}`);
 }

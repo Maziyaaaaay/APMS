@@ -11,7 +11,7 @@ router.use(authMiddleware);
 // GET /api/certificates
 // - student: own certificates only
 // - faculty: all from their department (joined via student)
-// - admin: all certificates
+// - administrators cannot access certificate records; faculty review them
 router.get('/', async (req, res) => {
   if (req.user.role === 'student') {
     const { data, error } = await supabase
@@ -44,13 +44,7 @@ router.get('/', async (req, res) => {
     return res.json(data);
   }
 
-  // admin — all
-  const { data, error } = await supabase
-    .from('certificates')
-    .select('*, student:student_id(id, name, email, roll_no, department, class, year, semester, student_type)')
-    .order('created_at', { ascending: false });
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+  return res.status(403).json({ error: 'Only faculty advisors can access certificate reviews.' });
 });
 
 // Issue a single-object upload capability; no service key is sent to the browser.
@@ -148,15 +142,15 @@ router.get('/:id/file-url', async (req, res) => {
   if (!cert || !cert.file_url) return res.status(404).json({ error: 'Certificate file not found.' });
   if (req.user.role === 'student' && cert.student_id !== req.user.id) return res.status(403).json({ error: 'Forbidden' });
   if (req.user.role === 'faculty' && (cert.student?.department_id !== req.user.departmentId || cert.student?.account_status !== 'approved')) return res.status(403).json({ error: 'You can only access files from approved students in your department.' });
-  if (!['student', 'faculty', 'admin'].includes(req.user.role)) return res.status(403).json({ error: 'Forbidden' });
+  if (!['student', 'faculty'].includes(req.user.role)) return res.status(403).json({ error: 'Only the student and their department faculty advisor can access this document.' });
   const { data: signed, error: signError } = await supabase.storage.from('apms-certificates')
     .createSignedUrl(cert.file_url, 60);
   if (signError) return res.status(500).json({ error: signError.message });
   res.json({ url: signed.signedUrl, mimeType: cert.file_mime_type, fileName: cert.file_name });
 });
 
-// PUT /api/certificates/:id — faculty/admin reviews
-router.put('/:id', requireRole('faculty', 'admin'), async (req, res) => {
+// PUT /api/certificates/:id — faculty advisors review certificates
+router.put('/:id', requireRole('faculty'), async (req, res) => {
   const { status, pointsAwarded, notes } = req.body;
   if (!['approved', 'rejected'].includes(status)) {
     return res.status(400).json({ error: 'status must be "approved" or "rejected"' });
@@ -208,9 +202,7 @@ router.delete('/:id', async (req, res) => {
   if (req.user.role === 'student') {
     if (cert.student_id !== req.user.id) return res.status(403).json({ error: 'Forbidden' });
     if (cert.status !== 'pending') return res.status(400).json({ error: 'Can only delete pending certificates' });
-  } else if (req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
+  } else return res.status(403).json({ error: 'Only students can remove their own pending submissions.' });
 
   if (cert.status !== 'pending') return res.status(409).json({ error: 'Reviewed evidence is retained for the audit trail.' });
   const { data: removed, error } = await supabase.from('certificates').delete().eq('id', req.params.id).eq('status', 'pending').select('id').maybeSingle();

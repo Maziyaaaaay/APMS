@@ -14,7 +14,7 @@ export default function SignupPage() {
   const [role, setRole] = useState('student');
   const [form, setForm] = useState({
     name: '', username: '', password: '', confirmPassword: '',
-    email: '', department: '', rollNo: '', studentType: 'regular', designation: '',
+    email: '', phone: '', department: '', rollNo: '', studentType: 'regular', designation: '',
     year: '', profileUrl: '',
   });
   const [error, setError] = useState('');
@@ -60,17 +60,19 @@ export default function SignupPage() {
     if (form.password.length < 12) {
       setError('Password must be at least 12 characters.'); return;
     }
-    if (!form.name.trim() || !form.username.trim()) {
-      setError('Name and username are required.'); return;
+    if (!form.name.trim() || !(role === 'student' ? form.rollNo.trim() : form.username.trim())) {
+      setError(role === 'student' ? 'Name and KTU registration number are required.' : 'Name and username are required.'); return;
     }
+    if (!form.email.trim() || !form.phone.trim()) { setError('Email and phone number are required.'); return; }
     setLoading(true);
     try {
       const result = await signup({
         role,
         name: form.name.trim(),
-        username: form.username.trim(),
+        username: role === 'student' ? form.rollNo.trim().toUpperCase() : form.username.trim(),
         password: form.password,
         email: form.email.trim() || undefined,
+        phone: form.phone.trim(),
         department: form.department || undefined,
         rollNo: role === 'student' ? form.rollNo.trim() : undefined,
         studentType: role === 'student' ? form.studentType : undefined,
@@ -174,7 +176,7 @@ export default function SignupPage() {
             <div style={{ padding: '32px 0', textAlign: 'center' }}>
               <span className="material-symbols-outlined" style={{ fontSize: 56, color: 'var(--success)', display: 'block', marginBottom: 12 }}>check_circle</span>
               <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>Request submitted</div>
-              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Your account is waiting for administrator approval. You can sign in after it is approved.</div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{role === 'student' ? 'Your department faculty advisor must approve your account before you can sign in.' : 'An administrator must approve your faculty account before you can sign in.'}</div>
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
@@ -192,14 +194,19 @@ export default function SignupPage() {
                   <input className="input" placeholder="e.g. Arjun Menon" value={form.name} onChange={set('name')} required />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Username *</label>
-                  <input className="input" placeholder="e.g. arjun2024" value={form.username} onChange={set('username')} required />
+                  <label className="form-label">{role === 'student' ? 'KTU Registration Number *' : 'Username *'}</label>
+                  <input className="input" placeholder={role === 'student' ? 'e.g. TVE23CS001' : 'e.g. arjun.menon'} value={role === 'student' ? form.rollNo : form.username} onChange={set(role === 'student' ? 'rollNo' : 'username')} required />
                 </div>
               </div>
 
               <div className="form-group">
-                <label className="form-label">Email</label>
-                <input className="input" type="email" placeholder="your@email.com" value={form.email} onChange={set('email')} />
+                <label className="form-label">Email *</label>
+                <input className="input" type="email" placeholder="you@example.com" value={form.email} onChange={set('email')} required />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Phone Number *</label>
+                <input className="input" type="tel" autoComplete="tel" placeholder="+91 98765 43210" value={form.phone} onChange={set('phone')} required />
               </div>
 
               <div className="form-group">
@@ -233,10 +240,6 @@ export default function SignupPage() {
                   </div>
 
                   <div className="form-row">
-                    <div className="form-group">
-                      <label className="form-label">Roll Number</label>
-                      <input className="input" placeholder="e.g. KTU21CS001" value={form.rollNo} onChange={set('rollNo')} />
-                    </div>
                     <div className="form-group">
                       <label className="form-label">Student Type</label>
                       <select className="input" value={form.studentType} onChange={set('studentType')}>

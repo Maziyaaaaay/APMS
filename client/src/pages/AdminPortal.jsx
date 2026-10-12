@@ -1,24 +1,22 @@
 import BrandLogo from '../components/BrandLogo';
 import InterfaceIcon from '../components/InterfaceIcon';
-import { AmbientBackdrop, WorkspaceHeading, MetricCard, ActivityChart, ActionTile, ProgressOrbit } from '../components/DashboardKit';
+import { AmbientBackdrop, WorkspaceHeading, MetricCard, ActionTile } from '../components/DashboardKit';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, logout } from '../utils/auth';
 import {
-    getUsers, getCertificates, addUser, deleteUser, updateUser, reviewAccount,
+    getUsers, addUser, deleteUser, updateUser, reviewAccount,
     getDepartmentsWithIds, addDepartment, removeDepartment,
     getCirculars, addCircular, deleteCircular,
     getPointOverrides, savePointOverride, deletePointOverride,
     promoteToAdmin, transferOwnership,
 } from '../utils/storage';
-import { ReviewsTab } from './FacultyPortal';
 import { compressImage } from '../utils/imageCompressor';
-import { ACTIVITIES, calculateStudentSummary } from '../utils/points';
+import { ACTIVITIES } from '../utils/points';
 
 const NAV_ITEMS = [
     { key: 'dashboard',    icon: 'dashboard',          label: 'Dashboard'     },
     { key: 'users',        icon: 'manage_accounts',    label: 'Manage Users'  },
-    { key: 'reviews', icon: 'fact_check', label: 'Submission Reviews' },
     { key: 'approvals',    icon: 'how_to_reg',         label: 'Account Requests' },
     { key: 'departments',  icon: 'account_balance',    label: 'Departments'   },
     { key: 'circulars',    icon: 'campaign',           label: 'Circulars'     },
@@ -31,15 +29,14 @@ export default function AdminPortal() {
     const [user, setUser] = useState(() => getCurrentUser());
     const [tab, setTab] = useState('dashboard');
     const [users, setUsers] = useState([]);
-    const [certs, setCerts] = useState([]);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'));
 
     const [loadError, setLoadError] = useState('');
     const refresh = useCallback(async () => {
         try {
-            const [usersData, certsData] = await Promise.all([getUsers(), getCertificates()]);
-            setUsers(usersData); setCerts(certsData); setLoadError('');
+            const usersData = await getUsers();
+            setUsers(usersData); setLoadError('');
         } catch (err) { setLoadError(err.message); }
     }, []);
     useEffect(() => {
@@ -63,7 +60,6 @@ export default function AdminPortal() {
         dashboard:   'Dashboard',
         users:       'Manage Users',
         approvals:   'Account Requests',
-        reviews: 'Submission Reviews',
         departments: 'Departments',
         circulars:   'Circulars & Announcements',
         points:      'Activity Point Grading',
@@ -136,11 +132,10 @@ export default function AdminPortal() {
                 </header>
 
                 <div className="page-content" key={tab}>
-                    {tab !== 'dashboard' && <WorkspaceHeading title={PAGE_TITLES[tab]} description={{users: 'Find students and faculty, manage their accounts, and keep campus access organised.', reviews: 'Check submitted evidence and give each student a clear decision.', approvals: 'Review registrations before students and faculty enter the platform.', departments: 'Keep your campus departments organised.', circulars: 'Publish university updates and guidance for your campus.', points: 'Explore activity categories and provisional point rules.', profile: 'Manage your details and account.'}[tab]} />}
+                    {tab !== 'dashboard' && <WorkspaceHeading title={PAGE_TITLES[tab]} description={{users: 'Add and remove students and faculty, and keep campus access organised.', approvals: 'Approve faculty registrations. Student registrations are reviewed by their department advisors.', departments: 'Keep your campus departments organised.', circulars: 'Publish university updates and guidance for your campus.', points: 'Explore activity categories and provisional point rules.', profile: 'Manage your details and account.'}[tab]} />}
                     {loadError && <div role="alert" className="alert alert-danger">{loadError} <button onClick={refresh}>Try again</button></div>}
-                    {tab === 'dashboard'   && <DashboardTab user={user} users={users} students={students} faculty={faculty} certs={certs} onNavigate={setTab} />}
-                    {tab === 'users'       && <UsersTab students={students} faculty={faculty} certs={certs} onRefresh={refresh} currentUser={user} />}
-                    {tab === 'reviews' && <ReviewsTab pendingCerts={certs.filter(c => c.status === 'pending')} students={users.filter(u => u.role === 'student')} user={user} onRefresh={refresh} />}
+                    {tab === 'dashboard'   && <DashboardTab user={user} users={users} students={students} faculty={faculty} onNavigate={setTab} />}
+                    {tab === 'users'       && <UsersTab students={students} faculty={faculty} onRefresh={refresh} currentUser={user} />}
                     {tab === 'approvals'   && <AccountApprovals users={users} onRefresh={refresh} currentUser={user} />}
                     {tab === 'departments' && <DepartmentsTab />}
                     {tab === 'circulars'   && <CircularsTab />}
@@ -157,7 +152,7 @@ function AccountApprovals({ users, onRefresh, currentUser }) {
     const [transferTarget, setTransferTarget] = useState(null);
     const [transferPassword, setTransferPassword] = useState('');
     const [transferError, setTransferError] = useState('');
-    const pending = users.filter(u => ['student', 'faculty'].includes(u.role) && ['pending', 'rejected', 'disabled'].includes(u.account_status));
+    const pending = users.filter(u => u.role === 'faculty' && u.account_status === 'pending');
     const decide = async (account, status) => {
         setBusyId(account.id);
         try {
@@ -192,15 +187,15 @@ function AccountApprovals({ users, onRefresh, currentUser }) {
     return (
         <>
         <section className="card">
-            <div className="card-header"><h3>Student and faculty access</h3><span className="badge badge-pending">{pending.length} waiting</span></div>
+            <div className="card-header"><h3>Faculty access requests</h3><span className="badge badge-pending">{pending.length} waiting</span></div>
             <div className="card-body">
-                <p className="td-muted" style={{ marginTop: 0 }}>New registrations stay locked until an administrator approves them.</p>
-                {pending.length === 0 ? <div className="empty-state"><span className="material-symbols-outlined">task_alt</span><p>No accounts are waiting for approval.</p></div> : (
+                <p className="td-muted" style={{ marginTop: 0 }}>Faculty accounts wait for admin approval. Student accounts are approved by a faculty advisor in their department.</p>
+                {pending.length === 0 ? <div className="empty-state"><span className="material-symbols-outlined">task_alt</span><p>No faculty registrations are waiting.</p></div> : (
                     <div className="table-overflow"><table className="data-table">
-                        <thead><tr><th>Name</th><th>Role</th><th>Department</th><th>Status / requested</th><th>Decision</th></tr></thead>
+                        <thead><tr><th>Faculty</th><th>Contact</th><th>Department</th><th>Requested</th><th>Decision</th></tr></thead>
                         <tbody>{pending.map(account => <tr key={account.id}>
-                            <td><div className="td-bold">{account.name}</div><div className="td-muted">{account.email || account.username}</div></td>
-                            <td>{account.role === 'faculty' ? 'Faculty' : 'Student'}</td>
+                            <td><div className="td-bold">{account.name}</div><div className="td-muted">@{account.username}</div></td>
+                            <td><div>{account.email}</div><div className="td-muted">{account.phone}</div></td>
                             <td>{account.department || ' / '}</td>
                             <td>{account.account_status}<br />{account.created_at ? new Date(account.created_at).toLocaleDateString('en-IN') : ' / '}</td>
                             <td><div style={{ display: 'flex', gap: 8 }}>
@@ -250,31 +245,21 @@ function AccountApprovals({ users, onRefresh, currentUser }) {
 /* ═══════════════════════════════════════════════════
    DASHBOARD TAB
 ════════════════════════════════════════════════════ */
-function DashboardTab({ user, users, students, faculty, certs, onNavigate }) {
-    const [activityFilter, setActivityFilter] = useState('all');
-    const totalApproved = certs.filter(c => c.status === 'approved').length;
-    const totalPending = certs.filter(c => c.status === 'pending').length;
-    const accountRequests = users.filter(u => u.account_status === 'pending').length;
-    const eligible = students.filter(s => calculateStudentSummary(certs.filter(c => (c.student_id || c.studentId) === s.id), s.student_type || s.studentType || 'regular').eligible).length;
-    const recent = [...certs].filter(c => activityFilter === 'all' || c.status === activityFilter).sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt)).slice(0, 6);
+function DashboardTab({ user, users, students, faculty, onNavigate }) {
+    const accountRequests = users.filter(u => u.role === 'faculty' && u.account_status === 'pending').length;
     const hour = new Date().getHours();
     const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
     return <div className="dashboard-composition">
         <div className="campus-hero"><WorkspaceHeading eyebrow="YOUR CAMPUS" title="Keep campus moving." description={`${greeting}, ${user?.name?.split(' ')[0] || 'Admin'}.`} /><div className="campus-hero-art" aria-hidden="true"><InterfaceIcon name="school" style={{width:72,height:72}} /></div></div>
         <section className="work-queue" aria-labelledby="queue-title">
-            <div className="section-intro"><h3 id="queue-title">Your next actions</h3><span>{accountRequests + totalPending} waiting</span></div>
-            <ActionTile title="Approve account requests" detail={accountRequests ? 'Waiting for access' : 'All caught up'} count={accountRequests} icon="person_check" tone="rose" onClick={() => onNavigate('approvals')} />
-            <ActionTile title="Review certificates" detail={totalPending ? 'Ready for a decision' : 'All caught up'} count={totalPending} icon="workspace_premium" tone="amber" onClick={() => onNavigate('reviews')} />
+            <div className="section-intro"><h3 id="queue-title">Your next actions</h3><span>{accountRequests} waiting</span></div>
+            <ActionTile title="Approve faculty" detail={accountRequests ? 'Waiting for access' : 'All caught up'} count={accountRequests} icon="person_check" tone="rose" onClick={() => onNavigate('approvals')} />
         </section>
         <section className="campus-register"><div className="section-intro"><h3>Campus at a glance</h3></div><div className="metric-grid">
             <MetricCard label="Students" value={students.length} detail="Approved accounts" icon="school" tone="rose" onClick={() => onNavigate('users')} />
             <MetricCard label="Faculty" value={faculty.length} detail="Approved advisors" icon="groups" tone="violet" onClick={() => onNavigate('users')} />
-            <MetricCard label="Certificates approved" value={totalApproved} detail={`${certs.length} submitted overall`} icon="workspace_premium" tone="amber" onClick={() => onNavigate('reviews')} />
+            <MetricCard label="Faculty requests" value={accountRequests} detail="Waiting for your approval" icon="how_to_reg" tone="amber" onClick={() => onNavigate('approvals')} />
         </div></section>
-        <section className="activity-feed"><div className="panel-heading"><h3>Latest submissions</h3><div className="segmented-control" aria-label="Filter recent activity">{['all', 'pending', 'approved'].map(f => <button key={f} aria-pressed={activityFilter === f} onClick={() => setActivityFilter(f)}>{f[0].toUpperCase() + f.slice(1)}</button>)}</div></div>
-            {recent.length ? <div className="feed-list">{recent.map(c => <div className="feed-item" key={c.id}><div className="feed-copy"><strong>{ACTIVITIES[c.activity_id || c.activityId]?.name || c.activityName || 'Activity submission'}</strong><span>{new Date(c.created_at || c.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span></div><span className={`badge badge-${c.status}`}>{c.status}</span></div>)}</div> : <div className="designed-empty"><h4>No {activityFilter === 'all' ? '' : activityFilter + ' '}submissions yet.</h4><p>{activityFilter === 'all' ? 'Once students upload certificates, their latest submissions will appear here.' : 'Try another status to see the rest of the submissions.'}</p></div>}
-        </section>
-        <details className="campus-insights"><summary>Explore activity and estimated progress</summary><ActivityChart certificates={certs} /><section className="campus-progress"><h3>Students at estimated target</h3><ProgressOrbit value={eligible} max={students.length} label="students at target" compact /><p>Provisional estimates. Handbook eligibility still needs verification.</p><button className="btn btn-outline" onClick={() => onNavigate('points')}>View point catalog</button></section></details>
         <nav className="workspace-links" aria-label="Campus administration"><button onClick={() => onNavigate('users')}>Manage people</button><button onClick={() => onNavigate('departments')}>Departments</button><button onClick={() => onNavigate('circulars')}>University circulars</button></nav>
     </div>;
 }
@@ -282,12 +267,12 @@ function DashboardTab({ user, users, students, faculty, certs, onNavigate }) {
 /* ═══════════════════════════════════════════════════
    MANAGE USERS TAB
 ════════════════════════════════════════════════════ */
-function UsersTab({ students, faculty, certs, onRefresh, currentUser }) {
+function UsersTab({ students, faculty, onRefresh, currentUser }) {
     const [userType, setUserType] = useState('student');
     const [search, setSearch] = useState('');
     const [showAdd, setShowAdd] = useState(false);
     const [newUser, setNewUser] = useState({
-        name: '', username: '', password: '', email: '',
+        name: '', username: '', password: '', email: '', phone: '',
         department: '', role: 'student', studentType: 'regular', rollNo: '', designation: '',
     });
 
@@ -302,10 +287,10 @@ function UsersTab({ students, faculty, certs, onRefresh, currentUser }) {
     );
 
     const handleAdd = async () => {
-        if (!newUser.name || !newUser.username || !newUser.password) return;
-        try { await addUser({ ...newUser }); } catch (err) { alert(err.message); return; }
+        if (!newUser.name || !(newUser.role === 'student' ? newUser.rollNo : newUser.username) || !newUser.password || !newUser.email || !newUser.phone) return;
+        try { await addUser({ ...newUser, username: newUser.role === 'student' ? newUser.rollNo : newUser.username }); } catch (err) { alert(err.message); return; }
         setShowAdd(false);
-        setNewUser({ name: '', username: '', password: '', email: '', department: '', role: newUser.role, studentType: 'regular', rollNo: '', designation: '' });
+        setNewUser({ name: '', username: '', password: '', email: '', phone: '', department: '', role: newUser.role, studentType: 'regular', rollNo: '', designation: '' });
         onRefresh();
     };
 
@@ -364,10 +349,10 @@ function UsersTab({ students, faculty, certs, onRefresh, currentUser }) {
                                 <label className="form-label">Full Name</label>
                                 <input className="input" value={newUser.name} onChange={e => setNewUser(p => ({ ...p, name: e.target.value }))} />
                             </div>
-                            <div className="form-group">
+                            {newUser.role !== 'student' && <div className="form-group">
                                 <label className="form-label">Username</label>
                                 <input className="input" value={newUser.username} onChange={e => setNewUser(p => ({ ...p, username: e.target.value }))} />
-                            </div>
+                            </div>}
                         </div>
                         <div className="form-row">
                             <div className="form-group">
@@ -379,8 +364,12 @@ function UsersTab({ students, faculty, certs, onRefresh, currentUser }) {
                                 </select>
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Email</label>
-                                <input className="input" type="email" value={newUser.email} onChange={e => setNewUser(p => ({ ...p, email: e.target.value }))} />
+                                <label className="form-label">Email *</label>
+                                <input className="input" type="email" required value={newUser.email} onChange={e => setNewUser(p => ({ ...p, email: e.target.value }))} />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Phone Number *</label>
+                                <input className="input" type="tel" required value={newUser.phone} onChange={e => setNewUser(p => ({ ...p, phone: e.target.value }))} />
                             </div>
                         </div>
                         <div className="form-row">
@@ -393,7 +382,7 @@ function UsersTab({ students, faculty, certs, onRefresh, currentUser }) {
                             </div>
                             {newUser.role === 'student' && (
                                 <div className="form-group">
-                                    <label className="form-label">Roll Number</label>
+                                    <label className="form-label">KTU Registration Number *</label>
                                     <input className="input" value={newUser.rollNo} onChange={e => setNewUser(p => ({ ...p, rollNo: e.target.value }))} />
                                 </div>
                             )}
@@ -448,15 +437,11 @@ function UsersTab({ students, faculty, certs, onRefresh, currentUser }) {
                                     <th>{userType === 'student' ? 'Roll No' : 'Designation'}</th>
                                     <th>Department</th>
                                     <th>Username</th>
-                                    {userType === 'student' && <th className="td-center">Points</th>}
-                                    {userType === 'student' && <th>Status</th>}
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filtered.map(u => {
-                                    const userCerts = certs.filter(c => (c.student_id || c.studentId) === u.id);
-                                    const summary = userType === 'student' ? calculateStudentSummary(userCerts, u.student_type || u.studentType || 'regular') : null;
                                     const initials = u.name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '??';
                                     return (
                                         <tr key={u.id}>
@@ -469,22 +454,13 @@ function UsersTab({ students, faculty, certs, onRefresh, currentUser }) {
                                                     </div>
                                                     <div>
                                                         <div className="td-bold">{u.name}</div>
-                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{u.email}</div>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{u.email} · {u.phone || 'No phone'}</div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="td-muted">{u.roll_no || u.rollNo || u.designation || ' / '}</td>
                                             <td className="td-muted">{u.department || ' / '}</td>
                                             <td className="td-muted">@{u.username}</td>
-                                            {userType === 'student' && <td className="td-center td-bold" style={{ color: 'var(--accent)' }}>{summary?.total}</td>}
-                                            {userType === 'student' && (
-                                                <td>
-                                                    {summary?.eligible
-                                                        ? <span className="badge badge-approved">Estimate meets target</span>
-                                                        : <span className="badge badge-pending">Estimated in progress</span>
-                                                    }
-                                                </td>
-                                            )}
                                             <td>
                                                 <div style={{ display: 'flex', gap: 6 }}>
                                                     {currentUser?.isSuperAdmin && (
