@@ -98,7 +98,7 @@ body{background:#fff}.sidebar{background:#fff;border-right:1px solid var(--borde
 .admin-portal .sidebar{width:246px;padding:0 20px;background:linear-gradient(170deg,#3f173d 0%,#581b4b 52%,#35172f 100%);border:0;color:#fff}
 .admin-portal .main-content{margin-left:246px;min-height:100vh;min-width:0}
 .admin-portal .sidebar-brand{padding:27px 2px 22px;border-bottom:1px solid #ffffff24;gap:14px}
-.admin-portal .sidebar-brand .apms-brand-image{width:118px;filter:none;mix-blend-mode:multiply;background:transparent}
+.admin-portal .sidebar-brand .apms-brand-image{width:112px;filter:none;mix-blend-mode:normal;background:#fff8f2;border-radius:7px}
 .admin-portal .sidebar-brand-text p{color:#f3dce9;font-size:10px;letter-spacing:.16em}
 .admin-portal .sidebar-nav{padding:27px 0;gap:7px}
 .admin-portal .nav-item{border:1px solid transparent;border-radius:14px;padding:13px 12px;color:#f0dce9;font:600 13px 'DM Sans',sans-serif;transition:background .2s,color .2s,transform .2s!important}
