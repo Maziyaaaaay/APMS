@@ -15,26 +15,6 @@ const NAV_ITEMS = [
     { key: 'profile',    icon: 'person',          label: 'Profile'         },
 ];
 
-const DEPARTMENTS = [
-    'Computer Science',
-    'Information Technology',
-    'Electronics and Communication Engineering',
-    'Electrical Engineering',
-    'Civil Engineering',
-    'Mechanical Engineering',
-    'Electrical and Computer Science',
-];
-
-const DUAL_CLASS_DEPTS = {
-    'Computer Science': ['CS1', 'CS2'],
-    'Electronics and Communication Engineering': ['ECE1', 'ECE2'],
-};
-
-function getCurrentSemesters() {
-    const month = new Date().getMonth() + 1;
-    return month >= 1 && month <= 6 ? [2, 4, 6, 8] : [1, 3, 5, 7];
-}
-
 export default function FacultyPortal() {
     const navigate = useNavigate();
     const [user, setUser] = useState(() => getCurrentUser());
