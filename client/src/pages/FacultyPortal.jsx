@@ -123,31 +123,9 @@ function StudentApprovalsTab({ requests, onRefresh }) {
         finally { setBusyId(null); }
     };
 
-    return <section className="card">
-        <div className="card-header"><h3>Student registrations</h3><span className="badge badge-pending">{requests.length} waiting</span></div>
-        <div className="card-body">
-            <p className="td-muted" style={{ marginTop: 0 }}>Approve students from your department before they can sign in and submit activity records.</p>
-            {requests.length === 0 ? <div className="empty-state"><span className="material-symbols-outlined">task_alt</span><p>No student registrations are waiting.</p></div> :
-                <div className="table-overflow"><table className="data-table">
-                    <thead><tr><th>Student</th><th>KTU Registration No.</th><th>Contact</th><th>Year</th><th>Decision</th></tr></thead>
-                    <tbody>{requests.map(account => <tr key={account.id}>
-                        <td><div className="td-bold">{account.name}</div><div className="td-muted">{account.department}</div></td>
-                        <td>{account.roll_no || account.username}</td>
-                        <td><div>{account.email}</div><div className="td-muted">{account.phone}</div></td>
-                        <td>{account.year ? `Year ${account.year}` : 'Not provided'}</td>
-                        <td><div style={{ display: 'flex', gap: 8 }}>
-                            <button className="btn btn-primary btn-sm" disabled={busyId === account.id} onClick={() => decide(account, 'approved')}>Approve</button>
-                            <button className="btn btn-danger btn-sm" disabled={busyId === account.id} onClick={() => decide(account, 'rejected')}>Reject</button>
-                        </div></td>
-                    </tr>)}</tbody>
-                </table></div>}
-        </div>
-    </section>;
+    return <div className="role-approvals-page"><div className="role-intro"><div><span className="role-kicker">ACCESS REQUESTS</span><h1>Welcome the right people<em>.</em></h1><p>Check each student’s details before giving them access.</p></div><span className="review-count">{requests.length} waiting</span></div>{requests.length ? <div className="approval-list">{requests.map(account => <article className="approval-item" key={account.id}><div className="approval-avatar">{account.name?.split(' ').map(part => part[0]).join('').slice(0,2).toUpperCase() || 'ST'}</div><div className="approval-person"><h2>{account.name}</h2><p>{account.roll_no || account.username} · {account.department || 'Department not set'}</p><span>{account.email || 'No email'} · {account.phone || 'No phone'} · {account.year ? `Year ${account.year}` : 'Year not provided'}</span></div><div className="approval-actions"><button disabled={busyId === account.id} onClick={() => decide(account,'rejected')}>Reject</button><button disabled={busyId === account.id} onClick={() => decide(account,'approved')}>Approve <span className="material-symbols-outlined">arrow_forward</span></button></div></article>)}</div> : <div className="role-empty"><span className="material-symbols-outlined">how_to_reg</span><h3>No students waiting</h3><p>New registration requests will appear here.</p></div>}</div>;
 }
 
-/* ═══════════════════════════════════════════════════
-   DASHBOARD TAB
-════════════════════════════════════════════════════ */
 function DashboardTab({ user, students, pendingCerts, pendingAccounts, circulars, onGoReviews, onGoApprovals }) {
     const latest = pendingCerts.slice(0,4);
     return <div className="role-dashboard faculty-dashboard">
