@@ -106,3 +106,23 @@ html.dark .role-workspace .role-profile-aside button:hover,html.dark .role-works
 html.dark .role-workspace .record-toolbar>div button.active,html.dark .role-workspace .record-item-foot button,html.dark .role-workspace .faculty-record .record-item-foot button,html.dark .role-workspace .approval-actions button:last-child{background:#ffbd9f;color:#2b1c1a;border-color:#ffbd9f}
 html.dark .role-workspace .role-theme:focus-visible,html.dark .role-workspace button:focus-visible,html.dark .role-workspace input:focus-visible,html.dark .role-workspace select:focus-visible,html.dark .role-workspace textarea:focus-visible{outline:2px solid #ffcfb7;outline-offset:2px}
 @media(max-width:800px){.role-workspace .role-profile-score strong{justify-content:flex-start}}
+
+/* Brand artwork uses a cream raster background. The existing SVG cutout filter
+   keeps the letterforms light and removes that background in night mode. */
+html.dark .role-workspace .role-identity .apms-brand-image,
+html.dark .login-page .apms-brand-image{
+  mix-blend-mode:normal;
+  background:transparent;
+}
+html.dark .role-workspace .role-identity .apms-brand-image img,
+html.dark .login-page .apms-brand-image img{
+  filter:url(#apms-sidebar-cutout);
+}
+/* These alignment rules apply to both themes; theme rules above change color only. */
+.role-workspace .role-masthead-actions,
+.role-workspace .role-nav{align-items:center}
+.role-workspace .role-masthead-actions button,
+.role-workspace .role-nav button{box-sizing:border-box;flex-shrink:0}
+.role-workspace .role-masthead-actions .material-symbols-outlined,
+.role-workspace .role-nav .material-symbols-outlined{display:block;line-height:1;flex-shrink:0}
+.role-workspace .role-account img{display:block}
