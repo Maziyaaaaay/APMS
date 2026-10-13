@@ -755,7 +755,7 @@ function PointGradingTab() {
             <div className="alert" style={{ background: 'rgba(45,91,227,0.06)', border: '1px solid rgba(45,91,227,0.15)', marginBottom: 20 }}>
                 <span className="material-symbols-outlined" style={{ fontSize: 16, color: 'var(--accent)' }}>info</span>
                 <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-                    Official KTU point values and caps are locked to the current handbook catalog. Admins can attach internal clarification notes without changing calculated points.
+                    This catalog is mapped to the 2024 handbook. Totals are estimates until faculty verify eligibility and evidence. Admin notes never change calculated points.
                 </span>
             </div>
 
