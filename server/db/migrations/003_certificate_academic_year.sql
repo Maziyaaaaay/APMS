@@ -4,8 +4,21 @@
 begin;
 
 alter table public.certificates
-  add column academic_year text
-  check (academic_year is null or academic_year ~ '^[0-9]{4}-[0-9]{2}$');
+  add column if not exists academic_year text;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.certificates'::regclass
+      and conname = 'certificates_academic_year_check'
+  ) then
+    alter table public.certificates
+      add constraint certificates_academic_year_check
+      check (academic_year is null or academic_year ~ '^[0-9]{4}-[0-9]{2}$');
+  end if;
+end;
+$$;
 
 create or replace function public.apms_validate_certificate() returns trigger
 language plpgsql set search_path = public, pg_temp as $$
