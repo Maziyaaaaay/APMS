@@ -1,10 +1,9 @@
 import jsPDF from 'jspdf';
-import { ACTIVITIES } from './points';
+import { getActivityForCertificate } from './points';
 
 export function generateApprovalPDF(certificate, student, faculty) {
     const doc = new jsPDF();
-    const actId = certificate.activityId || certificate.activity_id;
-    const activity = certificate.activity_snapshot || certificate.activitySnapshot || ACTIVITIES[actId];
+    const activity = getActivityForCertificate(certificate);
 
     // Header background
     doc.setFillColor(15, 23, 42); // dark blue
