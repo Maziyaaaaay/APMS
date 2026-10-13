@@ -660,7 +660,7 @@ function SubmissionsTab({ certs }) {
                                         const act = getActivityForCertificate(c);
                                         return (
                                             <tr key={c.id}>
-                                                <td className="td-bold">{act?.name || c.activityName}<div className="td-muted" style={{fontSize:11,fontWeight:400}}>{c.event_name || 'Legacy submission'}</div></td>
+                                                <td className="td-bold">{act?.name || c.activityName}<div className="td-muted" style={{fontSize:11,fontWeight:400}}>{c.event_name || 'Legacy submission'}{(c.academic_year || c.academicYear) ? ` · AY ${c.academic_year || c.academicYear}` : ''}</div></td>
                                                 <td className="td-muted">Group {act?.group || ' / '}</td>
                                                 <td className="td-muted">{c.level_selected || c.selectedLevel || ' / '}</td>
                                                 <td className="td-muted">{new Date(c.created_at || c.createdAt).toLocaleDateString('en-IN')}</td>
