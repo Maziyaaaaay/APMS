@@ -84,6 +84,7 @@ export async function addCertificate(cert) {
     description: cert.description,
     eventName: cert.eventName,
     activityDate: cert.activityDate,
+    academicYear: cert.academicYear,
     uploadReceipt: cert.uploadReceipt,
     fileUrl: cert.fileUrl,
     pointsAwarded: cert.pointsAwarded,

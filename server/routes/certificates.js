@@ -63,13 +63,18 @@ router.post('/upload-url', requireRole('student'), async (req, res) => {
 
 // POST /api/certificates — student submits
 router.post('/', requireRole('student'), async (req, res) => {
-  const { activityId, levelSelected, hours, description, eventName, activityDate, fileUrl, fileName, uploadReceipt } = req.body;
+  const { activityId, levelSelected, hours, description, eventName, activityDate, academicYear, fileUrl, fileName, uploadReceipt } = req.body;
   if (!activityId) return res.status(400).json({ error: 'activityId is required' });
   const activity = ACTIVITIES[activityId];
   if (!activity) return res.status(400).json({ error: 'Choose an activity from the current catalog.' });
   if (!String(eventName || '').trim() || String(eventName).trim().length > 180) return res.status(400).json({ error: 'A valid event or activity name is required.' });
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(activityDate || '')) || Number.isNaN(Date.parse(`${activityDate}T00:00:00Z`))) return res.status(400).json({ error: 'A valid activity date is required.' });
   if (activityDate > new Date().toISOString().slice(0, 10)) return res.status(400).json({ error: 'Activity records must be for a completed activity.' });
+  const normalizedAcademicYear = String(academicYear || '').trim().replace('–', '-');
+  if (!/^\d{4}-\d{2}$/.test(normalizedAcademicYear)
+    || Number(normalizedAcademicYear.slice(5)) !== (Number(normalizedAcademicYear.slice(0, 4)) + 1) % 100) {
+    return res.status(400).json({ error: 'Enter a valid academic year, such as 2025-26.' });
+  }
   if (!fileUrl && !uploadReceipt) return res.status(400).json({ error: 'A certificate document is required.' });
   if (activity.type === 'hours' && (!Number.isInteger(Number(hours)) || Number(hours) <= 0)) return res.status(400).json({ error: 'Enter the completed course duration in whole hours.' });
   if ((activity.type === 'level' || activity.type === 'choice') && !activity.levels.some(level => level.label === levelSelected)) return res.status(400).json({ error: 'Choose a valid points option for this activity.' });
@@ -117,6 +122,7 @@ router.post('/', requireRole('student'), async (req, res) => {
       description,
       event_name: String(eventName).trim(),
       activity_date: activityDate,
+      academic_year: normalizedAcademicYear,
       points_awarded: submittedPoints,
       file_url: objectPath,
       file_name: fileName || null,

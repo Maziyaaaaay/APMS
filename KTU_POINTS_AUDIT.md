@@ -24,6 +24,10 @@ The point-summary function was updated so lateral-entry and PwD totals retain up
 
 The current corrections do not make totals authoritative. Reconcile every remaining activity row against the handbook, capture eligibility evidence and programme dates, model academic-year and per-segment caps, and verify repeat-event handling, highest achievement, participation/winner conflicts, activity caps, 40-point Group ceilings, and student-category thresholds. In particular, academic-year rules currently cannot be inferred reliably from calendar dates; the submission flow needs a defined academic-year field for capped recurring activities. Faculty approval remains the source of credited points; any adjustment must retain an auditable explanation.
 
+## Academic-year evidence phase
+
+New submissions now require the student to enter the academic year shown on their academic calendar in `YYYY-YY` form. The value is stored on the certificate record, displayed in faculty review, and included in approval PDFs. Repeated event records use that academic year when grouping same-event awards; legacy records without the field continue to use the activity-date year and remain provisional. Faculty must verify the entered year against the document. This change does not encode all activity-specific prerequisites (such as minimum duration, class strength, approved-course status, or semester-level evidence), so calculated totals remain provisional.
+
 ## References
 
 - APJ Abdul Kalam Technological University, *Activity Points Handbook – 2024 Scheme* (the handbook bears APJAKTU authorship; this accessible PDF copy is hosted by an affiliated institution): https://www.iiet.org.in/wp-content/uploads/2025/12/KTURegulations2024%E2%80%93ActivityPointsHandbook.pdf — Group I and II tables, pp. 3–12; general rules, pp. 17–18.
