@@ -377,52 +377,13 @@ function StudentsTab({ certs, students }) {
     const [search, setSearch] = useState('');
     const [semester, setSemester] = useState('');
     const filtered = students.filter(student => {
-        const query = search.trim().toLowerCase();
         const identity = `${student.name || ''} ${student.roll_no || student.rollNo || ''}`.toLowerCase();
-        return (!query || identity.includes(query)) && (!semester || String(student.semester) === semester);
+        return identity.includes(search.trim().toLowerCase()) && (!semester || String(student.semester) === semester);
     });
-    const needsAttention = students.filter(student => certs.some(cert =>
-        (cert.student_id || cert.studentId) === student.id && cert.status === 'pending'
-    )).length;
-
-    return (
-        <div className="faculty-roster">
-            <div className="roster-intro">
-                <div><span className="eyebrow">YOUR DEPARTMENT</span><h2>My students<span>.</span></h2><p>See each student’s verified progress and submissions.</p></div>
-                <div className="roster-summary"><strong>{students.length}</strong><span>students</span><strong>{needsAttention}</strong><span>awaiting review</span></div>
-            </div>
-            <div className="roster-toolbar">
-                <label className="roster-search"><span className="material-symbols-outlined">search</span><input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Find a name or registration number" aria-label="Find a student" /></label>
-                <select value={semester} onChange={e => setSemester(e.target.value)} aria-label="Filter by semester">
-                    <option value="">Every semester</option>
-                    {[1,2,3,4,5,6,7,8].map(number => <option key={number} value={number}>Semester {number}</option>)}
-                </select>
-                <span className="roster-count">{filtered.length} shown</span>
-            </div>
-            {filtered.length === 0 ? <div className="roster-empty"><span className="material-symbols-outlined">person_search</span><h3>No students found</h3><p>Try another name or semester.</p></div> :
-            <div className="roster-grid">{filtered.map(student => {
-                const studentCerts = certs.filter(cert => (cert.student_id || cert.studentId) === student.id);
-                const summary = calculateStudentSummary(studentCerts, student.studentType || student.student_type || 'regular');
-                const target = (student.studentType || student.student_type) === 'lateral' ? 90 : (student.studentType || student.student_type) === 'pwd' ? 60 : 120;
-                const waiting = studentCerts.filter(cert => cert.status === 'pending').length;
-                const initials = student.name?.split(' ').map(part => part[0]).join('').slice(0,2).toUpperCase() || 'ST';
-                return <article className="roster-card" key={student.id}>
-                    <div className="roster-card-top"><div className="roster-avatar">{student.profile_url || student.profileUrl ? <img src={student.profile_url || student.profileUrl} alt="" /> : initials}</div><div className="roster-person"><h3>{student.name}</h3><p>{student.roll_no || student.rollNo || 'No registration number'} · S{student.semester || '—'}</p></div>{waiting > 0 && <span className="roster-waiting" title="Pending submissions">{waiting}<span className="material-symbols-outlined">schedule</span></span>}</div>
-                    <div className="roster-score"><strong>{summary.total}</strong><span>of {target} estimated points</span></div>
-                    <div className="roster-progress" role="group" aria-label="Estimated points by group">
-                        {[[summary.group1,'I'],[summary.group2,'II'],[summary.group3,'III']].map(([value,label]) => <div className="roster-group" key={label}><span>Group {label}</span><b>{value || 0}</b><div className="roster-track"><i style={{width:`${Math.min(100,((value || 0)/40)*100)}%`}} /></div></div>)}
-                    </div>
-                    <div className="roster-card-foot"><span>{student.department || 'Your department'}</span><span>{summary.eligible ? 'Estimated target met' : 'In progress'}</span></div>
-                </article>;
-            })}</div>}
-            <p className="roster-note">Totals are estimates from approved submissions. Faculty review determines each certificate’s status.</p>
-        </div>
-    );
+    const waiting = students.filter(student => certs.some(cert => (cert.student_id || cert.studentId) === student.id && cert.status === 'pending')).length;
+    return <div className="faculty-students-page"><div className="role-intro"><div><span className="role-kicker">YOUR DEPARTMENT</span><h1>Know your students<em>.</em></h1><p>Approved points, group balance, and submissions in one clear view.</p></div><div className="students-count"><strong>{students.length}</strong><span>students</span><strong>{waiting}</strong><span>with pending work</span></div></div><div className="record-toolbar"><label><span className="material-symbols-outlined">search</span><input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Find a name or registration number" /></label><select value={semester} onChange={event => setSemester(event.target.value)} aria-label="Filter by semester"><option value="">All semesters</option>{[1,2,3,4,5,6,7,8].map(number => <option key={number} value={number}>Semester {number}</option>)}</select></div>{filtered.length ? <div className="student-roster-list">{filtered.map(student => {const studentCerts = certs.filter(cert => (cert.student_id || cert.studentId) === student.id);const summary = calculateStudentSummary(studentCerts, student.studentType || student.student_type || 'regular');const type = student.studentType || student.student_type || 'regular';const target = type === 'lateral' ? 90 : type === 'pwd' ? 60 : 120;const pending = studentCerts.filter(cert => cert.status === 'pending').length;const initials = student.name?.split(' ').map(part => part[0]).join('').slice(0,2).toUpperCase() || 'ST';return <article className="student-roster-row" key={student.id}><div className="roster-person"><span className="roster-avatar">{student.profile_url || student.profileUrl ? <img src={student.profile_url || student.profileUrl} alt="" /> : initials}</span><div><h2>{student.name}</h2><p>{student.roll_no || student.rollNo || 'Registration unavailable'} · S{student.semester || '—'}</p></div></div><div className="roster-group-bars">{[[summary.group1,'I'],[summary.group2,'II'],[summary.group3,'III']].map(([points,group]) => <div key={group}><span>{group}</span><i><b style={{width:`${Math.min(100,((points || 0)/40)*100)}%`}} /></i><strong>{points || 0}</strong></div>)}</div><div className="roster-total"><strong>{summary.total}<small>/{target}</small></strong><span>{pending ? `${pending} awaiting review` : summary.eligible ? 'Estimated target met' : 'In progress'}</span></div></article>})}</div> : <div className="role-empty"><span className="material-symbols-outlined">person_search</span><h3>No students found</h3><p>Try another search or semester.</p></div>}<p className="roster-disclaimer">Point totals are estimates from approved submissions. Faculty review determines certificate status.</p></div>;
 }
 
-/* ═══════════════════════════════════════════════════
-   PROFILE TAB  (previously "Settings")
-════════════════════════════════════════════════════ */
 function ProfileTab({ user, onLogout, onRefresh, onUpdateUser }) {
     const [editing, setEditing] = useState(false);
     const [name, setName] = useState(user?.name || '');
