@@ -69,6 +69,7 @@ export function generateApprovalPDF(certificate, student, faculty) {
         ['Level / Type', certificate.selectedLevel || certificate.level_selected || 'N/A'],
         ['Sub-details', certificate.description || 'N/A'],
         ['Date of Activity', certificate.activityDate || (certificate.created_at ? new Date(certificate.created_at).toLocaleDateString('en-IN') : 'N/A')],
+        ['Academic Year', certificate.academic_year || certificate.academicYear || 'Not recorded'],
     ];
     y += 12;
     for (const [label, value] of details) {

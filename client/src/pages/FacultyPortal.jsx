@@ -572,6 +572,7 @@ function ReviewModal({ cert, student, faculty, onClose, onRefresh }) {
                         {[
                             ['Activity', activity?.name || cert.activityName || 'Unknown Activity'],
                             ['Event', cert.event_name || ' / '],
+                            ['Academic year', cert.academic_year || cert.academicYear || 'Not recorded'],
                             ['Group', `Group ${activity?.group || '?'}`],
                             ['Category', activity?.category || ' / '],
                             ['Level', cert.level_selected || cert.selectedLevel || 'N/A'],

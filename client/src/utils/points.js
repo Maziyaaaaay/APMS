@@ -705,7 +705,8 @@ export function calculateStudentSummary(certificates, studentType = 'regular') {
         const points = Number(cert.points_awarded ?? cert.pointsAwarded ?? 0);
         if (!Number.isFinite(points) || points <= 0) continue;
         const name = String(cert.event_name || cert.eventName || '').trim().toLowerCase().replace(/\s+/g, ' ');
-        const year = String(cert.activity_date || cert.activityDate || '').slice(0, 4);
+        const academicYear = String(cert.academic_year || cert.academicYear || '').trim().replace('–', '-');
+        const year = academicYear || String(cert.activity_date || cert.activityDate || '').slice(0, 4);
         // Without a validated event identifier these remain provisional estimates.
         const event = name && (activity.eventWindow === 'lifetime' || year)
             ? (activity.eventWindow === 'lifetime' ? [name] : [name, year])

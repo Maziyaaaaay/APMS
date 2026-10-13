@@ -271,6 +271,7 @@ function SubmitTab({ user, onSuccess }) {
     const [description,   setDescription]   = useState('');
     const [eventName,     setEventName]     = useState('');
     const [activityDate,  setActivityDate]  = useState('');
+    const [academicYear,  setAcademicYear]  = useState('');
     const [uploadedFile,  setUploadedFile]  = useState(null);
     const [submitting,    setSubmitting]    = useState(false);
     const [success,       setSuccess]       = useState(false);
@@ -313,6 +314,7 @@ function SubmitTab({ user, onSuccess }) {
                 description,
                 eventName: eventName.trim(),
                 activityDate,
+                academicYear: academicYear.trim(),
                 uploadReceipt,
                 fileName: uploadedFile?.name || null,
                 pointsAwarded: calculatePoints(activityId, selectedLevel, hours),
@@ -484,7 +486,18 @@ function SubmitTab({ user, onSuccess }) {
                                     <input className="input" value={eventName}
                                         onChange={e => setEventName(e.target.value)} maxLength={180}
                                         placeholder="e.g. KTU Tech Fest 2025" required />
-                                    <div className="form-hint">Use the same event name across related certificates. The event year distinguishes annual editions.</div>
+                                    <div className="form-hint">Use the same event name across related certificates.</div>
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Academic Year <span className="required">*</span></label>
+                                    <input className="input" value={academicYear}
+                                        onChange={e => setAcademicYear(e.target.value)}
+                                        placeholder="2025–26" maxLength={7}
+                                        pattern="[0-9]{4}[-–][0-9]{2}"
+                                        title="Enter the academic year as YYYY-YY, for example 2025-26"
+                                        required />
+                                    <div className="form-hint">Enter the year shown on your academic calendar. Faculty will verify it with your certificate.</div>
                                 </div>
 
                                 {/* Activity Date */}
@@ -647,7 +660,7 @@ function SubmissionsTab({ certs }) {
                                         const act = getActivityForCertificate(c);
                                         return (
                                             <tr key={c.id}>
-                                                <td className="td-bold">{act?.name || c.activityName}<div className="td-muted" style={{fontSize:11,fontWeight:400}}>{c.event_name || 'Legacy submission'}</div></td>
+                                                <td className="td-bold">{act?.name || c.activityName}<div className="td-muted" style={{fontSize:11,fontWeight:400}}>{c.event_name || 'Legacy submission'}{(c.academic_year || c.academicYear) ? ` · AY ${c.academic_year || c.academicYear}` : ''}</div></td>
                                                 <td className="td-muted">Group {act?.group || ' / '}</td>
                                                 <td className="td-muted">{c.level_selected || c.selectedLevel || ' / '}</td>
                                                 <td className="td-muted">{new Date(c.created_at || c.createdAt).toLocaleDateString('en-IN')}</td>
