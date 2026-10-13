@@ -1,5 +1,4 @@
 import BrandLogo from '../components/BrandLogo';
-import { AmbientBackdrop, WorkspaceHeading, ProgressOrbit, MetricCard } from '../components/DashboardKit';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, logout } from '../utils/auth';
@@ -66,13 +65,6 @@ export default function StudentPortal() {
 
     const initials = user?.name?.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase() || 'ST';
 
-    const PAGE_TITLES = {
-        dashboard:   'Dashboard',
-        submit:      'Submit Activity',
-        submissions: 'My Submissions',
-        profile:     'Profile',
-    };
-
     return (
         <div className="portal-layout student-portal role-workspace">
             <header className="role-masthead">
@@ -105,106 +97,30 @@ export default function StudentPortal() {
     );
 }
 
-/* ═══════════════════════════════════════════════════
-   DASHBOARD TAB
-═══════════════════════════════════════════════════ */
+
 function DashboardTab({ user, certs, summary, req, onSubmit, onViewAll }) {
-    const pct     = (v, m) => Math.min((v / m) * 100, 100).toFixed(1);
-    const pending  = certs.filter(c => c.status === 'pending').length;
-    const approved = certs.filter(c => c.status === 'approved').length;
-    const rejected = certs.filter(c => c.status === 'rejected').length;
-    const recent   = [...certs].sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt)).slice(0, 5);
-
-    return (
-        <>
-            <WorkspaceHeading eyebrow="STUDENT WORKSPACE" title={`Hey ${user?.name?.split(' ')[0] || 'there'}. What’s next?`} description="Your points, certificates, and next steps." action={onSubmit} actionLabel="Upload certificate" icon="add" />
-            <section className="student-progress-panel glass-panel">
-                <div className="student-progress-copy"><span className="eyebrow">YOUR ACTIVITY POINTS</span><h3>Your progress.</h3><p>{Math.max(0, req.total - summary.total)} points left to your estimated target.</p><span className={`badge ${summary.eligible ? 'badge-approved' : 'badge-info'}`}>{summary.eligible ? 'Estimate meets target' : 'Your journey is in progress'}</span><small>Provisional 2024-scheme estimate · approved submissions only</small></div>
-                <ProgressOrbit value={summary.total} max={req.total} />
+    const pending = certs.filter(cert => cert.status === 'pending').length;
+    const approved = certs.filter(cert => cert.status === 'approved').length;
+    const rejected = certs.filter(cert => cert.status === 'rejected').length;
+    const recent = [...certs].sort((a,b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt)).slice(0,4);
+    const remaining = Math.max(0, req.total - summary.total);
+    return <div className="role-dashboard student-dashboard">
+        <section className="role-intro">
+            <div><span className="role-kicker">YOUR ACTIVITY JOURNEY</span><h1>Hi, {user?.name?.split(' ')[0] || 'there'}<em>.</em></h1><p>Here’s where your points stand today.</p></div>
+            <button className="role-primary-action" onClick={onSubmit}><span className="material-symbols-outlined">add_circle</span>Submit an activity</button>
+        </section>
+        <div className="student-feature-layout">
+            <section className="student-journey-card">
+                <div className="journey-copy"><span className="role-kicker">APPROVED POINTS</span><div className="journey-number">{summary.total}<span> / {req.total}</span></div><h2>{remaining ? `${remaining} points to go` : 'Target reached'}</h2><p>Estimated from approved certificates. Your faculty advisor confirms eligibility.</p><button onClick={onViewAll}>See submissions <span className="material-symbols-outlined">arrow_forward</span></button></div>
+                <div className="journey-art" aria-label={`${summary.total} of ${req.total} estimated points`}><div className="journey-ring" style={{'--journey-pct':`${Math.min(100,(summary.total/req.total)*100)}%`}}><span className="material-symbols-outlined">workspace_premium</span></div></div>
             </section>
-            <div className="metric-grid student-metrics">
-                <MetricCard label="Awaiting review" value={pending} detail="With your faculty" icon="schedule" tone="blue" onClick={onViewAll} />
-                <MetricCard label="Approved" value={approved} detail="Points counted" icon="verified" tone="violet" onClick={onViewAll} />
-                <MetricCard label="Needs attention" value={rejected} detail="Read faculty feedback" icon="feedback" tone="rose" onClick={onViewAll} />
-            </div>
-            <div className="section-title"><div><h3>Your group progress</h3></div><span className="section-hint">Each group has its own minimum</span></div>
-            {/* Group Cards */}
-            <div className="group-grid">
-                {GROUP_META.map(g => {
-                    const val = summary[g.key] || 0;
-                    const pctVal = pct(val, req.perGroup);
-                    return (
-                        <div className="group-card" key={g.key}>
-                            <div className="group-card-icon" style={{ background: g.iconBg }}>
-                                <span className="material-symbols-outlined" style={{ color: g.iconColor, fontSize: 20 }}>
-                                    {g.key === 'group1' ? 'groups' : g.key === 'group2' ? 'work' : 'lightbulb'}
-                                </span>
-                            </div>
-                            <h4>{g.label}</h4>
-                            <p>{g.sub}</p>
-                            <div className="progress-label">
-                                <span>{val} / {req.perGroup}</span>
-                                <span>{pctVal}%</span>
-                            </div>
-                            <div className="progress-track">
-                                <div className="progress-fill" style={{ width:`${pctVal}%`, background: g.fillColor }} />
-                            </div>
-                            <div className="td-muted" style={{ fontSize: 11, marginTop: 7 }}>
-                                {val >= req.perGroup ? 'Minimum reached in this estimate' : `${req.perGroup - val} more points to meet the group minimum`}
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-
-            {/* Recent Submissions Table */}
-            <div className="table-card">
-                <div className="table-card-header">
-                    <h3>Recent Submissions</h3>
-                    <button className="btn btn-ghost btn-sm" onClick={onViewAll}>View All</button>
-                </div>
-                {recent.length === 0 ? (
-                    <div className="empty-state">
-                        <span className="material-symbols-outlined">description</span>
-                        <p>No submissions yet.<br />Submit your first activity!</p>
-                    </div>
-                ) : (
-                    <div className="table-overflow">
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Activity Name</th>
-                                    <th>Group</th>
-                                    <th>Date</th>
-                                    <th className="td-center">Points</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {recent.map(c => {
-                                    const act = getActivityForCertificate(c);
-                                    return (
-                                        <tr key={c.id}>
-                                            <td className="td-bold">{act?.name || c.activityName}</td>
-                                            <td className="td-muted">Group {act?.group || ' / '}</td>
-                                            <td className="td-muted">{new Date(c.created_at || c.createdAt).toLocaleDateString('en-IN')}</td>
-                                            <td className="td-center td-bold">{c.points_awarded ?? c.pointsAwarded}</td>
-                                            <td><span className={`badge badge-${c.status}`}>{c.status}</span></td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </div>
-        </>
-    );
+            <aside className="student-status-panel"><div className="status-panel-heading"><span className="role-kicker">AT A GLANCE</span><h2>Your submissions</h2></div><button onClick={onViewAll}><span className="status-dot waiting"/><span>Awaiting review</span><strong>{pending}</strong></button><button onClick={onViewAll}><span className="status-dot accepted"/><span>Approved</span><strong>{approved}</strong></button><button onClick={onViewAll}><span className="status-dot declined"/><span>Needs attention</span><strong>{rejected}</strong></button></aside>
+        </div>
+        <section className="student-groups-section"><div className="role-section-heading"><div><span className="role-kicker">THREE GROUPS</span><h2>Build your balance.</h2></div><p>Each group needs {req.perGroup} points.</p></div><div className="student-group-list">{GROUP_META.map((group,index) => { const value = summary[group.key] || 0; return <article className="student-group-row" key={group.key}><span className="group-index">0{index+1}</span><div className="group-title"><h3>{group.label}</h3><p>{group.sub}</p></div><div className="group-meter"><div><i style={{width:`${Math.min(100,(value/req.perGroup)*100)}%`}} /></div><span>{Math.max(0,req.perGroup-value)} left</span></div><strong>{value}<small>/{req.perGroup}</small></strong></article>; })}</div></section>
+        <section className="role-recent-section"><div className="role-section-heading"><div><span className="role-kicker">LATEST ACTIVITY</span><h2>Recent submissions.</h2></div><button className="role-text-action" onClick={onViewAll}>View all <span className="material-symbols-outlined">arrow_forward</span></button></div>{recent.length ? <div className="role-recent-list">{recent.map(cert => {const activity = getActivityForCertificate(cert);return <div className="role-recent-row" key={cert.id}><div className="recent-icon"><span className="material-symbols-outlined">description</span></div><div><strong>{activity?.name || cert.activityName}</strong><span>{new Date(cert.created_at || cert.createdAt).toLocaleDateString('en-IN')} · Group {activity?.group || '—'}</span></div><span className={`badge badge-${cert.status}`}>{cert.status}</span><b>{cert.points_awarded ?? cert.pointsAwarded} pts</b></div>})}</div> : <div className="role-empty"><span className="material-symbols-outlined">add_notes</span><h3>Nothing submitted yet</h3><p>Your first activity starts here.</p><button onClick={onSubmit}>Submit an activity</button></div>}</section>
+    </div>;
 }
 
-/* ═══════════════════════════════════════════════════
-   SUBMIT ACTIVITY TAB
-═══════════════════════════════════════════════════ */
 function SubmitTab({ user, onSuccess }) {
     const [step,          setStep]          = useState(0); // 0=select group, 1=fill details
     const [group,         setGroup]         = useState(1);
