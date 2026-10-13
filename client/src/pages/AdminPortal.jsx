@@ -1,19 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import BrandLogo from '../components/BrandLogo';
+import InterfaceIcon from '../components/InterfaceIcon';
+import { AmbientBackdrop, WorkspaceHeading, MetricCard, ActionTile } from '../components/DashboardKit';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, logout } from '../utils/auth';
 import {
-    getUsers, getCertificates, addUser, deleteUser, updateUser,
+    getUsers, addUser, deleteUser, updateUser, reviewAccount,
     getDepartmentsWithIds, addDepartment, removeDepartment,
     getCirculars, addCircular, deleteCircular,
     getPointOverrides, savePointOverride, deletePointOverride,
-    promoteToAdmin,
+    promoteToAdmin, transferOwnership,
 } from '../utils/storage';
 import { compressImage } from '../utils/imageCompressor';
-import { ACTIVITIES, calculateStudentSummary } from '../utils/points';
+import { ACTIVITIES } from '../utils/points';
 
 const NAV_ITEMS = [
     { key: 'dashboard',    icon: 'dashboard',          label: 'Dashboard'     },
     { key: 'users',        icon: 'manage_accounts',    label: 'Manage Users'  },
+    { key: 'approvals',    icon: 'how_to_reg',         label: 'Account Requests' },
     { key: 'departments',  icon: 'account_balance',    label: 'Departments'   },
     { key: 'circulars',    icon: 'campaign',           label: 'Circulars'     },
     { key: 'points',       icon: 'analytics',          label: 'Point Grading' },
@@ -25,21 +29,21 @@ export default function AdminPortal() {
     const [user, setUser] = useState(() => getCurrentUser());
     const [tab, setTab] = useState('dashboard');
     const [users, setUsers] = useState([]);
-    const [certs, setCerts] = useState([]);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'));
 
+    const [loadError, setLoadError] = useState('');
+    const refresh = useCallback(async () => {
+        try {
+            const usersData = await getUsers();
+            setUsers(usersData); setLoadError('');
+        } catch (err) { setLoadError(err.message); }
+    }, []);
     useEffect(() => {
         if (!user) { navigate('/'); return; }
-        refresh();
-    }, []);
+        Promise.resolve().then(refresh);
+    }, [user, navigate, refresh]);
 
-    const refresh = async () => {
-        try {
-            const [usersData, certsData] = await Promise.all([getUsers(), getCertificates()]);
-            setUsers(usersData); setCerts(certsData);
-        } catch (err) { console.error('Failed to load:', err); }
-    };
     const handleLogout = () => { logout(); navigate('/'); };
     const toggleDark = () => {
         const next = !dark;
@@ -48,13 +52,14 @@ export default function AdminPortal() {
         localStorage.setItem('theme', next ? 'dark' : 'light');
     };
 
-    const students = users.filter(u => u.role === 'student');
-    const faculty  = users.filter(u => u.role === 'faculty');
+    const students = users.filter(u => u.role === 'student' && (u.account_status || 'approved') === 'approved');
+    const faculty  = users.filter(u => u.role === 'faculty' && (u.account_status || 'approved') === 'approved');
     const initials = user?.name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'AD';
 
     const PAGE_TITLES = {
         dashboard:   'Dashboard',
         users:       'Manage Users',
+        approvals:   'Account Requests',
         departments: 'Departments',
         circulars:   'Circulars & Announcements',
         points:      'Activity Point Grading',
@@ -62,18 +67,14 @@ export default function AdminPortal() {
     };
 
     return (
-        <div className="portal-layout">
+        <div className="portal-layout admin-portal">
+            <AmbientBackdrop />
             {/* Sidebar overlay (mobile) */}
             <div className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)} />
 
             {/* Sidebar */}
             <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-                <div className="sidebar-brand">
-                    <div className="sidebar-brand-icon">
-                        <span className="material-symbols-outlined">admin_panel_settings</span>
-                    </div>
-                    <div className="sidebar-brand-text">
-                        <h1>KTU APMS</h1>
+                <div className="sidebar-brand"><BrandLogo /><div className="sidebar-brand-text">
                         <p>Admin Panel</p>
                     </div>
                 </div>
@@ -83,6 +84,7 @@ export default function AdminPortal() {
                         <button
                             key={item.key}
                             className={`nav-item ${tab === item.key ? 'active' : ''}`}
+                            aria-current={tab === item.key ? 'page' : undefined}
                             onClick={() => { setTab(item.key); setSidebarOpen(false); }}
                         >
                             <span className="material-symbols-outlined">{item.icon}</span>
@@ -108,7 +110,7 @@ export default function AdminPortal() {
             <div className="main-content">
                 <header className="topbar">
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <button className="topbar-menu-btn" onClick={() => setSidebarOpen(o => !o)}>
+                        <button className="topbar-menu-btn" aria-label="Open navigation" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(o => !o)}>
                             <span className="material-symbols-outlined">menu</span>
                         </button>
                         <span className="topbar-title">{PAGE_TITLES[tab]}</span>
@@ -129,9 +131,12 @@ export default function AdminPortal() {
                     </div>
                 </header>
 
-                <div className="page-content">
-                    {tab === 'dashboard'   && <DashboardTab students={students} faculty={faculty} certs={certs} onNavigate={setTab} />}
-                    {tab === 'users'       && <UsersTab students={students} faculty={faculty} certs={certs} onRefresh={refresh} currentUser={user} />}
+                <div className="page-content" key={tab}>
+                    {tab !== 'dashboard' && <WorkspaceHeading title={PAGE_TITLES[tab]} description={{users: 'Add and remove students and faculty, and keep campus access organised.', approvals: 'Approve faculty registrations. Student registrations are reviewed by their department advisors.', departments: 'Keep your campus departments organised.', circulars: 'Publish university updates and guidance for your campus.', points: 'Explore activity categories and provisional point rules.', profile: 'Manage your details and account.'}[tab]} />}
+                    {loadError && <div role="alert" className="alert alert-danger">{loadError} <button onClick={refresh}>Try again</button></div>}
+                    {tab === 'dashboard'   && <DashboardTab user={user} users={users} students={students} faculty={faculty} onNavigate={setTab} />}
+                    {tab === 'users'       && <UsersTab students={students} faculty={faculty} onRefresh={refresh} currentUser={user} />}
+                    {tab === 'approvals'   && <AccountApprovals users={users} onRefresh={refresh} currentUser={user} />}
                     {tab === 'departments' && <DepartmentsTab />}
                     {tab === 'circulars'   && <CircularsTab />}
                     {tab === 'points'      && <PointGradingTab />}
@@ -142,109 +147,132 @@ export default function AdminPortal() {
     );
 }
 
-/* ═══════════════════════════════════════════════════
-   DASHBOARD TAB
-════════════════════════════════════════════════════ */
-function DashboardTab({ students, faculty, certs, onNavigate }) {
-    const totalApproved = certs.filter(c => c.status === 'approved').length;
-    const totalPending  = certs.filter(c => c.status === 'pending').length;
-    const eligible      = students.filter(s => {
-        const sc = certs.filter(c => (c.student_id || c.studentId) === s.id);
-        return calculateStudentSummary(sc, s.student_type || s.studentType || 'regular').eligible;
-    }).length;
-
-    const stats = [
-        { icon: 'school',        label: 'Total Students', val: students.length,  color: 'var(--accent)',   bg: 'rgba(45,91,227,0.1)',  tab: 'users'       },
-        { icon: 'supervisor_account', label: 'Faculty Advisors', val: faculty.length,   color: '#06b6d4',        bg: 'rgba(6,182,212,0.1)',  tab: 'users'       },
-        { icon: 'description',   label: 'Total Certs',   val: certs.length,     color: '#7c3aed',         bg: 'rgba(124,58,237,0.1)', tab: null          },
-        { icon: 'verified',      label: 'Approved',      val: totalApproved,    color: 'var(--success)',  bg: 'rgba(16,185,129,0.1)', tab: null          },
-        { icon: 'schedule',      label: 'Pending',       val: totalPending,     color: 'var(--warning)',  bg: 'rgba(245,158,11,0.1)', tab: null          },
-        { icon: 'military_tech', label: 'Eligible',      val: eligible,         color: '#f59e0b',         bg: 'rgba(245,158,11,0.1)', tab: null          },
-    ];
-
-    const recentCerts = [...certs]
-        .sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt))
-        .slice(0, 8);
-
+function AccountApprovals({ users, onRefresh, currentUser }) {
+    const [busyId, setBusyId] = useState(null);
+    const [transferTarget, setTransferTarget] = useState(null);
+    const [transferPassword, setTransferPassword] = useState('');
+    const [transferError, setTransferError] = useState('');
+    const pending = users.filter(u => u.role === 'faculty' && u.account_status === 'pending');
+    const decide = async (account, status) => {
+        setBusyId(account.id);
+        try {
+            await reviewAccount(account.id, status);
+            await onRefresh();
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            setBusyId(null);
+        }
+    };
+    const disableAdmin = async (account) => {
+        if (!window.confirm(`Disable admin account ${account.name}?`)) return;
+        setBusyId(account.id);
+        try { await deleteUser(account.id); await onRefresh(); }
+        catch (err) { alert(err.message); }
+        finally { setBusyId(null); }
+    };
+    const handover = async (event) => {
+        event.preventDefault();
+        setBusyId(transferTarget.id);
+        setTransferError('');
+        try {
+            await transferOwnership(transferTarget.id, transferPassword);
+            setTransferPassword('');
+            logout();
+            window.location.assign('/');
+        } catch (err) { setTransferError(err.message); }
+        finally { setBusyId(null); }
+    };
+    const administrators = users.filter(u => u.role === 'admin' && !u.is_super_admin);
     return (
         <>
-            {/* KPI Stats */}
-            <div className="stat-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', marginBottom: 24 }}>
-                {stats.map(s => (
-                    <div
-                        key={s.label}
-                        className="stat-card"
-                        style={s.tab ? { cursor: 'pointer' } : {}}
-                        onClick={s.tab ? () => onNavigate(s.tab) : undefined}
-                    >
-                        <div className="stat-card-top">
-                            <span className="stat-card-label">{s.label}</span>
-                            <span className="stat-card-icon">
-                                <div style={{ width: 32, height: 32, borderRadius: 8, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <span className="material-symbols-outlined" style={{ color: s.color, fontSize: 18 }}>{s.icon}</span>
-                                </div>
-                            </span>
-                        </div>
-                        <div className="stat-card-val" style={{ color: s.color }}>{s.val}</div>
-                        <div className="stat-card-sub">{s.tab ? 'Click to manage →' : 'Total in system'}</div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Recent Activity Table */}
-            <div className="table-card">
-                <div className="table-card-header">
-                    <h3>Recent Certificate Activity</h3>
-                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Latest 8 submissions</span>
-                </div>
-                {recentCerts.length === 0 ? (
-                    <div className="empty-state">
-                        <span className="material-symbols-outlined">description</span>
-                        <p>No certificate activity yet</p>
-                    </div>
-                ) : (
-                    <div className="table-overflow">
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Activity</th>
-                                    <th>Level</th>
-                                    <th>Submitted</th>
-                                    <th className="td-center">Points</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {recentCerts.map(c => {
-                                    const act = ACTIVITIES[c.activity_id || c.activityId];
-                                    return (
-                                        <tr key={c.id}>
-                                            <td className="td-bold">{act?.name || c.activityName || c.activity_id || c.activityId}</td>
-                                            <td className="td-muted">{c.level_selected || c.selectedLevel || 'N/A'}</td>
-                                            <td className="td-muted">{new Date(c.created_at || c.createdAt).toLocaleDateString('en-IN')}</td>
-                                            <td className="td-center td-bold" style={{ color: 'var(--accent)' }}>{c.points_awarded ?? c.pointsAwarded}</td>
-                                            <td><span className={`badge badge-${c.status}`}>{c.status}</span></td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
+        <section className="card">
+            <div className="card-header"><h3>Faculty access requests</h3><span className="badge badge-pending">{pending.length} waiting</span></div>
+            <div className="card-body">
+                <p className="td-muted" style={{ marginTop: 0 }}>Faculty accounts wait for admin approval. Student accounts are approved by a faculty advisor in their department.</p>
+                {pending.length === 0 ? <div className="empty-state"><span className="material-symbols-outlined">task_alt</span><p>No faculty registrations are waiting.</p></div> : (
+                    <div className="table-overflow"><table className="data-table">
+                        <thead><tr><th>Faculty</th><th>Contact</th><th>Department</th><th>Requested</th><th>Decision</th></tr></thead>
+                        <tbody>{pending.map(account => <tr key={account.id}>
+                            <td><div className="td-bold">{account.name}</div><div className="td-muted">@{account.username}</div></td>
+                            <td><div>{account.email}</div><div className="td-muted">{account.phone}</div></td>
+                            <td>{account.department || ' / '}</td>
+                            <td>{account.account_status}<br />{account.created_at ? new Date(account.created_at).toLocaleDateString('en-IN') : ' / '}</td>
+                            <td><div style={{ display: 'flex', gap: 8 }}>
+                                <button className="btn btn-primary btn-sm" disabled={busyId === account.id} onClick={() => decide(account, 'approved')}>Approve</button>
+                                <button className="btn btn-danger btn-sm" disabled={busyId === account.id} onClick={() => decide(account, 'rejected')}>Reject</button>
+                            </div></td>
+                        </tr>)}</tbody>
+                    </table></div>
                 )}
             </div>
+        </section>
+        {currentUser?.isSuperAdmin && <section className="card" style={{ marginTop: 20 }}>
+            <div className="card-header"><h3>Admin access</h3><span className="td-muted">Super admin controls</span></div>
+            <div className="card-body">
+                {administrators.length === 0 ? <p className="td-muted">No additional admins yet. Promote a trusted user from Manage Users.</p> :
+                    <div className="table-overflow"><table className="data-table">
+                        <thead><tr><th>Admin</th><th>Username</th><th>Access</th></tr></thead>
+                        <tbody>{administrators.map(account => <tr key={account.id}>
+                            <td>{account.name}</td><td>@{account.username}</td>
+                            <td><div style={{ display: 'flex', gap: 8 }}>
+                                <button className="btn btn-danger btn-sm" disabled={busyId === account.id} onClick={() => disableAdmin(account)}>Disable</button>
+                                {account.account_status === 'approved' && <button className="btn btn-outline btn-sm" disabled={Boolean(busyId)} onClick={() => { setTransferTarget(account); setTransferPassword(''); setTransferError(''); }}>Transfer ownership</button>}
+                            </div></td>
+                        </tr>)}</tbody>
+                    </table></div>}
+            </div>
+        </section>}
+        {transferTarget && <div className="modal-overlay" role="presentation">
+            <section className="modal" role="dialog" aria-modal="true" aria-labelledby="handover-title">
+                <div className="modal-header"><h3 id="handover-title">Transfer super admin access</h3></div>
+                <form onSubmit={handover} className="modal-body">
+                    <p>{transferTarget.name} will become the only super admin. You will remain an admin. Both accounts will need to sign in again.</p>
+                    {transferError && <div className="alert alert-error" role="alert">{transferError}</div>}
+                    <label className="form-label" htmlFor="handover-password">Your current password</label>
+                    <input id="handover-password" className="input" type="password" autoComplete="current-password" required value={transferPassword} onChange={e => setTransferPassword(e.target.value)} />
+                    <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                        <button type="button" className="btn btn-outline" disabled={Boolean(busyId)} onClick={() => { setTransferTarget(null); setTransferPassword(''); }}>Cancel</button>
+                        <button type="submit" className="btn btn-primary" disabled={Boolean(busyId)}>{busyId ? 'Transferring…' : 'Transfer ownership'}</button>
+                    </div>
+                </form>
+            </section>
+        </div>}
         </>
     );
 }
 
 /* ═══════════════════════════════════════════════════
+   DASHBOARD TAB
+════════════════════════════════════════════════════ */
+function DashboardTab({ user, users, students, faculty, onNavigate }) {
+    const accountRequests = users.filter(u => u.role === 'faculty' && u.account_status === 'pending').length;
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+    return <div className="dashboard-composition">
+        <div className="campus-hero"><WorkspaceHeading eyebrow="YOUR CAMPUS" title="Keep campus moving." description={`${greeting}, ${user?.name?.split(' ')[0] || 'Admin'}.`} /><div className="campus-hero-art" aria-hidden="true"><InterfaceIcon name="school" style={{width:72,height:72}} /></div></div>
+        <section className="work-queue" aria-labelledby="queue-title">
+            <div className="section-intro"><h3 id="queue-title">Your next actions</h3><span>{accountRequests} waiting</span></div>
+            <ActionTile title="Approve faculty" detail={accountRequests ? 'Waiting for access' : 'All caught up'} count={accountRequests} icon="person_check" tone="rose" onClick={() => onNavigate('approvals')} />
+        </section>
+        <section className="campus-register"><div className="section-intro"><h3>Campus at a glance</h3></div><div className="metric-grid">
+            <MetricCard label="Students" value={students.length} detail="Approved accounts" icon="school" tone="rose" onClick={() => onNavigate('users')} />
+            <MetricCard label="Faculty" value={faculty.length} detail="Approved advisors" icon="groups" tone="violet" onClick={() => onNavigate('users')} />
+            <MetricCard label="Faculty requests" value={accountRequests} detail="Waiting for your approval" icon="how_to_reg" tone="amber" onClick={() => onNavigate('approvals')} />
+        </div></section>
+        <nav className="workspace-links" aria-label="Campus administration"><button onClick={() => onNavigate('users')}>Manage people</button><button onClick={() => onNavigate('departments')}>Departments</button><button onClick={() => onNavigate('circulars')}>University circulars</button></nav>
+    </div>;
+}
+
+/* ═══════════════════════════════════════════════════
    MANAGE USERS TAB
 ════════════════════════════════════════════════════ */
-function UsersTab({ students, faculty, certs, onRefresh, currentUser }) {
+function UsersTab({ students, faculty, onRefresh, currentUser }) {
     const [userType, setUserType] = useState('student');
     const [search, setSearch] = useState('');
     const [showAdd, setShowAdd] = useState(false);
     const [newUser, setNewUser] = useState({
-        name: '', username: '', password: '', email: '',
+        name: '', username: '', password: '', email: '', phone: '',
         department: '', role: 'student', studentType: 'regular', rollNo: '', designation: '',
     });
 
@@ -259,10 +287,10 @@ function UsersTab({ students, faculty, certs, onRefresh, currentUser }) {
     );
 
     const handleAdd = async () => {
-        if (!newUser.name || !newUser.username || !newUser.password) return;
-        try { await addUser({ ...newUser }); } catch (err) { alert(err.message); return; }
+        if (!newUser.name || !(newUser.role === 'student' ? newUser.rollNo : newUser.username) || !newUser.password || !newUser.email || !newUser.phone) return;
+        try { await addUser({ ...newUser, username: newUser.role === 'student' ? newUser.rollNo : newUser.username }); } catch (err) { alert(err.message); return; }
         setShowAdd(false);
-        setNewUser({ name: '', username: '', password: '', email: '', department: '', role: newUser.role, studentType: 'regular', rollNo: '', designation: '' });
+        setNewUser({ name: '', username: '', password: '', email: '', phone: '', department: '', role: newUser.role, studentType: 'regular', rollNo: '', designation: '' });
         onRefresh();
     };
 
@@ -321,10 +349,10 @@ function UsersTab({ students, faculty, certs, onRefresh, currentUser }) {
                                 <label className="form-label">Full Name</label>
                                 <input className="input" value={newUser.name} onChange={e => setNewUser(p => ({ ...p, name: e.target.value }))} />
                             </div>
-                            <div className="form-group">
+                            {newUser.role !== 'student' && <div className="form-group">
                                 <label className="form-label">Username</label>
                                 <input className="input" value={newUser.username} onChange={e => setNewUser(p => ({ ...p, username: e.target.value }))} />
-                            </div>
+                            </div>}
                         </div>
                         <div className="form-row">
                             <div className="form-group">
@@ -336,21 +364,25 @@ function UsersTab({ students, faculty, certs, onRefresh, currentUser }) {
                                 </select>
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Email</label>
-                                <input className="input" type="email" value={newUser.email} onChange={e => setNewUser(p => ({ ...p, email: e.target.value }))} />
+                                <label className="form-label">Email *</label>
+                                <input className="input" type="email" required value={newUser.email} onChange={e => setNewUser(p => ({ ...p, email: e.target.value }))} />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Phone Number *</label>
+                                <input className="input" type="tel" required value={newUser.phone} onChange={e => setNewUser(p => ({ ...p, phone: e.target.value }))} />
                             </div>
                         </div>
                         <div className="form-row">
                             <div className="form-group">
                                 <label className="form-label">Department</label>
                                 <select className="input" value={newUser.department} onChange={e => setNewUser(p => ({ ...p, department: e.target.value }))}>
-                                    <option value="">— Select Department —</option>
+                                    <option value=""> /  Select Department  / </option>
                                     {departments.map(d => <option key={d.id || d.name || d} value={d.name || d}>{d.name || d}</option>)}
                                 </select>
                             </div>
                             {newUser.role === 'student' && (
                                 <div className="form-group">
-                                    <label className="form-label">Roll Number</label>
+                                    <label className="form-label">KTU Registration Number *</label>
                                     <input className="input" value={newUser.rollNo} onChange={e => setNewUser(p => ({ ...p, rollNo: e.target.value }))} />
                                 </div>
                             )}
@@ -405,15 +437,11 @@ function UsersTab({ students, faculty, certs, onRefresh, currentUser }) {
                                     <th>{userType === 'student' ? 'Roll No' : 'Designation'}</th>
                                     <th>Department</th>
                                     <th>Username</th>
-                                    {userType === 'student' && <th className="td-center">Points</th>}
-                                    {userType === 'student' && <th>Status</th>}
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filtered.map(u => {
-                                    const userCerts = certs.filter(c => (c.student_id || c.studentId) === u.id);
-                                    const summary = userType === 'student' ? calculateStudentSummary(userCerts, u.student_type || u.studentType || 'regular') : null;
                                     const initials = u.name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '??';
                                     return (
                                         <tr key={u.id}>
@@ -426,22 +454,13 @@ function UsersTab({ students, faculty, certs, onRefresh, currentUser }) {
                                                     </div>
                                                     <div>
                                                         <div className="td-bold">{u.name}</div>
-                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{u.email}</div>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{u.email} · {u.phone || 'No phone'}</div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="td-muted">{u.roll_no || u.rollNo || u.designation || '—'}</td>
-                                            <td className="td-muted">{u.department || '—'}</td>
+                                            <td className="td-muted">{u.roll_no || u.rollNo || u.designation || ' / '}</td>
+                                            <td className="td-muted">{u.department || ' / '}</td>
                                             <td className="td-muted">@{u.username}</td>
-                                            {userType === 'student' && <td className="td-center td-bold" style={{ color: 'var(--accent)' }}>{summary?.total}</td>}
-                                            {userType === 'student' && (
-                                                <td>
-                                                    {summary?.eligible
-                                                        ? <span className="badge badge-approved">Eligible</span>
-                                                        : <span className="badge badge-pending">In Progress</span>
-                                                    }
-                                                </td>
-                                            )}
                                             <td>
                                                 <div style={{ display: 'flex', gap: 6 }}>
                                                     {currentUser?.isSuperAdmin && (
@@ -569,6 +588,8 @@ function CircularsTab() {
     const [circulars, setCirculars] = useState([]);
     const [title, setTitle] = useState('');
     const [body, setBody] = useState('');
+    const [sourceUrl, setSourceUrl] = useState('');
+    const [issuedOn, setIssuedOn] = useState('');
     const [priority, setPri] = useState('normal');
     const [showForm, setShowForm] = useState(false);
 
@@ -582,9 +603,9 @@ function CircularsTab() {
 
     const handlePost = async () => {
         if (!title.trim() || !body.trim()) return;
-        try { await addCircular({ title: title.trim(), content: body.trim() }); } catch (err) { alert(err.message); return; }
+        try { await addCircular({ title: title.trim(), content: body.trim(), sourceUrl: sourceUrl.trim(), issuedOn: issuedOn || null }); } catch (err) { alert(err.message); return; }
         getCirculars().then(setCirculars);
-        setTitle(''); setBody(''); setPri('normal'); setShowForm(false);
+        setTitle(''); setBody(''); setSourceUrl(''); setIssuedOn(''); setPri('normal'); setShowForm(false);
     };
 
     const handleDelete = async (id) => {
@@ -621,6 +642,17 @@ function CircularsTab() {
                             <textarea className="input" rows={4} placeholder="Write the full announcement here..."
                                 value={body} onChange={e => setBody(e.target.value)} style={{ resize: 'vertical' }} />
                         </div>
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label className="form-label">Official source link</label>
+                                <input className="input" type="url" placeholder="https://ktu.edu.in/..."
+                                    value={sourceUrl} onChange={e => setSourceUrl(e.target.value)} />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Circular issue date</label>
+                                <input className="input" type="date" value={issuedOn} onChange={e => setIssuedOn(e.target.value)} />
+                            </div>
+                        </div>
                         <div className="form-group">
                             <label className="form-label">Priority</label>
                             <div style={{ display: 'flex', gap: 8 }}>
@@ -655,7 +687,7 @@ function CircularsTab() {
                                             {circ.priority || 'normal'}
                                         </span>
                                         <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                                            {new Date(circ.created_at || circ.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                        {(circ.issued_on ? new Date(`${circ.issued_on}T00:00:00`) : new Date(circ.created_at || circ.createdAt)).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                                         </span>
                                     </div>
                                     <button className="btn btn-danger btn-sm" style={{ fontSize: 11, padding: '3px 10px' }}
@@ -665,6 +697,9 @@ function CircularsTab() {
                                 </div>
                                 <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)', marginBottom: 6 }}>{circ.title}</div>
                                 <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{circ.content || circ.body}</div>
+                                {circ.source_url && <a href={circ.source_url} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm" style={{ marginTop: 10 }}>
+                                    <span className="material-symbols-outlined" style={{ fontSize: 15 }}>open_in_new</span>View official source
+                                </a>}
                             </div>
                         );
                     })}
@@ -683,7 +718,6 @@ function PointGradingTab() {
     const [searchAct, setSearchAct] = useState('');
     const [groupFilter, setGroupFilter] = useState(0);
     const [editNote, setEditNote] = useState('');
-    const [editMax, setEditMax] = useState('');
 
     useEffect(() => { getPointOverrides().then(setOverrides).catch(console.error); }, []);
 
@@ -697,14 +731,12 @@ function PointGradingTab() {
     const startEdit = (a) => {
         const ov = overrides[a.id] || {};
         setEditNote(ov.note || '');
-        setEditMax(ov.maxPoints !== undefined ? String(ov.maxPoints) : '');
         setEditing(a.id);
     };
 
     const saveEdit = async (activityId) => {
         const newOv = {};
         if (editNote.trim()) newOv.note = editNote.trim();
-        if (editMax !== '' && !isNaN(editMax)) newOv.maxPoints = parseInt(editMax);
         try {
             if (Object.keys(newOv).length > 0) { await savePointOverride(activityId, newOv); }
             else { await deletePointOverride(activityId); }
@@ -723,7 +755,7 @@ function PointGradingTab() {
             <div className="alert" style={{ background: 'rgba(45,91,227,0.06)', border: '1px solid rgba(45,91,227,0.15)', marginBottom: 20 }}>
                 <span className="material-symbols-outlined" style={{ fontSize: 16, color: 'var(--accent)' }}>info</span>
                 <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-                    Base values come from the official KTU 2024 handbook. You can add admin notes or adjust max point caps per activity.
+                    Official KTU point values and caps are locked to the current handbook catalog. Admins can attach internal clarification notes without changing calculated points.
                 </span>
             </div>
 
@@ -757,11 +789,8 @@ function PointGradingTab() {
                                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>
                                         Group {a.group} · {a.category} ·
                                         <span style={{ color: 'var(--accent)', fontWeight: 700, marginLeft: 4 }}>
-                                            Max {ov?.maxPoints !== undefined ? ov.maxPoints : a.maxPoints} pts
+                                            Max {a.maxPoints} pts
                                         </span>
-                                        {ov?.maxPoints !== undefined && (
-                                            <span style={{ color: 'var(--text-muted)', marginLeft: 4 }}>(base: {a.maxPoints})</span>
-                                        )}
                                     </div>
                                     {ov?.note && !isEditing && (
                                         <div style={{ fontSize: 12, color: '#06b6d4', marginTop: 5, fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -787,17 +816,10 @@ function PointGradingTab() {
 
                             {isEditing && (
                                 <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
-                                    <div className="form-row">
-                                        <div className="form-group" style={{ marginBottom: 0 }}>
-                                            <label className="form-label">Override Max Points</label>
-                                            <input className="input" type="number" placeholder={`Default: ${a.maxPoints}`}
-                                                value={editMax} onChange={e => setEditMax(e.target.value)} />
-                                        </div>
-                                        <div className="form-group" style={{ marginBottom: 0 }}>
-                                            <label className="form-label">Admin Note</label>
-                                            <input className="input" placeholder="e.g. Only applicable from S3 onwards"
-                                                value={editNote} onChange={e => setEditNote(e.target.value)} />
-                                        </div>
+                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                        <label className="form-label">Admin Note</label>
+                                        <input className="input" placeholder="Add an internal clarification note"
+                                            value={editNote} onChange={e => setEditNote(e.target.value)} />
                                     </div>
                                     <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                                         <button className="btn btn-ghost btn-sm" style={{ flex: 1 }} onClick={() => setEditing(null)}>Cancel</button>
@@ -832,8 +854,8 @@ function ProfileTab({ user, onLogout, onUpdateUser }) {
             const fileData = await compressImage(f);
             const updated = await updateUser({ ...user, profileUrl: fileData });
             onUpdateUser(updated);
-        } catch (err) { 
-            alert(err.message); 
+        } catch (err) {
+            alert(err.message);
         }
         setUploading(false);
     };

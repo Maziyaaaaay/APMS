@@ -1,8 +1,8 @@
-import express from 'express';
+import { createRouter } from '../lib/router.js';
 import supabase from '../db/supabase.js';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
 
-const router = express.Router();
+const router = createRouter();
 router.use(authMiddleware);
 
 // GET /api/circulars — all roles can read
@@ -14,9 +14,17 @@ router.get('/', async (_req, res) => {
 
 // POST /api/circulars — admin only
 router.post('/', requireRole('admin'), async (req, res) => {
-  const { title, content } = req.body;
+  const { title, content, sourceUrl, issuedOn } = req.body;
   if (!title || !content) return res.status(400).json({ error: 'title and content are required' });
-  const { data, error } = await supabase.from('circulars').insert({ title, content }).select().single();
+  if (sourceUrl) {
+    try {
+      const parsed = new URL(sourceUrl);
+      if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('Invalid protocol');
+    } catch { return res.status(400).json({ error: 'Enter a valid official circular link.' }); }
+  }
+  const { data, error } = await supabase.from('circulars').insert({
+    title, content, source_url: sourceUrl || null, issued_on: issuedOn || null, created_by: req.user.id,
+  }).select().single();
   if (error) return res.status(400).json({ error: error.message });
   res.status(201).json(data);
 });

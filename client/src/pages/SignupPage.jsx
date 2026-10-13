@@ -1,30 +1,34 @@
+import BrandLogo from '../components/BrandLogo';
+import { AmbientBackdrop } from '../components/DashboardKit';
+import AchievementScene from '../components/AchievementScene';
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { signup } from '../utils/auth';
+import { getDepartments } from '../utils/storage';
 import { compressImage } from '../utils/imageCompressor';
-
-const DEPARTMENTS = [
-  'Computer Science',
-  'Information Technology',
-  'Electronics and Communication Engineering',
-  'Electrical Engineering',
-  'Civil Engineering',
-  'Mechanical Engineering',
-  'Electrical and Computer Science',
-];
 
 export default function SignupPage() {
   const navigate = useNavigate();
+  const [departments, setDepartments] = useState([]);
+  const [departmentsLoading, setDepartmentsLoading] = useState(true);
   const [role, setRole] = useState('student');
   const [form, setForm] = useState({
     name: '', username: '', password: '', confirmPassword: '',
-    email: '', department: '', rollNo: '', studentType: 'regular', designation: '',
+    email: '', phone: '', department: '', rollNo: '', studentType: 'regular', designation: '',
     year: '', profileUrl: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'));
+
+  useEffect(() => {
+    let active = true;
+    getDepartments().then(data => { if (active) setDepartments(data); })
+      .catch(() => { if (active) setError('Could not load departments. Refresh this page to try again.'); })
+      .finally(() => { if (active) setDepartmentsLoading(false); });
+    return () => { active = false; };
+  }, []);
 
   const profilePicRef = useRef();
 
@@ -53,20 +57,22 @@ export default function SignupPage() {
     if (form.password !== form.confirmPassword) {
       setError('Passwords do not match.'); return;
     }
-    if (form.password.length < 6) {
-      setError('Password must be at least 6 characters.'); return;
+    if (form.password.length < 12) {
+      setError('Password must be at least 12 characters.'); return;
     }
-    if (!form.name.trim() || !form.username.trim()) {
-      setError('Name and username are required.'); return;
+    if (!form.name.trim() || !(role === 'student' ? form.rollNo.trim() : form.username.trim())) {
+      setError(role === 'student' ? 'Name and KTU registration number are required.' : 'Name and username are required.'); return;
     }
+    if (!form.email.trim() || !form.phone.trim()) { setError('Email and phone number are required.'); return; }
     setLoading(true);
     try {
       const result = await signup({
         role,
         name: form.name.trim(),
-        username: form.username.trim(),
+        username: role === 'student' ? form.rollNo.trim().toUpperCase() : form.username.trim(),
         password: form.password,
         email: form.email.trim() || undefined,
+        phone: form.phone.trim(),
         department: form.department || undefined,
         rollNo: role === 'student' ? form.rollNo.trim() : undefined,
         studentType: role === 'student' ? form.studentType : undefined,
@@ -80,8 +86,8 @@ export default function SignupPage() {
       } else {
         setError(result.message);
       }
-    } catch (err) {
-      setError('Connection error — make sure the server is running.');
+    } catch {
+      setError('Could not reach APMS. Check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -89,21 +95,16 @@ export default function SignupPage() {
 
   return (
     <div className="login-page">
+            <AmbientBackdrop />
       {/* ── Left branded panel (desktop only) ── */}
       <div className="login-brand-panel">
-        <div className="login-brand-logo">
-          <div className="login-brand-logo-icon">
-            <span className="material-symbols-outlined">account_balance</span>
-          </div>
-          <h1>KTU APMS</h1>
+        <div className="login-brand-logo"><BrandLogo />
         </div>
 
-        <h2>Create Your<br />Account</h2>
-        <p>
-          Join the KTU Activity Point Management System to track your achievements,
-          manage certificates, and stay on top of your academic goals.
-        </p>
+        <div className="brand-eyebrow">YOUR NEXT CHAPTER.</div><h2>A world to explore.<br /><em>A journey to own.</em></h2>
+        <p>Your achievements. All in one place.</p>
 
+        <AchievementScene />
         <div className="login-features">
           <div className="login-feature-item">
             <div className="login-feature-dot">
@@ -132,7 +133,7 @@ export default function SignupPage() {
       <div className="login-form-panel">
         <div className="login-form-inner" style={{ maxWidth: 480 }}>
 
-          {/* Theme toggle — top right */}
+          {/* Theme toggle  /  top right */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
             <button
               className="theme-toggle"
@@ -146,11 +147,7 @@ export default function SignupPage() {
           </div>
 
           {/* Mobile logo */}
-          <div className="login-mobile-logo">
-            <div className="login-mobile-logo-icon">
-              <span className="material-symbols-outlined">account_balance</span>
-            </div>
-            <h1>KTU APMS</h1>
+          <div className="login-mobile-logo"><BrandLogo />
           </div>
 
           <div className="login-heading">
@@ -178,8 +175,8 @@ export default function SignupPage() {
           {success ? (
             <div style={{ padding: '32px 0', textAlign: 'center' }}>
               <span className="material-symbols-outlined" style={{ fontSize: 56, color: 'var(--success)', display: 'block', marginBottom: 12 }}>check_circle</span>
-              <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>Account Created!</div>
-              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Redirecting you to login…</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>Request submitted</div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{role === 'student' ? 'Your department faculty advisor must approve your account before you can sign in.' : 'An administrator must approve your faculty account before you can sign in.'}</div>
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
@@ -197,21 +194,26 @@ export default function SignupPage() {
                   <input className="input" placeholder="e.g. Arjun Menon" value={form.name} onChange={set('name')} required />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Username *</label>
-                  <input className="input" placeholder="e.g. arjun2024" value={form.username} onChange={set('username')} required />
+                  <label className="form-label">{role === 'student' ? 'KTU Registration Number *' : 'Username *'}</label>
+                  <input className="input" placeholder={role === 'student' ? 'e.g. TVE23CS001' : 'e.g. arjun.menon'} value={role === 'student' ? form.rollNo : form.username} onChange={set(role === 'student' ? 'rollNo' : 'username')} required />
                 </div>
               </div>
 
               <div className="form-group">
-                <label className="form-label">Email</label>
-                <input className="input" type="email" placeholder="your@email.com" value={form.email} onChange={set('email')} />
+                <label className="form-label">Email *</label>
+                <input className="input" type="email" placeholder="you@example.com" value={form.email} onChange={set('email')} required />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Phone Number *</label>
+                <input className="input" type="tel" autoComplete="tel" placeholder="+91 98765 43210" value={form.phone} onChange={set('phone')} required />
               </div>
 
               <div className="form-group">
                 <label className="form-label">Department</label>
-                <select className="input" value={form.department} onChange={set('department')}>
-                  <option value="">— Select Department —</option>
-                  {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+                <select className="input" value={form.department} onChange={set('department')} required disabled={departmentsLoading}>
+                  <option value=""> /  Select Department  / </option>
+                  {departments.map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
               </div>
 
@@ -239,10 +241,6 @@ export default function SignupPage() {
 
                   <div className="form-row">
                     <div className="form-group">
-                      <label className="form-label">Roll Number</label>
-                      <input className="input" placeholder="e.g. KTU21CS001" value={form.rollNo} onChange={set('rollNo')} />
-                    </div>
-                    <div className="form-group">
                       <label className="form-label">Student Type</label>
                       <select className="input" value={form.studentType} onChange={set('studentType')}>
                         <option value="regular">Regular (120 pts)</option>
@@ -255,7 +253,7 @@ export default function SignupPage() {
                   <div className="form-group">
                     <label className="form-label">Year of Study</label>
                     <select className="input" value={form.year} onChange={set('year')}>
-                      <option value="">— Select Year —</option>
+                      <option value=""> /  Select Year  / </option>
                       <option value="1">First Year</option>
                       <option value="2">Second Year</option>
                       <option value="3">Third Year</option>
@@ -277,7 +275,7 @@ export default function SignupPage() {
               <div className="form-row">
                 <div className="form-group">
                   <label className="form-label">Password *</label>
-                  <input className="input" type="password" placeholder="Min. 6 characters" value={form.password} onChange={set('password')} required />
+                  <input className="input" type="password" placeholder="Min. 12 characters" minLength={12} value={form.password} onChange={set('password')} required />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Confirm Password *</label>
@@ -288,7 +286,7 @@ export default function SignupPage() {
               <button
                 type="submit"
                 className="login-submit-btn"
-                disabled={loading}
+                disabled={loading || departmentsLoading || !departments.length}
               >
                 {loading ? (
                   <><span className="material-symbols-outlined" style={{ fontSize: 18, animation: 'spin 1s linear infinite' }}>refresh</span> Creating account…</>

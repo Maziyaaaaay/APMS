@@ -4,7 +4,7 @@ import { ACTIVITIES } from './points';
 export function generateApprovalPDF(certificate, student, faculty) {
     const doc = new jsPDF();
     const actId = certificate.activityId || certificate.activity_id;
-    const activity = ACTIVITIES[actId];
+    const activity = certificate.activity_snapshot || certificate.activitySnapshot || ACTIVITIES[actId];
 
     // Header background
     doc.setFillColor(15, 23, 42); // dark blue
@@ -134,3 +134,4 @@ export function generateApprovalPDF(certificate, student, faculty) {
     doc.save(filename);
     return filename;
 }
+
