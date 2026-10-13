@@ -38,7 +38,6 @@ export default function StudentPortal() {
     const [user, setUser] = useState(() => getCurrentUser());
     const [tab,          setTab]          = useState('dashboard');
     const [certs,        setCerts]        = useState([]);
-    const [sidebarOpen,  setSidebarOpen]  = useState(false);
     const [showGuidelines, setShowGuidelines] = useState(false);
     const [dark,         setDark]         = useState(() => document.documentElement.classList.contains('dark'));
 
@@ -75,78 +74,22 @@ export default function StudentPortal() {
     };
 
     return (
-        <div className="portal-layout student-portal">
-            <AmbientBackdrop />
-            {/* ── Sidebar overlay (mobile) ── */}
-            <div
-                className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`}
-                onClick={() => setSidebarOpen(false)}
-            />
-
-            {/* ── Sidebar ── */}
-            <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-                <div className="sidebar-brand"><BrandLogo /><div className="sidebar-brand-text">
-                        <p>Student Portal</p>
+        <div className="portal-layout student-portal role-workspace">
+            <header className="role-masthead">
+                <div className="role-masthead-top">
+                    <div className="role-identity"><BrandLogo /><span>STUDENT SPACE</span></div>
+                    <div className="role-masthead-actions">
+                        <button className="role-guidelines" onClick={() => setShowGuidelines(true)}><span className="material-symbols-outlined">menu_book</span><span>Guide</span></button>
+                        <button className="role-theme" onClick={toggleDark} aria-label={dark ? 'Switch to day mode' : 'Switch to night mode'}><span className="material-symbols-outlined">{dark ? 'light_mode' : 'dark_mode'}</span></button>
+                        <button className="role-account" onClick={() => setTab('profile')} aria-label="Open profile">{user?.profileUrl ? <img src={user.profileUrl} alt="" /> : initials}</button>
                     </div>
                 </div>
-
-                <nav className="sidebar-nav">
-                    {NAV_ITEMS.map(item => (
-                        <button
-                            key={item.key}
-                            className={`nav-item ${tab === item.key ? 'active' : ''}`}
-                            aria-current={tab === item.key ? 'page' : undefined}
-                            onClick={() => { setTab(item.key); setSidebarOpen(false); }}
-                        >
-                            <span className="material-symbols-outlined">{item.icon}</span>
-                            {item.label}
-                        </button>
-                    ))}
-                </nav>
-
-                <div className="sidebar-footer">
-                    <button className="sidebar-help-btn" onClick={() => setShowGuidelines(true)}>
-                        <span className="material-symbols-outlined" style={{ fontSize: 16 }}>menu_book</span>
-                        View Guidelines
-                    </button>
-                    <div style={{ display:'flex', alignItems:'center', gap:10, marginTop:12, paddingTop:12, borderTop:'1px solid rgba(255,255,255,0.08)', cursor:'pointer' }} onClick={() => { setTab('profile'); setSidebarOpen(false); }}>
-                        <div style={{ width:32, height:32, borderRadius:'50%', background:'rgba(255,255,255,0.15)', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:12, color:'#fff', flexShrink:0, overflow:'hidden' }}>
-                            {user?.profileUrl ? <img src={user.profileUrl} alt="Profile" style={{width:'100%', height:'100%', objectFit:'cover'}} /> : initials}
-                        </div>
-                        <div style={{ flex:1, overflow:'hidden' }}>
-                            <div style={{ fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.85)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{user?.name}</div>
-                            <div style={{ fontSize:10, color:'rgba(255,255,255,0.45)', marginTop:1 }}>{user?.rollNo}</div>
-                        </div>
-                    </div>
+                <div className="role-nav-line">
+                    <nav className="role-nav" aria-label="Student navigation">{NAV_ITEMS.map(item => <button key={item.key} className={tab === item.key ? 'active' : ''} aria-current={tab === item.key ? 'page' : undefined} onClick={() => setTab(item.key)}><span className="material-symbols-outlined">{item.icon}</span>{item.label}</button>)}</nav>
+                    <span className="role-context">{user?.rollNo} · {user?.department}</span>
                 </div>
-            </aside>
-
-            {/* ── Main Content ── */}
-            <div className="main-content">
-                {/* Top Bar */}
-                <header className="topbar">
-                    <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-                        <button className="topbar-menu-btn" aria-label="Open navigation" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(o => !o)}>
-                            <span className="material-symbols-outlined">menu</span>
-                        </button>
-                        <span className="topbar-title">{PAGE_TITLES[tab]}</span>
-                    </div>
-                    <div className="topbar-right">
-                        <div className="topbar-user-info">
-                            <div className="topbar-user-name">{user?.name}</div>
-                            <div className="topbar-user-sub">{user?.rollNo} · {user?.department}</div>
-                        </div>
-                        <div className="topbar-avatar" style={{ cursor: 'pointer', overflow:'hidden', padding:user?.profileUrl ? 0 : '', display:user?.profileUrl ? 'block' : 'flex' }} onClick={() => setTab('profile')}>
-                             {user?.profileUrl ? <img src={user.profileUrl} alt="Profile" style={{width:'100%', height:'100%', objectFit:'cover'}} /> : initials}
-                        </div>
-                        <button className="theme-toggle" onClick={toggleDark} title="Toggle dark mode">
-                            <span className="material-symbols-outlined" style={{ fontSize:18 }}>
-                                {dark ? 'light_mode' : 'dark_mode'}
-                            </span>
-                        </button>
-                    </div>
-                </header>
-
+            </header>
+            <main className="role-main">
                 {/* Page Content */}
                 <div className="page-content" key={tab}>
                     {loadError && <div role="alert" className="alert alert-danger">{loadError} <button onClick={refreshCerts}>Try again</button></div>}
@@ -155,7 +98,7 @@ export default function StudentPortal() {
                     {tab === 'submissions' && <SubmissionsTab certs={certs} />}
                     {tab === 'profile'     && <ProfileTab     user={user} onUpdateUser={setUser} summary={summary} req={req} onLogout={handleLogout} onGuidelines={() => setShowGuidelines(true)} />}
                 </div>
-            </div>
+            </main>
 
             {showGuidelines && <GuidelinesModal onClose={() => setShowGuidelines(false)} />}
         </div>
