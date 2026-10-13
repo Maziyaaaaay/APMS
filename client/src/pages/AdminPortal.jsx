@@ -777,12 +777,12 @@ function PointGradingTab() {
                 {filtered.length} activities · {Object.keys(overrides).length} with custom notes
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {filtered.map(a => {
+            <div className="point-catalog-list" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {filtered.map(a => {}
                     const ov = overrides[a.id];
                     const isEditing = editing === a.id;
                     return (
-                        <div key={a.id} style={{ padding: '14px 16px', borderRadius: 'var(--radius)', border: `1px solid ${ov ? 'rgba(45,91,227,0.25)' : 'var(--border)'}`, background: ov ? 'rgba(45,91,227,0.04)' : 'var(--surface)' }}>
+                        <div key={a.id} className="point-catalog-row" style={{ padding: '14px 16px', borderRadius: 'var(--radius)', border: `1px solid ${ov ? 'rgba(45,91,227,0.25)' : 'var(--border)'}`, background: ov ? 'rgba(45,91,227,0.04)' : 'var(--surface)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                                 <div style={{ flex: 1 }}>
                                     <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{a.name}</div>
