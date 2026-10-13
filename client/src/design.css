@@ -163,3 +163,122 @@ body{background:#fff}.sidebar{background:#fff;border-right:1px solid var(--borde
 @media(max-width:1120px){.admin-portal .work-queue{grid-template-columns:1fr 1fr}.admin-portal .work-queue .section-intro{grid-column:1/-1}.admin-portal .workspace-links{justify-content:flex-start}}
 @media(max-width:767px){.admin-portal .sidebar{width:270px}.admin-portal .main-content{margin-left:0}.admin-portal .topbar{height:68px;padding:0 19px}.admin-portal .topbar-user-info{display:none}.admin-portal .page-content{padding:24px 18px 42px}.admin-portal .dashboard-composition{display:flex;flex-direction:column;gap:0}.admin-portal .campus-hero{width:100%;min-height:230px;margin-bottom:25px;padding:35px 25px;border-radius:25px}.admin-portal .campus-hero .workspace-heading{max-width:100%}.admin-portal .campus-hero .workspace-heading h2{max-width:76%;font-size:clamp(38px,10vw,53px)}.admin-portal .campus-hero .workspace-heading p{font-size:13px;max-width:72%}.admin-portal .campus-hero-art{right:-16px;top:auto;bottom:13px;width:100px;height:100px;border-radius:26px}.admin-portal .campus-hero-art span{font-size:52px}.admin-portal .work-queue{display:flex;flex-direction:column;gap:12px;width:100%;margin-bottom:24px}.admin-portal .work-queue .section-intro{padding:4px 0 8px}.admin-portal .work-queue .section-intro h3{font-size:23px}.admin-portal .work-queue .action-tile{width:100%;min-height:102px;padding:17px;border-radius:19px}.admin-portal .action-tile-copy strong{font-size:15px}.admin-portal .action-count{font-size:30px}.admin-portal .campus-register,.admin-portal .activity-feed{width:100%;padding:19px;margin-bottom:23px;border-radius:21px}.admin-portal .campus-register .metric-grid{grid-template-columns:1fr;gap:9px}.admin-portal .campus-register .metric-card{min-height:76px;grid-template-columns:auto 1fr auto auto;padding:13px;border-radius:15px}.admin-portal .metric-value{grid-column:3;grid-row:1;font-size:27px}.admin-portal .metric-detail{grid-column:2;grid-row:2;text-align:left;font-size:10px}.admin-portal .metric-label{font-size:12px}.admin-portal .activity-feed .panel-heading{align-items:flex-start;flex-direction:column;margin-bottom:12px}.admin-portal .activity-feed .designed-empty{align-items:flex-start;flex-direction:column;gap:6px}.admin-portal .campus-insights{width:100%;margin-bottom:15px}.admin-portal .workspace-links{width:100%;justify-content:flex-start;gap:8px}.admin-portal .workspace-links button{font-size:11px;padding:10px 11px}}
 @media(prefers-reduced-motion:reduce){.admin-portal::before,.admin-portal::after,.admin-portal .campus-hero::before,.admin-portal .campus-hero-art{animation:none!important}}
+
+/* Night mode: wine, warm paper and soft amber light from the supplied reference. */
+.theme-toggle{display:flex!important;width:40px;height:40px;align-items:center;justify-content:center;border:1px solid rgba(116,43,58,.16);border-radius:50%;background:linear-gradient(145deg,#fff8f2,#f5e7df);color:#7a343d;box-shadow:0 5px 18px rgba(82,36,38,.09)!important}
+.theme-toggle:hover{background:linear-gradient(145deg,#ffe9dc,#f7d6d4);color:#5f202d}
+html.dark{
+ color-scheme:dark;
+ --primary:#f2d8cf;--primary-light:#f8e8dc;--accent:#e4a06f;--accent-hover:#f0b888;
+ --bg:#241311;--bg2:#321916;--surface:#3d211e;--surface2:#492824;
+ --text:#f7eae0;--text-secondary:#dbc5b8;--text-muted:#b49b8f;
+ --border:rgba(247,220,204,.14);--border-strong:rgba(247,220,204,.26);
+ --sidebar-bg:#2d1113;--sidebar-text:#ead8cf;--sidebar-active:#64272c;--sidebar-hover:rgba(255,231,216,.08);
+ --success:#a4d0ae;--success-bg:rgba(110,174,126,.16);--warning:#f0c785;--warning-bg:rgba(220,166,90,.16);--danger:#ef9a96;--danger-bg:rgba(212,102,100,.17);
+ --shadow:0 8px 26px rgba(9,3,3,.22);--shadow-lg:0 18px 50px rgba(9,3,3,.32);--shadow-accent:0 9px 28px rgba(208,112,95,.2);
+}
+html.dark body{background:radial-gradient(ellipse at 88% 5%,rgba(153,70,53,.23),transparent 35%),radial-gradient(ellipse at 12% 82%,rgba(116,35,53,.2),transparent 42%),linear-gradient(145deg,#211110,#2b1514 54%,#211211);background-attachment:fixed;color:var(--text)}
+html.dark .portal-layout,html.dark .main-content{background:transparent;color:var(--text)}
+html.dark .sidebar{background:linear-gradient(165deg,#321416,#251011 72%,#1f1010);border-right:1px solid var(--border)}
+html.dark .sidebar-brand-icon{background:linear-gradient(145deg,#b85c52,#e1a06c)}
+html.dark .nav-item{color:var(--sidebar-text)}
+html.dark .nav-item.active,html.dark .nav-item.active:hover{background:linear-gradient(110deg,#6b292d,#87433d);color:#fff4e9}
+html.dark .nav-item:hover{background:var(--sidebar-hover);color:#fff4e9}
+html.dark .sidebar-footer{border-color:var(--border)}
+html.dark .sidebar-footer .user-avatar{background:linear-gradient(140deg,#bd6c63,#db9c69);color:#fff!important}
+html.dark .topbar{background:rgba(39,19,17,.76);border-bottom:1px solid var(--border);backdrop-filter:blur(18px)}
+html.dark .topbar-title,html.dark .topbar-user-name{color:var(--text)}
+html.dark .topbar-user-role,html.dark .topbar-user-sub{color:var(--text-secondary)}
+html.dark .theme-toggle{display:flex!important;width:40px;height:40px;align-items:center;justify-content:center;border:1px solid rgba(246,218,197,.22);border-radius:50%;background:linear-gradient(145deg,rgba(120,50,48,.85),rgba(67,32,30,.92));color:#f4c486;box-shadow:0 5px 18px rgba(12,4,4,.24)!important}
+html.dark .theme-toggle:hover{background:linear-gradient(145deg,#9b4a48,#60302d);color:#fff0d9}
+html.dark .workspace-heading h2,html.dark .section-intro h3,html.dark .panel-heading h3,html.dark .card-header h3,html.dark .student-progress-copy h3,html.dark .faculty-focus-panel h3,html.dark .campus-progress h3{color:var(--text)}
+html.dark .workspace-heading p,html.dark .section-intro>span:last-child,html.dark .metric-detail,html.dark .feed-copy span,html.dark .campus-insights{color:var(--text-secondary)}
+html.dark .eyebrow,html.dark .form-eyebrow,.admin-portal.dark .eyebrow{color:#e5ad7a}
+html.dark .campus-hero{background:radial-gradient(ellipse at 88% 12%,rgba(224,154,105,.42),transparent 39%),radial-gradient(ellipse at 72% 100%,rgba(167,69,81,.65),transparent 48%),linear-gradient(118deg,#45191d,#702c35 52%,#9a5143);border:1px solid rgba(255,230,211,.2);box-shadow:0 24px 64px rgba(10,2,4,.25)}
+html.dark .campus-hero .eyebrow{color:#ffdfc0}
+html.dark .campus-hero-art{background:linear-gradient(145deg,rgba(255,236,220,.2),rgba(255,222,203,.06));border-color:rgba(255,236,220,.35);backdrop-filter:blur(16px)}
+html.dark .campus-hero-art span{color:#ffe2bf}
+html.dark .work-queue,html.dark .student-progress-panel,html.dark .faculty-focus-panel{background:linear-gradient(135deg,rgba(91,42,39,.78),rgba(57,27,27,.86));border:1px solid var(--border);box-shadow:0 16px 38px rgba(8,2,3,.14)!important}
+html.dark .work-queue .action-tile,html.dark .work-queue .action-tile:first-of-type,html.dark .work-queue .action-tile:last-of-type{background:linear-gradient(130deg,rgba(119,53,52,.56),rgba(69,34,32,.72));border-color:rgba(255,225,210,.18);color:var(--text)}
+html.dark .action-tile-copy strong,html.dark .metric-value,html.dark .orbit-copy strong{color:var(--text)}
+html.dark .action-tile-copy>span{color:var(--text-secondary)}
+html.dark .campus-register,html.dark .activity-feed,html.dark .campus-insights,html.dark .card,html.dark .glass-panel,html.dark .stat-card,html.dark .table-card,html.dark .modal{background:linear-gradient(145deg,rgba(66,35,32,.92),rgba(48,26,25,.94));border-color:var(--border);color:var(--text);box-shadow:0 14px 36px rgba(8,2,3,.16)!important}
+html.dark .metric-grid{border-color:var(--border)}
+html.dark .metric-card{background:transparent;color:var(--text);border-color:var(--border)}
+html.dark .metric-label{color:#e5cfc1}
+html.dark .activity-feed .feed-item{border-color:var(--border)}
+html.dark .activity-feed .feed-copy strong,html.dark .campus-insights summary{color:var(--text)}
+html.dark .designed-empty{background:rgba(99,47,47,.24);border-color:rgba(236,184,157,.28)}
+html.dark .designed-empty h4{color:#f4d9ca}
+html.dark .designed-empty p{color:var(--text-secondary)}
+html.dark .segmented-control{background:rgba(34,17,17,.5);border-color:var(--border)}
+html.dark .segmented-control button{color:var(--text-secondary)}
+html.dark .segmented-control button[aria-pressed=true]{background:linear-gradient(110deg,#762d37,#a65747);color:#fff5e9}
+html.dark .workspace-links button{background:rgba(107,51,47,.42);border-color:var(--border);color:#f4d9ca}
+html.dark .workspace-links button:hover{background:#74403a}
+html.dark .btn-primary,html.dark .login-submit-btn{background:linear-gradient(110deg,#9b3d4e,#d27a5e);color:#fff7ed;border:1px solid rgba(255,229,210,.15)}
+html.dark .btn-primary:hover,html.dark .login-submit-btn:hover{background:linear-gradient(110deg,#b44d59,#e29268)}
+html.dark .btn-outline,html.dark .btn-ghost{background:rgba(255,230,214,.04);border-color:var(--border-strong);color:var(--text)}
+html.dark .input,html.dark .select,html.dark .textarea,html.dark .search-input,html.dark .filter-select{background:rgba(28,14,14,.42);border-color:var(--border-strong);color:var(--text)}
+html.dark .input::placeholder,html.dark .search-input::placeholder,html.dark .textarea::placeholder{color:#b49a8c}
+html.dark .form-label{color:var(--text)}
+html.dark .data-table{color:var(--text)}
+html.dark .data-table th{background:#512b27;color:#f7eae0}
+html.dark .data-table td{border-color:var(--border);color:var(--text-secondary)}
+html.dark .badge-info{background:rgba(220,173,142,.15);color:#f1d3bd}
+html.dark .modal-overlay{background:rgba(16,6,7,.76)}
+html.dark .progress-orbit progress::-webkit-progress-bar{background:#5b3731}
+html.dark .progress-orbit progress::-webkit-progress-value{background:linear-gradient(90deg,#bd5861,#e3a16a)}
+html.dark .login-page{background:radial-gradient(ellipse at 80% 70%,rgba(171,67,93,.48),transparent 42%),radial-gradient(ellipse at 15% 15%,rgba(224,153,104,.38),transparent 43%),linear-gradient(130deg,#281111,#40191d 50%,#291311);color:var(--text)}
+html.dark .login-brand-panel{background:radial-gradient(ellipse at 55% 78%,rgba(229,125,117,.58),transparent 40%),radial-gradient(ellipse at 12% 24%,rgba(226,172,111,.45),transparent 42%),linear-gradient(145deg,#542329,#722e3a 55%,#3e1c23);border-right:1px solid rgba(255,232,216,.14);color:#fff1e5}
+html.dark .login-brand-panel::before,html.dark .login-brand-panel::after{display:block}
+html.dark .login-brand-logo h1,html.dark .login-brand-panel h2,html.dark .login-brand-panel p{color:#fff1e5}
+html.dark .login-brand-footer,html.dark .login-brand-badge{color:#e7c9b9}
+html.dark .login-brand-logo-icon,html.dark .login-mobile-logo-icon{background:linear-gradient(145deg,#c86d61,#e2aa72)}
+html.dark .login-form-panel{background:rgba(48,24,24,.72);backdrop-filter:blur(24px);border:1px solid rgba(255,232,216,.12)}
+html.dark .login-heading h2,html.dark .login-heading p{color:var(--text)}
+html.dark .login-role-tabs{border-color:var(--border)}
+html.dark .login-role-tab{color:var(--text-secondary)}
+html.dark .login-role-tab.active,html.dark .role-tab.active{background:linear-gradient(110deg,#78313b,#a4554b);color:#fff4e9}
+html.dark .login-feature-item span{color:var(--text-secondary)}
+html.dark .journey-showcase{border-color:var(--border)}
+html.dark .journey-controls button{border-color:var(--border-strong);color:var(--text)}
+html.dark .journey-controls button[aria-pressed=true]{background:linear-gradient(110deg,#78313b,#a4554b);color:#fff4e9}
+html.dark .journey-caption p,html.dark .journey-showcase>small{color:var(--text-secondary)}
+html.dark .workspace-skeleton>span{background:var(--surface);border-color:var(--border)}
+html.dark .admin-portal{background:radial-gradient(ellipse at 84% 3%,rgba(158,62,61,.2),transparent 32%),linear-gradient(150deg,#251211,#2b1514 60%,#211110);color:var(--text)}
+html.dark .admin-portal .sidebar{background:linear-gradient(175deg,#301214,#241011);border-color:var(--border)}
+html.dark .admin-portal .sidebar-brand-icon{background:linear-gradient(145deg,#b85c52,#e1a06c)}
+html.dark .admin-portal .nav-item.active{background:linear-gradient(110deg,#69282e,#873c3e);color:#fff3e8}
+html.dark .admin-portal .topbar{background:rgba(38,18,17,.76);border-color:var(--border)}
+html.dark .admin-portal .topbar-title,html.dark .admin-portal .topbar-user-name{color:var(--text)}
+html.dark .admin-portal .topbar-user-sub{color:var(--text-secondary)}
+html.dark .admin-portal .theme-toggle{display:flex!important;background:linear-gradient(145deg,rgba(130,54,53,.9),rgba(69,31,31,.95));border-color:var(--border);color:#f4c486}
+html.dark .admin-portal .campus-hero{background:radial-gradient(ellipse at 86% 10%,rgba(225,157,104,.52),transparent 39%),radial-gradient(ellipse at 68% 100%,rgba(166,61,87,.69),transparent 50%),linear-gradient(118deg,#46191e,#702a35 55%,#945043);border-color:rgba(255,230,211,.2)}
+html.dark .admin-portal .campus-hero::before{background:radial-gradient(ellipse at 72% 65%,#e4ab77b8 0%,transparent 34%),radial-gradient(ellipse at 35% 40%,#cf6179bd 0%,transparent 42%),radial-gradient(ellipse at 86% 12%,#a95f62 0%,transparent 38%)}
+html.dark .admin-portal .campus-hero::after{background:linear-gradient(100deg,#260d14aa,transparent 76%)}
+html.dark .admin-portal .campus-hero .workspace-heading h2{color:#fff1e5}
+html.dark .admin-portal .campus-hero .workspace-heading p,html.dark .admin-portal .campus-hero .eyebrow{color:#ffe1c9}
+html.dark .admin-portal .work-queue .section-intro h3,html.dark .admin-portal .campus-register .section-intro h3,html.dark .admin-portal .activity-feed .panel-heading h3{color:var(--text)}
+html.dark .admin-portal .work-queue .section-intro>span:last-child,html.dark .admin-portal .action-tile-copy>span,html.dark .admin-portal .metric-detail,html.dark .admin-portal .feed-copy span{color:var(--text-secondary)}
+html.dark .admin-portal .work-queue .action-tile,html.dark .admin-portal .work-queue .action-tile:first-of-type,html.dark .admin-portal .work-queue .action-tile:last-of-type{background:linear-gradient(135deg,rgba(111,49,48,.76),rgba(64,31,30,.82));border-color:var(--border);box-shadow:0 12px 30px rgba(11,3,3,.2),inset 0 1px 0 rgba(255,237,220,.12)!important}
+html.dark .admin-portal .action-tile-copy strong,html.dark .admin-portal .action-count,html.dark .admin-portal .metric-value{color:var(--text)}
+html.dark .admin-portal .campus-register,html.dark .admin-portal .activity-feed{background:linear-gradient(145deg,rgba(67,34,32,.93),rgba(47,25,24,.95));border-color:var(--border)}
+html.dark .admin-portal .campus-register .metric-card{background:linear-gradient(135deg,rgba(118,58,54,.58),rgba(70,37,34,.66));border-color:var(--border);color:var(--text)}
+html.dark .admin-portal .campus-register .metric-card:nth-child(2){background:linear-gradient(135deg,rgba(103,60,66,.62),rgba(69,36,37,.7))}
+html.dark .admin-portal .campus-register .metric-card:nth-child(3){background:linear-gradient(135deg,rgba(133,75,48,.55),rgba(70,39,32,.7))}
+html.dark .admin-portal .metric-label{color:#e5c9bb}
+html.dark .admin-portal .activity-feed .designed-empty{background:rgba(112,54,53,.22);border-color:rgba(236,184,157,.3)}
+html.dark .admin-portal .designed-empty h4{color:#f2d8cb}
+html.dark .admin-portal .designed-empty p{color:var(--text-secondary)}
+html.dark .admin-portal .segmented-control{background:rgba(31,15,15,.6);border-color:var(--border)}
+html.dark .admin-portal .segmented-control button{color:var(--text-secondary)}
+html.dark .admin-portal .segmented-control button[aria-pressed=true]{background:linear-gradient(110deg,#78313b,#b15a4d);color:#fff4e9}
+html.dark .admin-portal .campus-insights{background:rgba(66,35,32,.72);border-color:var(--border)}
+html.dark .admin-portal .campus-insights summary{color:var(--text)}
+html.dark .admin-portal .workspace-links button{background:rgba(107,51,47,.42);border-color:var(--border);color:#f4d9ca}
+html.dark .admin-portal .workspace-links button:hover{background:#74403a}
+html.dark .activity-chart,html.dark .chart-column{color:var(--text-secondary)}
+html.dark .chart-bar{background:linear-gradient(180deg,#e7ab73,#b9505d)}
+html.dark ::selection{background:#a04c51;color:#fff5ea}
+@media(prefers-reduced-motion:no-preference){html.dark body,html.dark .topbar,html.dark .sidebar,html.dark .card,html.dark .glass-panel,html.dark .theme-toggle{transition:background-color .28s ease,color .28s ease,border-color .28s ease,box-shadow .28s ease!important}}
