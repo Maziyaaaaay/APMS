@@ -1,5 +1,4 @@
 import BrandLogo from '../components/BrandLogo';
-import { AmbientBackdrop, WorkspaceHeading, MetricCard } from '../components/DashboardKit';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, logout } from '../utils/auth';
@@ -16,26 +15,6 @@ const NAV_ITEMS = [
     { key: 'profile',    icon: 'person',          label: 'Profile'         },
 ];
 
-const DEPARTMENTS = [
-    'Computer Science',
-    'Information Technology',
-    'Electronics and Communication Engineering',
-    'Electrical Engineering',
-    'Civil Engineering',
-    'Mechanical Engineering',
-    'Electrical and Computer Science',
-];
-
-const DUAL_CLASS_DEPTS = {
-    'Computer Science': ['CS1', 'CS2'],
-    'Electronics and Communication Engineering': ['ECE1', 'ECE2'],
-};
-
-function getCurrentSemesters() {
-    const month = new Date().getMonth() + 1;
-    return month >= 1 && month <= 6 ? [2, 4, 6, 8] : [1, 3, 5, 7];
-}
-
 export default function FacultyPortal() {
     const navigate = useNavigate();
     const [user, setUser] = useState(() => getCurrentUser());
@@ -44,7 +23,6 @@ export default function FacultyPortal() {
     const [students, setStudents] = useState([]);
     const [accountRequests, setAccountRequests] = useState([]);
     const [circulars, setCirculars] = useState([]);
-    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'));
 
     const [loadError, setLoadError] = useState('');
@@ -79,83 +57,23 @@ export default function FacultyPortal() {
     const pendingCerts = certs.filter(c => c.status === 'pending');
     const initials = user?.name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'FA';
 
-    const PAGE_TITLES = {
-        dashboard: 'Dashboard',
-        reviews:   'Pending Reviews',
-        approvals: 'Student Requests',
-        students:  'My Students',
-        profile:   'Profile',
-    };
-
     return (
-        <div className="portal-layout faculty-portal">
-            <AmbientBackdrop />
-            {/* Sidebar overlay (mobile) */}
-            <div
-                className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`}
-                onClick={() => setSidebarOpen(false)}
-            />
-
-            {/* Sidebar */}
-            <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-                <div className="sidebar-brand"><BrandLogo /><div className="sidebar-brand-text">
-                        <p>Faculty Portal</p>
+        <div className="portal-layout faculty-portal role-workspace">
+            <header className="role-masthead">
+                <div className="role-masthead-top">
+                    <div className="role-identity"><BrandLogo /><span>FACULTY SPACE</span></div>
+                    <div className="role-masthead-actions">
+                        <span className="role-person-name">{user?.name}</span>
+                        <button className="role-theme" onClick={toggleDark} aria-label={dark ? 'Switch to day mode' : 'Switch to night mode'}><span className="material-symbols-outlined">{dark ? 'light_mode' : 'dark_mode'}</span></button>
+                        <button className="role-account" onClick={() => setTab('profile')} aria-label="Open profile">{user?.profileUrl ? <img src={user.profileUrl} alt="" /> : initials}</button>
                     </div>
                 </div>
-
-                <nav className="sidebar-nav">
-                    {NAV_ITEMS.map(item => (
-                        <button
-                            key={item.key}
-                            className={`nav-item ${tab === item.key ? 'active' : ''}`}
-                            aria-current={tab === item.key ? 'page' : undefined}
-                            onClick={() => { setTab(item.key); setSidebarOpen(false); }}
-                        >
-                            <span className="material-symbols-outlined">{item.icon}</span>
-                            {item.label}
-                        </button>
-                    ))}
-                </nav>
-
-                <div className="sidebar-footer">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }} onClick={() => { setTab('profile'); setSidebarOpen(false); }}>
-                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12, color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
-                            {user?.profileUrl ? <img src={user.profileUrl} alt="Profile" style={{width:'100%', height:'100%', objectFit:'cover'}} /> : initials}
-                        </div>
-                        <div style={{ flex: 1, overflow: 'hidden' }}>
-                            <div style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.85)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.name}</div>
-                            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', marginTop: 1 }}>{user?.designation || 'Faculty Advisor'}</div>
-                        </div>
-                    </div>
+                <div className="role-nav-line">
+                    <nav className="role-nav" aria-label="Faculty navigation">{NAV_ITEMS.map(item => <button key={item.key} className={tab === item.key ? 'active' : ''} aria-current={tab === item.key ? 'page' : undefined} onClick={() => setTab(item.key)}><span className="material-symbols-outlined">{item.icon}</span>{item.label}</button>)}</nav>
+                    <span className="role-context">{user?.department}</span>
                 </div>
-            </aside>
-
-            {/* Main Content */}
-            <div className="main-content">
-                {/* Top Bar */}
-                <header className="topbar">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <button className="topbar-menu-btn" aria-label="Open navigation" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(o => !o)}>
-                            <span className="material-symbols-outlined">menu</span>
-                        </button>
-                        <span className="topbar-title">{PAGE_TITLES[tab]}</span>
-                    </div>
-                    <div className="topbar-right">
-                        <div className="topbar-user-info">
-                            <div className="topbar-user-name">{user?.name}</div>
-                            <div className="topbar-user-sub">{user?.designation || 'Faculty Advisor'} · {user?.department}</div>
-                        </div>
-                        <div className="topbar-avatar" style={{ cursor: 'pointer', overflow:'hidden', padding:user?.profileUrl ? 0 : '', display:user?.profileUrl ? 'block' : 'flex' }} onClick={() => setTab('profile')}>
-                            {user?.profileUrl ? <img src={user.profileUrl} alt="Profile" style={{width:'100%', height:'100%', objectFit:'cover'}} /> : initials}
-                        </div>
-                        <button className="theme-toggle" onClick={toggleDark} title="Toggle dark mode">
-                            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
-                                {dark ? 'light_mode' : 'dark_mode'}
-                            </span>
-                        </button>
-                    </div>
-                </header>
-
+            </header>
+            <main className="role-main">
                 {/* Page Content */}
                 <div className="page-content" key={tab}>
                     {loadError && <div role="alert" className="alert alert-danger">{loadError} <button onClick={refreshData}>Try again</button></div>}
@@ -188,7 +106,7 @@ export default function FacultyPortal() {
                         <ProfileTab user={user} onLogout={handleLogout} onRefresh={refreshData} onUpdateUser={setUser} />
                     )}
                 </div>
-            </div>
+            </main>
         </div>
     );
 }
@@ -205,277 +123,35 @@ function StudentApprovalsTab({ requests, onRefresh }) {
         finally { setBusyId(null); }
     };
 
-    return <section className="card">
-        <div className="card-header"><h3>Student registrations</h3><span className="badge badge-pending">{requests.length} waiting</span></div>
-        <div className="card-body">
-            <p className="td-muted" style={{ marginTop: 0 }}>Approve students from your department before they can sign in and submit activity records.</p>
-            {requests.length === 0 ? <div className="empty-state"><span className="material-symbols-outlined">task_alt</span><p>No student registrations are waiting.</p></div> :
-                <div className="table-overflow"><table className="data-table">
-                    <thead><tr><th>Student</th><th>KTU Registration No.</th><th>Contact</th><th>Year</th><th>Decision</th></tr></thead>
-                    <tbody>{requests.map(account => <tr key={account.id}>
-                        <td><div className="td-bold">{account.name}</div><div className="td-muted">{account.department}</div></td>
-                        <td>{account.roll_no || account.username}</td>
-                        <td><div>{account.email}</div><div className="td-muted">{account.phone}</div></td>
-                        <td>{account.year ? `Year ${account.year}` : 'Not provided'}</td>
-                        <td><div style={{ display: 'flex', gap: 8 }}>
-                            <button className="btn btn-primary btn-sm" disabled={busyId === account.id} onClick={() => decide(account, 'approved')}>Approve</button>
-                            <button className="btn btn-danger btn-sm" disabled={busyId === account.id} onClick={() => decide(account, 'rejected')}>Reject</button>
-                        </div></td>
-                    </tr>)}</tbody>
-                </table></div>}
-        </div>
-    </section>;
+    return <div className="role-approvals-page"><div className="role-intro"><div><span className="role-kicker">ACCESS REQUESTS</span><h1>Welcome the right people<em>.</em></h1><p>Check each student’s details before giving them access.</p></div><span className="review-count">{requests.length} waiting</span></div>{requests.length ? <div className="approval-list">{requests.map(account => <article className="approval-item" key={account.id}><div className="approval-avatar">{account.name?.split(' ').map(part => part[0]).join('').slice(0,2).toUpperCase() || 'ST'}</div><div className="approval-person"><h2>{account.name}</h2><p>{account.roll_no || account.username} · {account.department || 'Department not set'}</p><span>{account.email || 'No email'} · {account.phone || 'No phone'} · {account.year ? `Year ${account.year}` : 'Year not provided'}</span></div><div className="approval-actions"><button disabled={busyId === account.id} onClick={() => decide(account,'rejected')}>Reject</button><button disabled={busyId === account.id} onClick={() => decide(account,'approved')}>Approve <span className="material-symbols-outlined">arrow_forward</span></button></div></article>)}</div> : <div className="role-empty"><span className="material-symbols-outlined">how_to_reg</span><h3>No students waiting</h3><p>New registration requests will appear here.</p></div>}</div>;
 }
 
-/* ═══════════════════════════════════════════════════
-   DASHBOARD TAB
-════════════════════════════════════════════════════ */
-function DashboardTab({ user, certs, students, pendingCerts, pendingAccounts, circulars, onGoReviews, onGoApprovals }) {
-    const now = new Date();
-    const thisMonth = now.getMonth();
-    const thisYear = now.getFullYear();
-
-    const approvedThisMonth = certs.filter(c => {
-        if (c.status !== 'approved') return false;
-        const d = new Date(c.reviewed_at || c.approvedAt || c.created_at || c.createdAt);
-        return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
-    }).length;
-
-    const isOverdue = (cert) => {
-        const days = (now - new Date(cert.created_at || cert.createdAt)) / (1000 * 60 * 60 * 24);
-        return days > 3;
-    };
-
-    const getStudent = (cert) => cert.student || students.find(s => s.id === (cert.student_id || cert.studentId));
-
-    const topCirculars = (circulars || []).slice(0, 3);
-
-    const PRIORITY_COLORS = {
-        normal: { bg: 'rgba(45,91,227,0.08)', text: 'var(--accent)', border: 'rgba(45,91,227,0.2)' },
-        urgent: { bg: 'rgba(239,68,68,0.08)', text: 'var(--danger)', border: 'rgba(239,68,68,0.2)' },
-        info:   { bg: 'rgba(6,182,212,0.08)',  text: '#06b6d4',       border: 'rgba(6,182,212,0.2)' },
-    };
-
-    return (
-        <>
-            <WorkspaceHeading eyebrow="FACULTY WORKSPACE" title={`Welcome back, ${user?.name?.split(' ')[0] || 'Advisor'}.`} description={`${user?.department || 'Your department'}`}  />
-            <section className="faculty-focus-panel"><div><h3>{pendingCerts.length ? `${pendingCerts.length} submissions to review` : 'You’re up to date.'}</h3><p>{pendingCerts.length ? 'Check certificates and share feedback.' : 'New submissions will appear here.'}</p><button className="btn btn-primary" onClick={onGoReviews}>Review submissions <span className="material-symbols-outlined">arrow_forward</span></button>{pendingAccounts.length > 0 && <button className="btn btn-outline" style={{ marginLeft: 10 }} onClick={onGoApprovals}>Approve students ({pendingAccounts.length})</button>}</div><div className="faculty-focus-art" aria-hidden="true"><span className="material-symbols-outlined">verified</span><i /><i /></div></section>
-            <div className="metric-grid student-metrics">
-                <MetricCard label="Pending reviews" value={pendingCerts.length} detail="Awaiting your decision" icon="schedule" tone="rose" onClick={onGoReviews} />
-                <MetricCard label="Student requests" value={pendingAccounts.length} detail="Waiting for your approval" icon="how_to_reg" tone="amber" onClick={onGoApprovals} />
-                <MetricCard label="Reviewed & approved" value={approvedThisMonth} detail="Approved this calendar month" icon="verified" tone="violet" />
-                <MetricCard label="Department students" value={students.length} detail="In your department" icon="groups" tone="blue" />
-            </div>
-            <div className="faculty-dashboard-grid">
-                {/* Pending Table */}
-                <div className="table-card">
-                    <div className="table-card-header">
-                        <h3>Pending Submissions</h3>
-                        <button className="btn btn-ghost btn-sm" onClick={onGoReviews}>
-                            View All <span className="material-symbols-outlined" style={{ fontSize: 14 }}>arrow_forward</span>
-                        </button>
-                    </div>
-                    {pendingCerts.length === 0 ? (
-                        <div className="empty-state">
-                            <span className="material-symbols-outlined">check_circle</span>
-                            <p>All caught up! No pending reviews.</p>
-                        </div>
-                    ) : (
-                        <div className="table-overflow">
-                            <table className="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Activity</th>
-                                        <th>Student</th>
-                                        <th>Submitted</th>
-                                        <th className="td-center">Points</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {pendingCerts.slice(0, 6).map(cert => {
-                                        const student = getStudent(cert);
-                                        const act = getActivityForCertificate(cert);
-                                        const overdue = isOverdue(cert);
-                                        return (
-                                            <tr key={cert.id} style={overdue ? { borderLeft: '3px solid var(--warning)' } : {}}>
-                                                <td className="td-bold">{act?.name || cert.activityName}</td>
-                                                <td>
-                                                    <div style={{ fontSize: 13, fontWeight: 600 }}>{student?.name || 'Unknown'}</div>
-                                                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{student?.roll_no || student?.rollNo}</div>
-                                                </td>
-                                                <td className="td-muted">
-                                                    {new Date(cert.created_at || cert.createdAt).toLocaleDateString('en-IN')}
-                                                    {overdue && <span style={{ marginLeft: 6, fontSize: 10, color: 'var(--warning)', fontWeight: 700 }}>OVERDUE</span>}
-                                                </td>
-                                                <td className="td-center td-bold">{cert.points_awarded ?? cert.pointsAwarded}</td>
-                                                <td><span className="badge badge-pending">Pending</span></td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-
-                {/* Announcements */}
-                <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                    <div className="card-header">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span className="material-symbols-outlined" style={{ color: 'var(--accent)', fontSize: 20 }}>campaign</span>
-                            <h3>Announcements</h3>
-                        </div>
-                    </div>
-                    <div className="card-body" style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        {topCirculars.length === 0 ? (
-                            <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0' }}>No announcements yet</div>
-                        ) : topCirculars.map(circ => {
-                            const pc = PRIORITY_COLORS[circ.priority] || PRIORITY_COLORS.normal;
-                            return (
-                                <div key={circ.id} style={{ padding: '10px 12px', borderRadius: 'var(--radius-sm)', background: pc.bg, border: `1px solid ${pc.border}` }}>
-                                    <div style={{ fontSize: 10, fontWeight: 700, color: pc.text, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3 }}>
-                                        {circ.priority || 'normal'} · {circ.issued_on ? new Date(`${circ.issued_on}T00:00:00`).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : new Date(circ.created_at || circ.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                                    </div>
-                                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 3 }}>{circ.title}</div>
-                                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{circ.content || circ.body}</div>
-                                    {circ.source_url && <a href={circ.source_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 7, fontSize: 11, color: 'var(--accent)' }}>
-                                        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>open_in_new</span>Official circular
-                                    </a>}
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            </div>
-        </>
-    );
+function DashboardTab({ user, students, pendingCerts, pendingAccounts, circulars, onGoReviews, onGoApprovals }) {
+    const latest = pendingCerts.slice(0,4);
+    return <div className="role-dashboard faculty-dashboard">
+        <section className="role-intro"><div><span className="role-kicker">FACULTY DESK · {user?.department || 'YOUR DEPARTMENT'}</span><h1>Good to see you, {user?.name?.split(' ')[0] || 'advisor'}<em>.</em></h1><p>Your review queue and student requests, all in one place.</p></div><button className="role-primary-action" onClick={onGoReviews}><span className="material-symbols-outlined">fact_check</span>Open review queue</button></section>
+        <div className="faculty-feature-layout"><section className="faculty-hero-card"><span className="role-kicker">YOUR PRIORITY</span><div className="faculty-hero-count">{pendingCerts.length}<span>certificates waiting</span></div><h2>{pendingCerts.length ? 'Ready for your review.' : 'You’re all caught up.'}</h2><p>{pendingCerts.length ? 'Open each document, verify it, and record a decision.' : 'New student submissions will show up here.'}</p><button onClick={onGoReviews}>Review certificates <span className="material-symbols-outlined">arrow_forward</span></button><span className="faculty-hero-mark material-symbols-outlined" aria-hidden="true">verified_user</span></section><div className="faculty-side-stat"><button onClick={onGoApprovals}><span className="material-symbols-outlined">person_add</span><strong>{pendingAccounts.length}</strong><span>Student requests</span><small>Approve access to APMS</small></button><div><span className="material-symbols-outlined">groups</span><strong>{students.length}</strong><span>Department students</span><small>Approved accounts</small></div></div></div>
+        <div className="faculty-lower-grid"><section className="role-recent-section"><div className="role-section-heading"><div><span className="role-kicker">UP NEXT</span><h2>Review queue.</h2></div><button className="role-text-action" onClick={onGoReviews}>View all <span className="material-symbols-outlined">arrow_forward</span></button></div>{latest.length ? <div className="role-recent-list">{latest.map(cert => {const student = cert.student || students.find(item => item.id === (cert.student_id || cert.studentId));const activity = getActivityForCertificate(cert);return <button className="role-recent-row faculty-review-row" key={cert.id} onClick={onGoReviews}><div className="recent-icon"><span className="material-symbols-outlined">description</span></div><div><strong>{activity?.name || cert.activityName}</strong><span>{student?.name || 'Student'} · {new Date(cert.created_at || cert.createdAt).toLocaleDateString('en-IN')}</span></div><b>{cert.points_awarded ?? cert.pointsAwarded} pts</b><span className="material-symbols-outlined">arrow_forward</span></button>})}</div> : <div className="role-empty"><span className="material-symbols-outlined">task_alt</span><h3>Queue cleared</h3><p>There are no certificates to review right now.</p></div>}</section><aside className="faculty-notices"><span className="role-kicker">FROM ADMIN</span><h2>University updates.</h2>{circulars?.length ? circulars.slice(0,3).map(circular => <article key={circular.id}><span>{circular.priority || 'Notice'}</span><h3>{circular.title}</h3><p>{circular.content || circular.body}</p>{circular.source_url && <a href={circular.source_url} target="_blank" rel="noopener noreferrer">Open circular <span className="material-symbols-outlined">open_in_new</span></a>}</article>) : <p className="notices-empty">No circulars published yet.</p>}</aside></div>
+    </div>;
 }
 
-/* ═══════════════════════════════════════════════════
-   PENDING REVIEWS TAB
-════════════════════════════════════════════════════ */
-export function ReviewsTab({ pendingCerts, students, user, onRefresh }) {
+function ReviewsTab({ pendingCerts, students, user, onRefresh }) {
     const [reviewing, setReviewing] = useState(null);
     const [search, setSearch] = useState('');
     const now = new Date();
-
-    const getStudent = (cert) => cert.student || students.find(s => s.id === (cert.student_id || cert.studentId));
-    const isOverdue = (cert) => (now - new Date(cert.created_at || cert.createdAt)) / (1000 * 60 * 60 * 24) > 3;
-
-    const filtered = pendingCerts.filter(c => {
-        const student = getStudent(c);
-        const act = getActivityForCertificate(c);
-        const q = search.toLowerCase();
-        return (
-            (act?.name || c.activityName || '').toLowerCase().includes(q) ||
-            (student?.name || '').toLowerCase().includes(q) ||
-            (student?.roll_no || student?.rollNo || '').toLowerCase().includes(q)
-        );
+    const getStudent = cert => cert.student || students.find(student => student.id === (cert.student_id || cert.studentId));
+    const isOverdue = cert => (now - new Date(cert.created_at || cert.createdAt)) / (1000 * 60 * 60 * 24) > 3;
+    const filtered = pendingCerts.filter(cert => {
+        const student = getStudent(cert);
+        const activity = getActivityForCertificate(cert);
+        const query = search.trim().toLowerCase();
+        return !query || (activity?.name || cert.activityName || '').toLowerCase().includes(query)
+            || (student?.name || '').toLowerCase().includes(query)
+            || (student?.roll_no || student?.rollNo || '').toLowerCase().includes(query);
     });
-
-    return (
-        <>
-            {/* Search Bar */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-                <div className="search-box" style={{ flex: 1 }}>
-                    <span className="search-box-icon">
-                        <span className="material-symbols-outlined">search</span>
-                    </span>
-                    <input
-                        className="input"
-                        placeholder="Search by activity, student name or roll number…"
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                    />
-                </div>
-                <div style={{ fontSize: 13, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                    {filtered.length} pending
-                </div>
-            </div>
-
-            <div className="table-card">
-                {filtered.length === 0 ? (
-                    <div className="empty-state">
-                        <span className="material-symbols-outlined">check_circle</span>
-                        <p>{search ? 'No results found' : 'No pending certificates. All caught up!'}</p>
-                    </div>
-                ) : (
-                    <div className="table-overflow">
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Activity</th>
-                                    <th>Student</th>
-                                    <th>Group</th>
-                                    <th>Level</th>
-                                    <th>Submitted</th>
-                                    <th className="td-center">Points</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filtered.map(cert => {
-                                    const student = getStudent(cert);
-                                    const act = getActivityForCertificate(cert);
-                                    const overdue = isOverdue(cert);
-                                    return (
-                                        <tr key={cert.id} style={overdue ? { borderLeft: '3px solid var(--warning)' } : {}}>
-                                            <td>
-                                                <div className="td-bold">{act?.name || cert.activityName}</div>
-                                                {overdue && (
-                                                    <div style={{ fontSize: 10, color: 'var(--warning)', fontWeight: 700, marginTop: 2 }}>
-                                                        ⚠ Overdue (&gt;3 days)
-                                                    </div>
-                                                )}
-                                            </td>
-                                            <td>
-                                                <div style={{ fontSize: 13, fontWeight: 600 }}>{student?.name || ' / '}</div>
-                                                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{student?.roll_no || student?.rollNo} · {student?.department}</div>
-                                            </td>
-                                            <td className="td-muted">Group {act?.group || ' / '}</td>
-                                            <td className="td-muted">{cert.level_selected || cert.selectedLevel || ' / '}</td>
-                                            <td className="td-muted">{new Date(cert.created_at || cert.createdAt).toLocaleDateString('en-IN')}</td>
-                                            <td className="td-center td-bold">{cert.points_awarded ?? cert.pointsAwarded}</td>
-                                            <td>
-                                                <button
-                                                    className="btn btn-primary btn-sm"
-                                                    onClick={() => setReviewing(cert)}
-                                                >
-                                                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>fact_check</span>
-                                                    Review
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-                {filtered.length > 0 && (
-                    <div className="table-card-footer">
-                        <span>Showing {filtered.length} pending certificate{filtered.length !== 1 ? 's' : ''}</span>
-                    </div>
-                )}
-            </div>
-
-            {reviewing && (
-                <ReviewModal
-                    cert={reviewing}
-                    student={getStudent(reviewing)}
-                    faculty={user}
-                    onClose={() => setReviewing(null)}
-                    onRefresh={onRefresh}
-                />
-            )}
-        </>
-    );
+    return <div className="role-records-page"><div className="role-intro"><div><span className="role-kicker">FACULTY REVIEW</span><h1>Make every point count<em>.</em></h1><p>Open the proof, then approve or return it with clear feedback.</p></div><span className="review-count">{filtered.length} to review</span></div><div className="record-toolbar"><label><span className="material-symbols-outlined">search</span><input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Student, registration number or activity" /></label></div>{filtered.length ? <div className="record-list">{filtered.map(cert => {const student = getStudent(cert);const activity = getActivityForCertificate(cert);return <article className="record-item faculty-record" key={cert.id}><div className="record-item-head"><span className="record-item-icon material-symbols-outlined">description</span><div><span className="role-kicker">{student?.name || 'Student'} · {student?.roll_no || student?.rollNo || 'No registration number'}</span><h2>{activity?.name || cert.activityName}</h2><p>Group {activity?.group || '—'} · Submitted {new Date(cert.created_at || cert.createdAt).toLocaleDateString('en-IN')}</p></div>{isOverdue(cert) && <span className="review-overdue">Waiting over 3 days</span>}</div><div className="record-item-foot"><span>{cert.level_selected || cert.selectedLevel || 'Certificate'}</span><strong>{cert.points_awarded ?? cert.pointsAwarded} <small>proposed points</small></strong><button onClick={() => setReviewing(cert)}>Open review <span className="material-symbols-outlined">arrow_forward</span></button></div></article>})}</div> : <div className="role-empty"><span className="material-symbols-outlined">task_alt</span><h3>{search ? 'Nothing matches your search' : 'No pending reviews'}</h3><p>{search ? 'Try another name or activity.' : 'You’re all caught up for now.'}</p></div>}{reviewing && <ReviewModal cert={reviewing} student={getStudent(reviewing)} faculty={user} onClose={() => setReviewing(null)} onRefresh={onRefresh} />}</div>;
 }
 
-/* ═══════════════════════════════════════════════════
-   REVIEW MODAL  (logic fully preserved)
-════════════════════════════════════════════════════ */
 function ReviewModal({ cert, student, faculty, onClose, onRefresh }) {
     const [remark, setRemark] = useState('');
     const [submitting, setSubmitting] = useState(false);
@@ -681,52 +357,13 @@ function StudentsTab({ certs, students }) {
     const [search, setSearch] = useState('');
     const [semester, setSemester] = useState('');
     const filtered = students.filter(student => {
-        const query = search.trim().toLowerCase();
         const identity = `${student.name || ''} ${student.roll_no || student.rollNo || ''}`.toLowerCase();
-        return (!query || identity.includes(query)) && (!semester || String(student.semester) === semester);
+        return identity.includes(search.trim().toLowerCase()) && (!semester || String(student.semester) === semester);
     });
-    const needsAttention = students.filter(student => certs.some(cert =>
-        (cert.student_id || cert.studentId) === student.id && cert.status === 'pending'
-    )).length;
-
-    return (
-        <div className="faculty-roster">
-            <div className="roster-intro">
-                <div><span className="eyebrow">YOUR DEPARTMENT</span><h2>My students<span>.</span></h2><p>See each student’s verified progress and submissions.</p></div>
-                <div className="roster-summary"><strong>{students.length}</strong><span>students</span><strong>{needsAttention}</strong><span>awaiting review</span></div>
-            </div>
-            <div className="roster-toolbar">
-                <label className="roster-search"><span className="material-symbols-outlined">search</span><input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Find a name or registration number" aria-label="Find a student" /></label>
-                <select value={semester} onChange={e => setSemester(e.target.value)} aria-label="Filter by semester">
-                    <option value="">Every semester</option>
-                    {[1,2,3,4,5,6,7,8].map(number => <option key={number} value={number}>Semester {number}</option>)}
-                </select>
-                <span className="roster-count">{filtered.length} shown</span>
-            </div>
-            {filtered.length === 0 ? <div className="roster-empty"><span className="material-symbols-outlined">person_search</span><h3>No students found</h3><p>Try another name or semester.</p></div> :
-            <div className="roster-grid">{filtered.map(student => {
-                const studentCerts = certs.filter(cert => (cert.student_id || cert.studentId) === student.id);
-                const summary = calculateStudentSummary(studentCerts, student.studentType || student.student_type || 'regular');
-                const target = (student.studentType || student.student_type) === 'lateral' ? 90 : (student.studentType || student.student_type) === 'pwd' ? 60 : 120;
-                const waiting = studentCerts.filter(cert => cert.status === 'pending').length;
-                const initials = student.name?.split(' ').map(part => part[0]).join('').slice(0,2).toUpperCase() || 'ST';
-                return <article className="roster-card" key={student.id}>
-                    <div className="roster-card-top"><div className="roster-avatar">{student.profile_url || student.profileUrl ? <img src={student.profile_url || student.profileUrl} alt="" /> : initials}</div><div className="roster-person"><h3>{student.name}</h3><p>{student.roll_no || student.rollNo || 'No registration number'} · S{student.semester || '—'}</p></div>{waiting > 0 && <span className="roster-waiting" title="Pending submissions">{waiting}<span className="material-symbols-outlined">schedule</span></span>}</div>
-                    <div className="roster-score"><strong>{summary.total}</strong><span>of {target} estimated points</span></div>
-                    <div className="roster-progress" role="group" aria-label="Estimated points by group">
-                        {[[summary.group1,'I'],[summary.group2,'II'],[summary.group3,'III']].map(([value,label]) => <div className="roster-group" key={label}><span>Group {label}</span><b>{value || 0}</b><div className="roster-track"><i style={{width:`${Math.min(100,((value || 0)/40)*100)}%`}} /></div></div>)}
-                    </div>
-                    <div className="roster-card-foot"><span>{student.department || 'Your department'}</span><span>{summary.eligible ? 'Estimated target met' : 'In progress'}</span></div>
-                </article>;
-            })}</div>}
-            <p className="roster-note">Totals are estimates from approved submissions. Faculty review determines each certificate’s status.</p>
-        </div>
-    );
+    const waiting = students.filter(student => certs.some(cert => (cert.student_id || cert.studentId) === student.id && cert.status === 'pending')).length;
+    return <div className="faculty-students-page"><div className="role-intro"><div><span className="role-kicker">YOUR DEPARTMENT</span><h1>Know your students<em>.</em></h1><p>Approved points, group balance, and submissions in one clear view.</p></div><div className="students-count"><strong>{students.length}</strong><span>students</span><strong>{waiting}</strong><span>with pending work</span></div></div><div className="record-toolbar"><label><span className="material-symbols-outlined">search</span><input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Find a name or registration number" /></label><select value={semester} onChange={event => setSemester(event.target.value)} aria-label="Filter by semester"><option value="">All semesters</option>{[1,2,3,4,5,6,7,8].map(number => <option key={number} value={number}>Semester {number}</option>)}</select></div>{filtered.length ? <div className="student-roster-list">{filtered.map(student => {const studentCerts = certs.filter(cert => (cert.student_id || cert.studentId) === student.id);const summary = calculateStudentSummary(studentCerts, student.studentType || student.student_type || 'regular');const type = student.studentType || student.student_type || 'regular';const target = type === 'lateral' ? 90 : type === 'pwd' ? 60 : 120;const pending = studentCerts.filter(cert => cert.status === 'pending').length;const initials = student.name?.split(' ').map(part => part[0]).join('').slice(0,2).toUpperCase() || 'ST';return <article className="student-roster-row" key={student.id}><div className="roster-person"><span className="roster-avatar">{student.profile_url || student.profileUrl ? <img src={student.profile_url || student.profileUrl} alt="" /> : initials}</span><div><h2>{student.name}</h2><p>{student.roll_no || student.rollNo || 'Registration unavailable'} · S{student.semester || '—'}</p></div></div><div className="roster-group-bars">{[[summary.group1,'I'],[summary.group2,'II'],[summary.group3,'III']].map(([points,group]) => <div key={group}><span>{group}</span><i><b style={{width:`${Math.min(100,((points || 0)/40)*100)}%`}} /></i><strong>{points || 0}</strong></div>)}</div><div className="roster-total"><strong>{summary.total}<small>/{target}</small></strong><span>{pending ? `${pending} awaiting review` : summary.eligible ? 'Estimated target met' : 'In progress'}</span></div></article>})}</div> : <div className="role-empty"><span className="material-symbols-outlined">person_search</span><h3>No students found</h3><p>Try another search or semester.</p></div>}<p className="roster-disclaimer">Point totals are estimates from approved submissions. Faculty review determines certificate status.</p></div>;
 }
 
-/* ═══════════════════════════════════════════════════
-   PROFILE TAB  (previously "Settings")
-════════════════════════════════════════════════════ */
 function ProfileTab({ user, onLogout, onRefresh, onUpdateUser }) {
     const [editing, setEditing] = useState(false);
     const [name, setName] = useState(user?.name || '');
@@ -780,111 +417,9 @@ function ProfileTab({ user, onLogout, onRefresh, onUpdateUser }) {
         } catch(err) { alert(err.message); }
     };
 
-    return (
-        <div style={{ maxWidth: 700, margin: '0 auto' }}>
-            {saved && (
-                <div className="alert alert-success" style={{ marginBottom: 16 }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>check_circle</span>
-                    Profile updated successfully!
-                </div>
-            )}
-
-            {/* Profile Hero */}
-            <div className="card" style={{ marginBottom: 20 }}>
-                <div style={{ padding: '24px 24px 20px', borderBottom: '1px solid var(--border)', background: 'var(--surface2)', display: 'flex', alignItems: 'center', gap: 20 }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                        <div className="profile-avatar-lg" style={{ overflow: 'hidden', padding:user?.profileUrl ? 0 : '', display:user?.profileUrl ? 'block' : 'flex', position: 'relative', cursor: 'pointer' }} onClick={() => fileInputRef.current.click()}>
-                            {uploading && <div style={{position:'absolute', inset:0, background:'rgba(0,0,0,0.5)', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, zIndex:10}}>UPLOADING</div>}
-                            {user?.profileUrl ? <img src={user.profileUrl} alt="Profile" style={{width:'100%', height:'100%', objectFit:'cover'}} /> : initials}
-                            {!uploading && (
-                                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 10, textAlign: 'center', padding: '4px 0', opacity: 0 }} className="avatar-overlay-hover">
-                                    CHANGE
-                                </div>
-                            )}
-                        </div>
-                        {user?.profileUrl && (
-                            <button className="btn btn-ghost btn-sm" onClick={handleRemovePhoto} style={{ fontSize: 11, color: 'var(--danger)', padding: '2px 8px', marginTop: 4 }}>
-                                Remove Photo
-                            </button>
-                        )}
-                        <input ref={fileInputRef} type="file" accept=".jpg,.jpeg,.png,.webp" style={{ display:'none' }} onChange={handlePhotoChange} />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                            <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)' }}>{user?.name}</h2>
-                            <span className="badge badge-info">Faculty Advisor</span>
-                        </div>
-                        <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>{user?.designation} · {user?.department}</p>
-                    </div>
-                    {!editing && (
-                        <button className="btn btn-ghost btn-sm" onClick={startEditing}>
-                            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>edit</span>
-                            Edit
-                        </button>
-                    )}
-                </div>
-
-                <div style={{ padding: 24 }}>
-                    {!editing ? (
-                        <div className="profile-info-grid">
-                            {[
-                                ['Name', user?.name, 'person'],
-                                ['Email', user?.email, 'email'],
-                                ['Phone', user?.phone, 'call'],
-                                ['Designation', user?.designation, 'badge'],
-                                ['Department', user?.department, 'school'],
-                                ['Username', user?.username, 'alternate_email'],
-                            ].map(([label, val]) => (
-                                <div className="profile-info-item" key={label}>
-                                    <label>{label}</label>
-                                    <p>{val || 'N/A'}</p>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                            <div className="form-group" style={{ marginBottom: 0 }}>
-                                <label className="form-label">Full Name</label>
-                                <input className="input" value={name} onChange={e => setName(e.target.value)} />
-                            </div>
-                            <div className="form-group" style={{ marginBottom: 0 }}>
-                                <label className="form-label">Email</label>
-                                <input className="input" type="email" value={email} onChange={e => setEmail(e.target.value)} />
-                            </div>
-                            <div className="form-group" style={{ marginBottom: 0 }}>
-                                <label className="form-label">Phone Number</label>
-                                <input className="input" type="tel" value={phone} onChange={e => setPhone(e.target.value)} />
-                            </div>
-                            <div className="form-group" style={{ marginBottom: 0 }}>
-                                <label className="form-label">Designation</label>
-                                <input className="input" value={designation} onChange={e => setDesignation(e.target.value)} />
-                            </div>
-                            <div style={{ padding:'8px 0', fontSize:12, color:'var(--text-muted)', display:'flex', alignItems:'center', gap:6 }}>
-                                <span className="material-symbols-outlined" style={{ fontSize:14 }}>info</span>
-                                Username cannot be changed. Contact admin if needed.
-                            </div>
-                            <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
-                                <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditing(false)}>Cancel</button>
-                                <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleSave}>
-                                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>save</span>
-                                    Save Changes
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Logout */}
-            <div className="settings-item" onClick={onLogout} style={{ borderColor: 'color-mix(in srgb, var(--danger) 25%, transparent)', cursor: 'pointer' }}>
-                <div className="settings-icon" style={{ background: 'var(--danger-bg)' }}>
-                    <span className="material-symbols-outlined" style={{ color: 'var(--danger)', fontSize: 20 }}>logout</span>
-                </div>
-                <div className="settings-info">
-                    <h4 style={{ color: 'var(--danger)' }}>Log Out</h4>
-                    <p>Sign out of your account</p>
-                </div>
-            </div>
-        </div>
-    );
+    return <div className="role-profile-page">
+        <section className="role-profile-hero"><div className="role-profile-hero-main"><span className="role-kicker">FACULTY PROFILE</span><div className="role-profile-avatar" onClick={() => fileInputRef.current?.click()} role="button" tabIndex={0} onKeyDown={event => {if(event.key === 'Enter') fileInputRef.current?.click()}} aria-label="Change profile photo">{uploading ? <span className="material-symbols-outlined">progress_activity</span> : user?.profileUrl ? <img src={user.profileUrl} alt="" /> : initials}</div><div><h1>{user?.name}</h1><p>{user?.designation || 'Faculty advisor'} · {user?.department}</p><div className="role-profile-actions"><button onClick={startEditing}><span className="material-symbols-outlined">edit</span>Edit profile</button>{user?.profileUrl && <button onClick={handleRemovePhoto}>Remove photo</button>}</div></div></div><div className="role-profile-decoration"><span className="material-symbols-outlined">school</span></div><input ref={fileInputRef} type="file" accept=".jpg,.jpeg,.png,.webp" hidden onChange={handlePhotoChange} /></section>
+        {saved && <div className="alert alert-success">Profile updated.</div>}
+        <div className="role-profile-body"><section className="role-profile-details"><div className="role-section-heading"><div><span className="role-kicker">YOUR DETAILS</span><h2>Contact & role.</h2></div></div>{!editing ? <div className="role-detail-grid">{[['Name',user?.name],['Email',user?.email],['Phone',user?.phone],['Designation',user?.designation],['Department',user?.department],['Username',user?.username]].map(([label,value]) => <div key={label}><span>{label}</span><strong>{value || 'Not added'}</strong></div>)}</div> : <div className="role-edit-grid"><label>Full name<input className="input" value={name} onChange={event => setName(event.target.value)} /></label><label>Email<input className="input" type="email" value={email} onChange={event => setEmail(event.target.value)} /></label><label>Phone<input className="input" type="tel" value={phone} onChange={event => setPhone(event.target.value)} /></label><label>Designation<input className="input" value={designation} onChange={event => setDesignation(event.target.value)} /></label><div className="role-edit-actions"><button onClick={() => setEditing(false)}>Cancel</button><button onClick={handleSave}>Save changes</button></div></div>}</section><aside className="role-profile-aside"><span className="role-kicker">YOUR ACCOUNT</span><p>Your department is assigned by an administrator.</p><button onClick={onLogout}><span className="material-symbols-outlined">logout</span>Sign out<span className="material-symbols-outlined">arrow_forward</span></button></aside></div>
+    </div>;
 }
