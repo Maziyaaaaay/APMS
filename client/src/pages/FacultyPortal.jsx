@@ -1,5 +1,4 @@
 import BrandLogo from '../components/BrandLogo';
-import { AmbientBackdrop, WorkspaceHeading, MetricCard } from '../components/DashboardKit';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, logout } from '../utils/auth';
@@ -77,14 +76,6 @@ export default function FacultyPortal() {
 
     const pendingCerts = certs.filter(c => c.status === 'pending');
     const initials = user?.name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'FA';
-
-    const PAGE_TITLES = {
-        dashboard: 'Dashboard',
-        reviews:   'Pending Reviews',
-        approvals: 'Student Requests',
-        students:  'My Students',
-        profile:   'Profile',
-    };
 
     return (
         <div className="portal-layout faculty-portal role-workspace">
@@ -177,132 +168,16 @@ function StudentApprovalsTab({ requests, onRefresh }) {
 /* ═══════════════════════════════════════════════════
    DASHBOARD TAB
 ════════════════════════════════════════════════════ */
-function DashboardTab({ user, certs, students, pendingCerts, pendingAccounts, circulars, onGoReviews, onGoApprovals }) {
-    const now = new Date();
-    const thisMonth = now.getMonth();
-    const thisYear = now.getFullYear();
-
-    const approvedThisMonth = certs.filter(c => {
-        if (c.status !== 'approved') return false;
-        const d = new Date(c.reviewed_at || c.approvedAt || c.created_at || c.createdAt);
-        return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
-    }).length;
-
-    const isOverdue = (cert) => {
-        const days = (now - new Date(cert.created_at || cert.createdAt)) / (1000 * 60 * 60 * 24);
-        return days > 3;
-    };
-
-    const getStudent = (cert) => cert.student || students.find(s => s.id === (cert.student_id || cert.studentId));
-
-    const topCirculars = (circulars || []).slice(0, 3);
-
-    const PRIORITY_COLORS = {
-        normal: { bg: 'rgba(45,91,227,0.08)', text: 'var(--accent)', border: 'rgba(45,91,227,0.2)' },
-        urgent: { bg: 'rgba(239,68,68,0.08)', text: 'var(--danger)', border: 'rgba(239,68,68,0.2)' },
-        info:   { bg: 'rgba(6,182,212,0.08)',  text: '#06b6d4',       border: 'rgba(6,182,212,0.2)' },
-    };
-
-    return (
-        <>
-            <WorkspaceHeading eyebrow="FACULTY WORKSPACE" title={`Welcome back, ${user?.name?.split(' ')[0] || 'Advisor'}.`} description={`${user?.department || 'Your department'}`}  />
-            <section className="faculty-focus-panel"><div><h3>{pendingCerts.length ? `${pendingCerts.length} submissions to review` : 'You’re up to date.'}</h3><p>{pendingCerts.length ? 'Check certificates and share feedback.' : 'New submissions will appear here.'}</p><button className="btn btn-primary" onClick={onGoReviews}>Review submissions <span className="material-symbols-outlined">arrow_forward</span></button>{pendingAccounts.length > 0 && <button className="btn btn-outline" style={{ marginLeft: 10 }} onClick={onGoApprovals}>Approve students ({pendingAccounts.length})</button>}</div><div className="faculty-focus-art" aria-hidden="true"><span className="material-symbols-outlined">verified</span><i /><i /></div></section>
-            <div className="metric-grid student-metrics">
-                <MetricCard label="Pending reviews" value={pendingCerts.length} detail="Awaiting your decision" icon="schedule" tone="rose" onClick={onGoReviews} />
-                <MetricCard label="Student requests" value={pendingAccounts.length} detail="Waiting for your approval" icon="how_to_reg" tone="amber" onClick={onGoApprovals} />
-                <MetricCard label="Reviewed & approved" value={approvedThisMonth} detail="Approved this calendar month" icon="verified" tone="violet" />
-                <MetricCard label="Department students" value={students.length} detail="In your department" icon="groups" tone="blue" />
-            </div>
-            <div className="faculty-dashboard-grid">
-                {/* Pending Table */}
-                <div className="table-card">
-                    <div className="table-card-header">
-                        <h3>Pending Submissions</h3>
-                        <button className="btn btn-ghost btn-sm" onClick={onGoReviews}>
-                            View All <span className="material-symbols-outlined" style={{ fontSize: 14 }}>arrow_forward</span>
-                        </button>
-                    </div>
-                    {pendingCerts.length === 0 ? (
-                        <div className="empty-state">
-                            <span className="material-symbols-outlined">check_circle</span>
-                            <p>All caught up! No pending reviews.</p>
-                        </div>
-                    ) : (
-                        <div className="table-overflow">
-                            <table className="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Activity</th>
-                                        <th>Student</th>
-                                        <th>Submitted</th>
-                                        <th className="td-center">Points</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {pendingCerts.slice(0, 6).map(cert => {
-                                        const student = getStudent(cert);
-                                        const act = getActivityForCertificate(cert);
-                                        const overdue = isOverdue(cert);
-                                        return (
-                                            <tr key={cert.id} style={overdue ? { borderLeft: '3px solid var(--warning)' } : {}}>
-                                                <td className="td-bold">{act?.name || cert.activityName}</td>
-                                                <td>
-                                                    <div style={{ fontSize: 13, fontWeight: 600 }}>{student?.name || 'Unknown'}</div>
-                                                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{student?.roll_no || student?.rollNo}</div>
-                                                </td>
-                                                <td className="td-muted">
-                                                    {new Date(cert.created_at || cert.createdAt).toLocaleDateString('en-IN')}
-                                                    {overdue && <span style={{ marginLeft: 6, fontSize: 10, color: 'var(--warning)', fontWeight: 700 }}>OVERDUE</span>}
-                                                </td>
-                                                <td className="td-center td-bold">{cert.points_awarded ?? cert.pointsAwarded}</td>
-                                                <td><span className="badge badge-pending">Pending</span></td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-
-                {/* Announcements */}
-                <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                    <div className="card-header">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span className="material-symbols-outlined" style={{ color: 'var(--accent)', fontSize: 20 }}>campaign</span>
-                            <h3>Announcements</h3>
-                        </div>
-                    </div>
-                    <div className="card-body" style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        {topCirculars.length === 0 ? (
-                            <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0' }}>No announcements yet</div>
-                        ) : topCirculars.map(circ => {
-                            const pc = PRIORITY_COLORS[circ.priority] || PRIORITY_COLORS.normal;
-                            return (
-                                <div key={circ.id} style={{ padding: '10px 12px', borderRadius: 'var(--radius-sm)', background: pc.bg, border: `1px solid ${pc.border}` }}>
-                                    <div style={{ fontSize: 10, fontWeight: 700, color: pc.text, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3 }}>
-                                        {circ.priority || 'normal'} · {circ.issued_on ? new Date(`${circ.issued_on}T00:00:00`).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : new Date(circ.created_at || circ.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                                    </div>
-                                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 3 }}>{circ.title}</div>
-                                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{circ.content || circ.body}</div>
-                                    {circ.source_url && <a href={circ.source_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 7, fontSize: 11, color: 'var(--accent)' }}>
-                                        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>open_in_new</span>Official circular
-                                    </a>}
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            </div>
-        </>
-    );
+function DashboardTab({ user, students, pendingCerts, pendingAccounts, circulars, onGoReviews, onGoApprovals }) {
+    const latest = pendingCerts.slice(0,4);
+    return <div className="role-dashboard faculty-dashboard">
+        <section className="role-intro"><div><span className="role-kicker">FACULTY DESK · {user?.department || 'YOUR DEPARTMENT'}</span><h1>Good to see you, {user?.name?.split(' ')[0] || 'advisor'}<em>.</em></h1><p>Your review queue and student requests, all in one place.</p></div><button className="role-primary-action" onClick={onGoReviews}><span className="material-symbols-outlined">fact_check</span>Open review queue</button></section>
+        <div className="faculty-feature-layout"><section className="faculty-hero-card"><span className="role-kicker">YOUR PRIORITY</span><div className="faculty-hero-count">{pendingCerts.length}<span>certificates waiting</span></div><h2>{pendingCerts.length ? 'Ready for your review.' : 'You’re all caught up.'}</h2><p>{pendingCerts.length ? 'Open each document, verify it, and record a decision.' : 'New student submissions will show up here.'}</p><button onClick={onGoReviews}>Review certificates <span className="material-symbols-outlined">arrow_forward</span></button><span className="faculty-hero-mark material-symbols-outlined" aria-hidden="true">verified_user</span></section><div className="faculty-side-stat"><button onClick={onGoApprovals}><span className="material-symbols-outlined">person_add</span><strong>{pendingAccounts.length}</strong><span>Student requests</span><small>Approve access to APMS</small></button><div><span className="material-symbols-outlined">groups</span><strong>{students.length}</strong><span>Department students</span><small>Approved accounts</small></div></div></div>
+        <div className="faculty-lower-grid"><section className="role-recent-section"><div className="role-section-heading"><div><span className="role-kicker">UP NEXT</span><h2>Review queue.</h2></div><button className="role-text-action" onClick={onGoReviews}>View all <span className="material-symbols-outlined">arrow_forward</span></button></div>{latest.length ? <div className="role-recent-list">{latest.map(cert => {const student = cert.student || students.find(item => item.id === (cert.student_id || cert.studentId));const activity = getActivityForCertificate(cert);return <button className="role-recent-row faculty-review-row" key={cert.id} onClick={onGoReviews}><div className="recent-icon"><span className="material-symbols-outlined">description</span></div><div><strong>{activity?.name || cert.activityName}</strong><span>{student?.name || 'Student'} · {new Date(cert.created_at || cert.createdAt).toLocaleDateString('en-IN')}</span></div><b>{cert.points_awarded ?? cert.pointsAwarded} pts</b><span className="material-symbols-outlined">arrow_forward</span></button>})}</div> : <div className="role-empty"><span className="material-symbols-outlined">task_alt</span><h3>Queue cleared</h3><p>There are no certificates to review right now.</p></div>}</section><aside className="faculty-notices"><span className="role-kicker">FROM ADMIN</span><h2>University updates.</h2>{circulars?.length ? circulars.slice(0,3).map(circular => <article key={circular.id}><span>{circular.priority || 'Notice'}</span><h3>{circular.title}</h3><p>{circular.content || circular.body}</p>{circular.source_url && <a href={circular.source_url} target="_blank" rel="noopener noreferrer">Open circular <span className="material-symbols-outlined">open_in_new</span></a>}</article>) : <p className="notices-empty">No circulars published yet.</p>}</aside></div>
+    </div>;
 }
 
-/* ═══════════════════════════════════════════════════
-   PENDING REVIEWS TAB
-════════════════════════════════════════════════════ */
-export function ReviewsTab({ pendingCerts, students, user, onRefresh }) {
+function ReviewsTab({ pendingCerts, students, user, onRefresh }) {
     const [reviewing, setReviewing] = useState(null);
     const [search, setSearch] = useState('');
     const now = new Date();
