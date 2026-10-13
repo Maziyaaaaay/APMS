@@ -148,11 +148,9 @@ function SubmitTab({ user, onSuccess }) {
         return acc;
     }, {});
 
-    const STEPS = ['Activity Details', 'Upload Certificate', 'Review & Submit'];
-
     const handleSelectActivity = (id) => { setActivityId(id); setSelectedLevel(''); setStep(1); };
 
-    const handleFileChange = (e) => { const f = e.target.files[0]; if (f) setUploadedFile(f); };
+    const handleFileChange = (e) => { const f = e.target.files[0]; if (f) { setUploadedFile(f); setSubmitError(''); } };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -188,267 +186,31 @@ function SubmitTab({ user, onSuccess }) {
         }
     };
 
-    if (success) {
-        return (
-            <div className="success-screen">
-                <div className="success-icon-wrap">
-                    <span className="material-symbols-outlined">check_circle</span>
-                </div>
-                <h2>Certificate Submitted!</h2>
-                <p style={{ marginBottom: 8 }}>
-                    {previewPoints > 0 ? `${previewPoints} points` : 'Your submission'} is pending Faculty Advisor review.
-                </p>
-                <p style={{ fontSize:12, color:'var(--text-muted)' }}>Redirecting to your submissions…</p>
+    if (success) return <div className="role-complete"><span className="material-symbols-outlined">check_circle</span><h2>Submitted for review.</h2><p>Your faculty advisor will check the document. You can track its status in My Submissions.</p></div>;
+    return <div className="student-submit-page">
+        <div className="role-intro"><div><span className="role-kicker">NEW SUBMISSION</span><h1>Show what you did<em>.</em></h1><p>Choose an activity, add the details, then attach its proof.</p></div></div>
+        <div className="submit-stage-strip"><span className={step === 0 ? 'active' : 'done'}><b>01</b> Choose activity</span><span className={step === 1 ? 'active' : ''}><b>02</b> Add details & proof</span><span><b>03</b> Faculty review</span></div>
+        {step === 0 ? <div className="submit-choose-layout">
+            <aside className="submit-groups"><span className="role-kicker">FIND YOUR GROUP</span><h2>Where does it belong?</h2>{[1,2,3].map(number => <button key={number} className={group === number ? 'active' : ''} onClick={() => {setGroup(number);setActivityId('')}}><span>0{number}</span><strong>{number === 1 ? 'Co-curricular' : number === 2 ? 'Professional development' : 'Innovation'}</strong><span className="material-symbols-outlined">arrow_forward</span></button>)}</aside>
+            <section className="submit-activity-list"><div className="role-section-heading"><div><span className="role-kicker">GROUP {group}</span><h2>Choose an activity.</h2></div><p>Select the closest match to your certificate.</p></div>{Object.entries(byCategory).map(([category,items]) => <div className="activity-category" key={category}><h3>{category}</h3><div>{items.map(item => <button key={item.id} onClick={() => handleSelectActivity(item.id)}><span className="material-symbols-outlined">workspace_premium</span><span><strong>{item.name}</strong><small>Up to {item.maxPoints} points</small></span><span className="material-symbols-outlined">north_east</span></button>)}</div></div>)}</section>
+        </div> : <div className="submit-detail-layout"><form className="submit-detail-form" onSubmit={handleSubmit}>
+            <div className="submit-form-heading"><button type="button" onClick={() => {setStep(0);setActivityId('')}}><span className="material-symbols-outlined">arrow_back</span> All activities</button><span className="role-kicker">GROUP {activity?.group}</span><h2>{activity?.name}</h2><p>{activity?.category} · Up to {activity?.maxPoints} points</p></div>
+            <div className="submit-form-fields">
+                {needsLevel && <label className="submit-field">Achievement level <span>*</span><select className="input" value={selectedLevel} onChange={e => setSelectedLevel(e.target.value)} required><option value="">Choose your level</option>{activity.levels.map(level => <option key={level.label} value={level.label}>{level.label} · {level.points} pts</option>)}</select></label>}
+                {activity?.type === 'hours' && <label className="submit-field">Course duration <span>*</span><input className="input" type="number" min="1" max="40" value={hours} onChange={e => setHours(e.target.value)} placeholder="Hours completed" required /></label>}
+                <label className="submit-field">Event or activity name <span>*</span><input className="input" value={eventName} onChange={e => setEventName(e.target.value)} maxLength={180} placeholder="Name on your certificate" required /></label>
+                <label className="submit-field">Activity date <span>*</span><input className="input" type="date" max={new Date().toISOString().slice(0,10)} value={activityDate} onChange={e => setActivityDate(e.target.value)} required /></label>
+                <label className="submit-field">Academic year <span>*</span><input className="input" value={academicYear} onChange={e => setAcademicYear(e.target.value)} placeholder="2025-26" maxLength={7} pattern="[0-9]{4}[-–][0-9]{2}" required /></label>
+                <label className="submit-field submit-field-wide">A short note <small>Optional</small><textarea className="input" rows={3} maxLength={2000} value={description} onChange={e => setDescription(e.target.value)} placeholder="Add context that helps your advisor verify this activity." /></label>
+                <div className="submit-field submit-field-wide"><label htmlFor="certificate-file">Certificate or proof <span>*</span></label><label className="submit-upload" htmlFor="certificate-file"><span className="material-symbols-outlined">{uploadedFile ? 'draft' : 'upload_file'}</span><strong>{uploadedFile ? uploadedFile.name : 'Choose a document'}</strong><small>{uploadedFile ? `${(uploadedFile.size/1024).toFixed(1)} KB · Select to change` : 'PDF, JPG or PNG · 10 MB maximum'}</small></label><input id="certificate-file" ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} required /></div>
             </div>
-        );
-    }
-
-    return (
-        <div style={{ maxWidth: 860, margin:'0 auto' }}>
-            {/* Step Indicator */}
-            <div className="step-indicator">
-                {STEPS.map((s, i) => (
-                    <React.Fragment key={s}>
-                        <div className="step-item">
-                            <div className={`step-circle ${i < step ? 'done' : i === step ? 'active' : ''}`}>
-                                {i < step
-                                    ? <span className="material-symbols-outlined" style={{ fontSize:16 }}>check</span>
-                                    : i + 1}
-                            </div>
-                            <span className={`step-label ${i === step ? 'active' : ''}`}>{s}</span>
-                        </div>
-                        {i < STEPS.length - 1 && (
-                            <div className={`step-connector ${i < step ? 'done' : ''}`} />
-                        )}
-                    </React.Fragment>
-                ))}
-            </div>
-
-            <div style={{ display:'grid', gridTemplateColumns:'1fr auto', gap:20, alignItems:'start' }}>
-                {/* ── Left: Main Form Card ── */}
-                <div className="card">
-                    <div className="card-header">
-                        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                            <span className="material-symbols-outlined" style={{ color:'var(--accent)', fontSize:20 }}>info</span>
-                            <h3>{step === 0 ? 'Select Activity' : activity?.name}</h3>
-                        </div>
-                        {step === 1 && (
-                            <button className="btn btn-ghost btn-sm" onClick={() => { setStep(0); setActivityId(''); }}>
-                                <span className="material-symbols-outlined" style={{ fontSize:16 }}>arrow_back</span>
-                                Back
-                            </button>
-                        )}
-                    </div>
-                    <div className="card-body">
-                        {step === 0 ? (
-                            <>
-                                {/* Group Selector */}
-                                <div style={{ display:'flex', gap:8, marginBottom:20 }}>
-                                    {[1,2,3].map(g => (
-                                        <button key={g}
-                                            className={`btn ${group === g ? 'btn-primary' : 'btn-ghost'}`}
-                                            style={{ flex:1 }}
-                                            onClick={() => { setGroup(g); setActivityId(''); }}
-                                        >
-                                            Group {g}
-                                        </button>
-                                    ))}
-                                </div>
-                                {/* Activity List */}
-                                {Object.entries(byCategory).map(([cat, acts]) => (
-                                    <div key={cat} style={{ marginBottom:18 }}>
-                                        <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>{cat}</div>
-                                        {acts.map(a => (
-                                            <div key={a.id}
-                                                className="cert-card"
-                                                style={{ cursor:'pointer', marginBottom:7 }}
-                                                onClick={() => handleSelectActivity(a.id)}
-                                            >
-                                                <div className="cert-card-header" style={{ marginBottom:0 }}>
-                                                    <div>
-                                                        <div className="cert-card-title">{a.name}</div>
-                                                        <div className="cert-card-sub">Max {a.maxPoints} pts</div>
-                                                    </div>
-                                                    <span className="material-symbols-outlined" style={{ color:'var(--text-muted)', fontSize:18 }}>chevron_right</span>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ))}
-                            </>
-                        ) : (
-                            <form onSubmit={handleSubmit}>
-                                <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:20 }}>
-                                    Group {activity?.group} · {activity?.category} · Max {activity?.maxPoints} pts
-                                </div>
-
-                                {/* Level / Hours */}
-                                {needsLevel && (
-                                    <div className="form-group">
-                                        <label className="form-label">
-                                            Select Level / Option <span className="required">*</span>
-                                        </label>
-                                        <select className="input" value={selectedLevel}
-                                            onChange={e => setSelectedLevel(e.target.value)} required
-                                            style={{ borderColor: !selectedLevel ? 'var(--danger)' : '' }}
-                                        >
-                                            <option value=""> /  Select a level to continue  / </option>
-                                            {activity.levels.map(l => (
-                                                <option key={l.label} value={l.label}>{l.label} ({l.points} pts)</option>
-                                            ))}
-                                        </select>
-                                        {!selectedLevel && (
-                                            <div className="form-hint" style={{ color:'var(--danger)' }}>⚠ You must select a level before submitting</div>
-                                        )}
-                                    </div>
-                                )}
-                                {activity?.type === 'hours' && (
-                                    <div className="form-group">
-                                        <label className="form-label">Course Duration (Hours)</label>
-                                        <input className="input" type="number" min="1" max="40"
-                                            placeholder="e.g. 30" value={hours}
-                                            onChange={e => setHours(e.target.value)} required />
-                                        <div className="form-hint">1 pt/hour • Max 40 pts</div>
-                                    </div>
-                                )}
-
-                                {/* Upload Certificate */}
-                                <div className="form-group">
-                                    <label className="form-label">
-                                        Upload Certificate <span className="required">*</span>
-                                    </label>
-                                    <div className={`upload-zone ${uploadedFile ? 'drag-over' : ''}`}
-                                        onClick={() => fileInputRef.current.click()}
-                                        style={{ borderColor: uploadedFile ? 'var(--success)' : '' }}
-                                    >
-                                        <span className="material-symbols-outlined" style={{ color: uploadedFile ? 'var(--success)' : '' }}>
-                                            {uploadedFile ? 'attach_file' : 'cloud_upload'}
-                                        </span>
-                                        {uploadedFile ? (
-                                            <>
-                                                <p style={{ fontWeight:600, color:'var(--success)' }}>{uploadedFile.name}</p>
-                                                <span>{(uploadedFile.size / 1024).toFixed(1)} KB · Click to change</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <p>Click to upload certificate</p>
-                                                <span>PDF, JPG, PNG supported</span>
-                                            </>
-                                        )}
-                                    </div>
-                                    <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png"
-                                        style={{ display:'none' }} onChange={handleFileChange} required />
-                                </div>
-
-                                <div className="form-group">
-                                    <label className="form-label">Event / Activity Name <span className="required">*</span></label>
-                                    <input className="input" value={eventName}
-                                        onChange={e => setEventName(e.target.value)} maxLength={180}
-                                        placeholder="e.g. KTU Tech Fest 2025" required />
-                                    <div className="form-hint">Use the same event name across related certificates.</div>
-                                </div>
-
-                                <div className="form-group">
-                                    <label className="form-label">Academic Year <span className="required">*</span></label>
-                                    <input className="input" value={academicYear}
-                                        onChange={e => setAcademicYear(e.target.value)}
-                                        placeholder="2025–26" maxLength={7}
-                                        pattern="[0-9]{4}[-–][0-9]{2}"
-                                        title="Enter the academic year as YYYY-YY, for example 2025-26"
-                                        required />
-                                    <div className="form-hint">Enter the year shown on your academic calendar. Faculty will verify it with your certificate.</div>
-                                </div>
-
-                                {/* Activity Date */}
-                                <div className="form-group">
-                                    <label className="form-label">Activity Date <span className="required">*</span></label>
-                                    <input className="input" type="date" max={new Date().toISOString().slice(0, 10)} value={activityDate}
-                                        onChange={e => setActivityDate(e.target.value)} required />
-                                </div>
-
-                                {/* Description */}
-                                <div className="form-group">
-                                    <label className="form-label">Description / Notes</label>
-                                    <textarea className="input" rows={3}
-                                        placeholder="Describe the activity, event name, organizer, etc."
-                                        value={description} onChange={e => setDescription(e.target.value)}
-                                        style={{ resize:'vertical' }} />
-                                </div>
-
-                                {activity?.note && (
-                                    <div className="alert alert-warning" style={{ marginBottom:16 }}>
-                                        <span className="material-symbols-outlined" style={{ fontSize:16 }}>info</span>
-                                        {activity.note}
-                                    </div>
-                                )}
-
-                                {submitError && (
-                                    <div className="alert alert-error" style={{ marginBottom:16 }}>
-                                        <span className="material-symbols-outlined" style={{ fontSize:16, flexShrink:0 }}>error_outline</span>
-                                        {submitError}
-                                    </div>
-                                )}
-
-                                <div style={{ display:'flex', gap:10, paddingTop:8, borderTop:'1px solid var(--border)' }}>
-                                    <button type="button" className="btn btn-ghost" style={{ flex:1 }} onClick={() => { setStep(0); setActivityId(''); }}>Cancel</button>
-                                    <button type="submit" className="btn btn-primary" style={{ flex:2 }}
-                                        disabled={submitting || (needsLevel && !selectedLevel)}
-                                    >
-                                        {submitting
-                                            ? <><span className="material-symbols-outlined" style={{ fontSize:18, animation:'spin 1s linear infinite' }}>progress_activity</span> Submitting…</>
-                                            : <><span className="material-symbols-outlined" style={{ fontSize:18 }}>send</span> Submit for Verification</>}
-                                    </button>
-                                </div>
-                            </form>
-                        )}
-                    </div>
-                </div>
-
-                {/* ── Right: Info Cards ── */}
-                <div style={{ width:220, display:'flex', flexDirection:'column', gap:14 }}>
-                    {/* Point Rules */}
-                    <div className="card" style={{ padding:18 }}>
-                        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12 }}>
-                            <span className="material-symbols-outlined" style={{ color:'var(--warning)', fontSize:20 }}>gavel</span>
-                            <span style={{ fontWeight:700, fontSize:13, color:'var(--text)' }}>Point Rules</span>
-                        </div>
-                        <div style={{ display:'flex', flexDirection:'column', gap:8, fontSize:12, color:'var(--text-secondary)' }}>
-                            <div style={{ display:'flex', gap:6 }}>
-                                <span className="material-symbols-outlined" style={{ fontSize:14, color:'var(--text-muted)', flexShrink:0, marginTop:1 }}>check_circle</span>
-                                Activities need a valid certificate from the organizing body.
-                            </div>
-                            <div style={{ display:'flex', gap:6 }}>
-                                <span className="material-symbols-outlined" style={{ fontSize:14, color:'var(--text-muted)', flexShrink:0, marginTop:1 }}>check_circle</span>
-                                Double claiming for the same event is not allowed.
-                            </div>
-                            <div style={{ display:'flex', gap:6 }}>
-                                <span className="material-symbols-outlined" style={{ fontSize:14, color:'var(--text-muted)', flexShrink:0, marginTop:1 }}>check_circle</span>
-                                Only highest level achievement is counted.
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Estimated Points */}
-                    <div style={{ background:'var(--primary)', borderRadius:'var(--radius-lg)', padding:18, position:'relative', overflow:'hidden' }}>
-                        <span className="material-symbols-outlined" style={{ position:'absolute', right:-10, bottom:-10, fontSize:80, color:'rgba(255,255,255,0.08)' }}>military_tech</span>
-                        <div style={{ fontSize:11, color:'rgba(255,255,255,0.7)', marginBottom:4, position:'relative' }}>Estimated Points</div>
-                        <div style={{ fontSize:32, fontWeight:900, color:'#fff', position:'relative' }}>
-                            {previewPoints}
-                            <span style={{ fontSize:14, fontWeight:500, opacity:0.7, marginLeft:4 }}>pts</span>
-                        </div>
-                        <div style={{ fontSize:10, color:'rgba(255,255,255,0.5)', marginTop:8, lineHeight:1.5, position:'relative' }}>
-                            *Subject to Faculty Advisor verification. Final award may vary.
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
+            {activity?.note && <div className="submit-note"><span className="material-symbols-outlined">info</span>{activity.note}</div>}
+            {submitError && <div role="alert" className="alert alert-error">{submitError}</div>}
+            <div className="submit-form-actions"><span>Submitted points remain provisional until reviewed.</span><button type="submit" disabled={submitting || (needsLevel && !selectedLevel) || !uploadedFile}>{submitting ? 'Submitting…' : 'Submit for review'}<span className="material-symbols-outlined">arrow_forward</span></button></div>
+        </form><aside className="submit-preview"><span className="role-kicker">YOUR ESTIMATE</span><strong>{previewPoints}<small>points</small></strong><p>Faculty will confirm the award after checking your certificate.</p><div><span className="material-symbols-outlined">verified_user</span><span>Only authentic, eligible activities count.</span></div></aside></div>}
+    </div>;
 }
 
-/* ═══════════════════════════════════════════════════
-   MY SUBMISSIONS TAB
-═══════════════════════════════════════════════════ */
 function SubmissionsTab({ certs }) {
     const [filter,  setFilter]  = useState('all');
     const [search,  setSearch]  = useState('');
