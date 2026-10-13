@@ -14,8 +14,9 @@ router.get('/', async (_req, res) => {
 
 // POST /api/circulars — admin only
 router.post('/', requireRole('admin'), async (req, res) => {
-  const { title, content, sourceUrl, issuedOn } = req.body;
+  const { title, content, sourceUrl, issuedOn, priority = 'normal' } = req.body;
   if (!title || !content) return res.status(400).json({ error: 'title and content are required' });
+  if (!['normal', 'urgent', 'info'].includes(priority)) return res.status(400).json({ error: 'Choose a valid circular priority.' });
   if (sourceUrl) {
     try {
       const parsed = new URL(sourceUrl);
@@ -23,7 +24,8 @@ router.post('/', requireRole('admin'), async (req, res) => {
     } catch { return res.status(400).json({ error: 'Enter a valid official circular link.' }); }
   }
   const { data, error } = await supabase.from('circulars').insert({
-    title, content, source_url: sourceUrl || null, issued_on: issuedOn || null, created_by: req.user.id,
+    title: String(title).trim(), content: String(content).trim(), source_url: sourceUrl || null,
+    issued_on: issuedOn || null, priority, created_by: req.user.id,
   }).select().single();
   if (error) return res.status(400).json({ error: error.message });
   res.status(201).json(data);

@@ -17,7 +17,7 @@ export function generateApprovalPDF(certificate, student, faculty) {
 
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text('Activity Points Certificate of Approval — 2024 Scheme', 105, 25, { align: 'center' });
+    doc.text('Faculty Activity Submission Review Record', 105, 25, { align: 'center' });
 
     doc.setFontSize(9);
     doc.text('KTU Activity Point Management System', 105, 33, { align: 'center' });
@@ -53,34 +53,35 @@ export function generateApprovalPDF(certificate, student, faculty) {
 
     // Certificate Details Section
     y += 4;
+    const activityId = certificate.activity_id || certificate.activityId || activity?.id || 'N/A';
+    const description = String(certificate.description || 'N/A');
+    const details = [
+        ['Activity ID', activityId],
+        ['Activity Name', activity ? activity.name : (certificate.activityName || 'N/A')],
+        ['Group', `Group ${activity ? activity.group : 'N/A'} — ${activity ? activity.category : ''}`],
+        ['Level / Type', certificate.selectedLevel || certificate.level_selected || 'N/A'],
+        ['Sub-details', description.length > 180 ? `${description.slice(0, 177)}… (full details in APMS)` : description],
+        ['Date of Activity', certificate.activity_date || certificate.activityDate || (certificate.created_at ? new Date(certificate.created_at).toLocaleDateString('en-IN') : 'N/A')],
+        ['Academic Year', certificate.academic_year || certificate.academicYear || 'Not recorded'],
+    ];
+    const detailRows = details.map(([label, value]) => ({ label, lines: doc.splitTextToSize(String(value), 120) }));
+    const detailsHeight = 18 + detailRows.reduce((height, row) => height + Math.max(1, row.lines.length) * 7, 0);
     doc.setFillColor(241, 245, 249);
-    doc.roundedRect(14, y - 4, 182, 6 * 8 + 14, 3, 3, 'F');
-
+    doc.roundedRect(14, y - 4, 182, detailsHeight, 3, 3, 'F');
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
     doc.setTextColor(15, 23, 42);
     doc.text('Activity Details', 18, y + 4);
-
     doc.setFontSize(10);
-    const details = [
-        ['Activity ID', actId || 'N/A'],
-        ['Activity Name', activity ? activity.name : (certificate.activityName || 'N/A')],
-        ['Group', `Group ${activity ? activity.group : 'N/A'} — ${activity ? activity.category : ''}`],
-        ['Level / Type', certificate.selectedLevel || certificate.level_selected || 'N/A'],
-        ['Sub-details', certificate.description || 'N/A'],
-        ['Date of Activity', certificate.activityDate || (certificate.created_at ? new Date(certificate.created_at).toLocaleDateString('en-IN') : 'N/A')],
-        ['Academic Year', certificate.academic_year || certificate.academicYear || 'Not recorded'],
-    ];
     y += 12;
-    for (const [label, value] of details) {
+    for (const { label, lines } of detailRows) {
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(100, 116, 139);
         doc.text(`${label}:`, 18, y);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(15, 23, 42);
-        const wrapped = doc.splitTextToSize(value, 120);
-        doc.text(wrapped, 75, y);
-        y += 8;
+        doc.text(lines, 75, y);
+        y += Math.max(7, lines.length * 7);
     }
 
     // Points Awarded Box
@@ -92,10 +93,10 @@ export function generateApprovalPDF(certificate, student, faculty) {
     doc.setFont('helvetica', 'bold');
     doc.text('Points Awarded:', 22, y + 13);
     doc.setFontSize(20);
-    doc.text(`${certificate.pointsAwarded} pts`, 170, y + 13, { align: 'right' });
+    doc.text(`${certificate.points_awarded ?? certificate.pointsAwarded ?? 0} pts`, 170, y + 13, { align: 'right' });
 
     // Approval Details
-    y += 30;
+    y += 36;
     doc.setTextColor(15, 23, 42);
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
@@ -107,7 +108,7 @@ export function generateApprovalPDF(certificate, student, faculty) {
         ['Approved By', faculty.name || 'System'],
         ['Designation', faculty.designation || 'Faculty'],
         ['Approval Date', certificate.approvedAt || certificate.reviewed_at ? new Date(certificate.approvedAt || certificate.reviewed_at).toLocaleDateString('en-IN') : new Date().toLocaleDateString('en-IN')],
-        ['Remarks', certificate.notes || certificate.facultyRemark || 'Approved'],
+        ['Remarks', String(certificate.notes || certificate.facultyRemark || 'Approved').slice(0, 180)],
     ];
     y += 8;
     for (const [label, value] of approval) {
@@ -117,6 +118,12 @@ export function generateApprovalPDF(certificate, student, faculty) {
         doc.text(value, 70, y);
         y += 8;
     }
+
+    // Estimates are not university-issued certificates and remain subject to eligibility review.
+    doc.setTextColor(103, 91, 119);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'italic');
+    doc.text('APMS progress totals are estimates. This record is not an official KTU certificate.', 105, Math.min(y + 12, 268), { align: 'center' });
 
     // Footer
     doc.setFillColor(15, 23, 42);

@@ -603,7 +603,7 @@ function CircularsTab() {
 
     const handlePost = async () => {
         if (!title.trim() || !body.trim()) return;
-        try { await addCircular({ title: title.trim(), content: body.trim(), sourceUrl: sourceUrl.trim(), issuedOn: issuedOn || null }); } catch (err) { alert(err.message); return; }
+        try { await addCircular({ title: title.trim(), content: body.trim(), sourceUrl: sourceUrl.trim(), issuedOn: issuedOn || null, priority }); } catch (err) { alert(err.message); return; }
         getCirculars().then(setCirculars);
         setTitle(''); setBody(''); setSourceUrl(''); setIssuedOn(''); setPri('normal'); setShowForm(false);
     };

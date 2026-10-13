@@ -1,7 +1,7 @@
 // KTU 2024 Activity Points Algorithm
 // Source: APJ Abdul Kalam Technological University - Activity Points Handbook 2024
 
-export const CATALOG_VERSION = 'ktu-2024-provisional-v3';
+export const CATALOG_VERSION = 'ktu-2024-provisional-v4';
 
 export const STUDENT_TYPES = {
     regular: { total: 120, perGroup: 40 },
@@ -309,9 +309,7 @@ export const ACTIVITIES = {
     },
     '2.12': {
         id: '2.12', group: 2, name: 'College/University Union',
-        category: 'Leadership & Management',
-        type: 'choice',
-        maxPoints: 30,
+        category: 'Leadership & Management', type: 'choice', maxPoints: 30,
         levels: [
             { label: 'College Union — Executive Committee Member', points: 15 },
             { label: 'College Union — Office Bearer', points: 20 },
@@ -321,6 +319,34 @@ export const ACTIVITIES = {
     },
     '2.13': {
         id: '2.13', group: 2, name: 'Department Student Association Activities',
+        category: 'Leadership & Management', type: 'choice', maxPoints: 10,
+        levels: [
+            { label: 'Executive Committee / Office Bearer (per academic year)', points: 5 },
+            { label: 'Student Coordinator (per event)', points: 5 },
+        ],
+    },
+    '2.14': {
+        id: '2.14', group: 2, name: 'Class Representative',
+        category: 'Leadership & Management', type: 'fixed', maxPoints: 10,
+        pointsPerEntry: 5, eventWindow: 'academic-year',
+        note: '5 points per academic year; one class representative per class.',
+    },
+    '2.15': {
+        id: '2.15', group: 2, name: 'Industrial Visit Coordinator (Min 6 Days)',
+        category: 'Leadership & Management', type: 'fixed', maxPoints: 5,
+        pointsPerEntry: 5, note: 'Maximum 2 coordinators per class.',
+    },
+    '2.16': {
+        id: '2.16', group: 2, name: 'Placement Cell (Min 1 Academic Year)',
+        category: 'Leadership & Management', type: 'choice', maxPoints: 10,
+        levels: [
+            { label: 'Executive Committee Member (1 per class)', points: 5 },
+            { label: 'Coordinator / Convenor (max 2)', points: 10 },
+        ],
+        note: 'Coordinator appointments have a class limit and at least one coordinator must be a female student.',
+    },
+    '2.17': {
+        id: '2.17', group: 2, name: 'IEDC Cell (Min 1 Academic Year)',
         category: 'Leadership & Management',
         type: 'choice',
         maxPoints: 10,
@@ -329,48 +355,10 @@ export const ACTIVITIES = {
             { label: 'Student Coordinator (per event)', points: 5 },
         ],
     },
-    '2.14': {
-        id: '2.14', group: 2, name: 'Class Representative',
-        category: 'Leadership & Management',
-        type: 'fixed',
-        maxPoints: 10,
-        pointsPerEntry: 5,
-        note: '5 pts per academic year (1 CR per class)',
-    },
-    '2.15': {
-        id: '2.15', group: 2, name: 'Industrial Visit Coordinator (Min 6 Days)',
-        category: 'Leadership & Management',
-        type: 'fixed',
-        maxPoints: 5,
-        pointsPerEntry: 5,
-        note: 'Max 2 coordinators per class',
-    },
-    '2.16': {
-        id: '2.16', group: 2, name: 'Placement Cell (Min 1 Academic Year)',
-        category: 'Leadership & Management',
-        type: 'choice',
-        maxPoints: 10,
-        levels: [
-            { label: 'Executive Committee Member (1 per class)', points: 5 },
-            { label: 'Coordinator / Convenor (max 2)', points: 10 },
-        ],
-    },
-    '2.17': {
-        id: '2.17', group: 2, name: 'IEDC Cell (Min 1 Academic Year)',
-        category: 'Leadership & Management',
-        type: 'choice',
-        maxPoints: 10,
-        levels: [
-            { label: 'Exec / Office Bearer (per year)', points: 5 },
-            { label: 'Student Coordinator (per event)', points: 5 },
-        ],
-    },
     '2.18': {
         id: '2.18', group: 2, name: 'YIP – K-DISC (Min 1 Academic Year)',
-        category: 'Leadership & Management',
-        type: 'fixed',
-        maxPoints: 10,
-        pointsPerEntry: 5,
+        category: 'Leadership & Management', type: 'fixed', maxPoints: 10,
+        pointsPerEntry: 5, note: 'Student coordinator: 5 points; maximum 10 points.',
     },
     '2.19': {
         id: '2.19', group: 2, name: 'STRIDE – K-DISC (Min 1 Academic Year)',
@@ -388,19 +376,14 @@ export const ACTIVITIES = {
     },
     '2.20': {
         id: '2.20', group: 2, name: 'College Magazine Editorial Board',
-        category: 'Leadership & Management',
-        type: 'fixed',
-        maxPoints: 10,
-        pointsPerEntry: 5,
-        note: '5 pts per academic year',
+        category: 'Leadership & Management', type: 'fixed', maxPoints: 10,
+        pointsPerEntry: 5, eventWindow: 'academic-year',
+        note: '5 points per academic year; handbook limits eligible editorial-board students per year.',
     },
     '2.21': {
         id: '2.21', group: 2, name: 'Hobby Club Executive/Convenor',
-        category: 'Leadership & Management',
-        type: 'fixed',
-        maxPoints: 10,
-        pointsPerEntry: 5,
-        note: '5 pts per academic year',
+        category: 'Leadership & Management', type: 'fixed', maxPoints: 10,
+        pointsPerEntry: 5, eventWindow: 'academic-year',
     },
     '2.22': {
         id: '2.22', group: 2, name: 'ICFOSS / FOSS Activities (Min 1 Academic Year)',
@@ -626,7 +609,9 @@ export const ACTIVITIES = {
 
 // Get all activities by group
 export function getActivitiesByGroup(group) {
-    return Object.values(ACTIVITIES).filter(a => a.group === group);
+    return Object.values(ACTIVITIES)
+        .filter(activity => activity.group === group)
+        .sort((a, b) => Number(a.id.split('.')[1]) - Number(b.id.split('.')[1]));
 }
 
 // Calculate points for a single certificate submission
@@ -650,41 +635,29 @@ export function calculatePoints(activityId, selectedLevel, hours) {
     return 0;
 }
 
-// v2 placed College Union, the magazine board, and hobby clubs in Group I and
-// shifted the later Group II identifiers. Interpret those immutable snapshots
-// using their corrected handbook positions when calculating historical totals.
+// The v2 catalog used incorrect IDs for Group II leadership rows. Keep its
+// submitted evidence intact and resolve snapshots to the handbook IDs. The
+// deployed v3 catalog already uses the correct Group II identifiers.
 const V2_ACTIVITY_REMAP = {
-    '1.22': { id: '2.12', group: 2 },
-    '2.12': { id: '2.13', group: 2 },
-    '2.13': { id: '2.14', group: 2 },
-    '2.14': { id: '2.15', group: 2 },
-    '2.15': { id: '2.16', group: 2 },
-    '2.16': { id: '2.17', group: 2 },
-    '2.17': { id: '2.18', group: 2 },
-    '2.18': { id: '2.19', group: 2 },
-    '1.23': { id: '2.20', group: 2 },
-    '1.24': { id: '2.21', group: 2 },
-    '2.19': { id: '2.22', group: 2 },
-    '2.20': { id: '2.23', group: 2 },
-    '2.21': { id: '2.24', group: 2 },
-    '2.22': { id: '2.25', group: 2 },
+    '1.22': '2.12', '1.23': '2.20', '1.24': '2.21',
+    '2.12': '2.13', '2.13': '2.14', '2.14': '2.15', '2.15': '2.16',
+    '2.16': '2.17', '2.17': '2.18', '2.18': '2.19', '2.19': '2.22',
+    '2.20': '2.23', '2.21': '2.24', '2.22': '2.25',
 };
 
 export function getActivityForCertificate(cert) {
     const actId = cert?.activity_id || cert?.activityId;
     const version = cert?.catalog_version || cert?.catalogVersion || CATALOG_VERSION;
     const storedActivity = cert?.activity_snapshot || cert?.activitySnapshot || ACTIVITIES[actId];
-    const legacyPosition = version === 'ktu-2024-provisional-v2'
+    const correctedId = version === 'ktu-2024-provisional-v2'
         ? V2_ACTIVITY_REMAP[storedActivity?.id || actId]
         : null;
-    if (!legacyPosition) return storedActivity || null;
-    const currentActivity = ACTIVITIES[legacyPosition.id];
+    if (!correctedId) return storedActivity || null;
+    const currentActivity = ACTIVITIES[correctedId];
     if (!storedActivity) return currentActivity || null;
     return {
         ...storedActivity,
-        ...legacyPosition,
-        category: currentActivity?.category || storedActivity.category,
-        awardType: storedActivity.awardType || currentActivity?.awardType,
+        ...currentActivity,
     };
 }
 
@@ -699,7 +672,6 @@ export function calculateStudentSummary(certificates, studentType = 'regular') {
     for (const cert of certificates) {
         if (cert.status !== 'approved') continue;
         const actId = cert.activity_id || cert.activityId;
-        const version = cert.catalog_version || cert.catalogVersion || CATALOG_VERSION;
         const activity = getActivityForCertificate(cert);
         if (!activity || ![1, 2, 3].includes(activity.group)) continue;
         const points = Number(cert.points_awarded ?? cert.pointsAwarded ?? 0);
@@ -711,18 +683,28 @@ export function calculateStudentSummary(certificates, studentType = 'regular') {
         const event = name && (activity.eventWindow === 'lifetime' || year)
             ? (activity.eventWindow === 'lifetime' ? [name] : [name, year])
             : ['legacy', cert.id || JSON.stringify(cert)];
-        const key = JSON.stringify([version, activity.group, activity.exclusiveGroup || actId, event]);
+        // The catalog version describes the saved rules, not a different real-world
+        // event. Old and new snapshots for one event must still collapse to one award.
+        const key = JSON.stringify([activity.group, activity.exclusiveGroup || activity.id, event]);
         const previous = bestAwards.get(key);
-        const awardType = activity.awardType || ACTIVITIES[actId]?.awardType || null;
+        const awardType = activity.awardType || ACTIVITIES[activity.id]?.awardType || ACTIVITIES[actId]?.awardType || null;
+        const selectedLevel = cert.level_selected || cert.levelSelected;
+        const levelRank = activity.levels?.findIndex(level => level.label === selectedLevel) ?? -1;
         const winnerTakesPrecedence = awardType === 'winner' && previous?.awardType !== 'winner';
-        const sameOutcomeImprovesScore = awardType === previous?.awardType && points > (previous?.points ?? -1);
+        const higherAchievementLevel = awardType === previous?.awardType && levelRank >= 0
+            && previous?.levelRank >= 0 && levelRank > previous.levelRank;
+        const sameOutcomeImprovesScore = awardType === previous?.awardType
+            && (levelRank < 0 || previous?.levelRank < 0 || levelRank === previous.levelRank)
+            && points > (previous?.points ?? -1);
         if (!previous || winnerTakesPrecedence || sameOutcomeImprovesScore) {
-            bestAwards.set(key, { activity, version, points, awardType });
+            bestAwards.set(key, { activity, points, awardType, levelRank });
+        } else if (higherAchievementLevel) {
+            bestAwards.set(key, { activity, points, awardType, levelRank });
         }
     }
     const activityAwards = new Map();
     for (const award of bestAwards.values()) {
-        const key = JSON.stringify([award.version, award.activity.id]);
+        const key = award.activity.id;
         const previous = activityAwards.get(key);
         activityAwards.set(key, { ...award, points: (previous?.points || 0) + award.points });
     }

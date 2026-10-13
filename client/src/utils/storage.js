@@ -132,7 +132,7 @@ export async function getCirculars() {
 }
 
 export async function addCircular(circular) {
-  return api.post('/circulars', { title: circular.title, content: circular.content, sourceUrl: circular.sourceUrl, issuedOn: circular.issuedOn });
+  return api.post('/circulars', { title: circular.title, content: circular.content, sourceUrl: circular.sourceUrl, issuedOn: circular.issuedOn, priority: circular.priority });
 }
 
 export async function deleteCircular(id) {

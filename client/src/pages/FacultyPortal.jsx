@@ -797,7 +797,7 @@ function StudentsTab({ certs, students }) {
                                             <span className="badge badge-pending" style={{ marginRight: 6 }}>{studentCerts.filter(c => c.status === 'pending').length} pending</span>
                                             <span className="badge badge-approved">{studentCerts.filter(c => c.status === 'approved').length} approved</span>
                                         </span>
-                                        <span style={{ fontWeight: 800, color: 'var(--accent)', fontSize: 14 }}>{summary.total}/{reqTotal}</span>
+                                        <span style={{ fontWeight: 800, color: 'var(--accent)', fontSize: 14 }} title="Provisional estimate from approved submissions">{summary.total}/{reqTotal} est.</span>
                                     </div>
                                 </div>
                             </div>

@@ -4,10 +4,11 @@ import {
     ACTIVITIES,
     CATALOG_VERSION,
     calculateStudentSummary,
+    getActivitiesByGroup,
     getActivityForCertificate,
 } from './points.js';
 
-function certificate(activityId, points, { date = '2025-08-15', event = activityId, version = CATALOG_VERSION, snapshot } = {}) {
+function certificate(activityId, points, { date = '2025-08-15', event = activityId, version = CATALOG_VERSION, snapshot, level } = {}) {
     return {
         id: `${activityId}-${event}-${date}`,
         activity_id: activityId,
@@ -16,22 +17,32 @@ function certificate(activityId, points, { date = '2025-08-15', event = activity
         event_name: event,
         activity_date: date,
         points_awarded: points,
+        level_selected: level,
         status: 'approved',
     };
 }
 
 test('catalog IDs follow the 2024 handbook groups and ranges', () => {
-    assert.equal(CATALOG_VERSION, 'ktu-2024-provisional-v3');
+    assert.equal(CATALOG_VERSION, 'ktu-2024-provisional-v4');
     for (let i = 1; i <= 21; i += 1) assert.equal(ACTIVITIES[`1.${i}`]?.group, 1);
     for (let i = 1; i <= 25; i += 1) assert.equal(ACTIVITIES[`2.${i}`]?.group, 2);
     for (let i = 1; i <= 17; i += 1) assert.equal(ACTIVITIES[`3.${i}`]?.group, 3);
+    assert.equal(ACTIVITIES['1.22'], undefined);
     assert.equal(ACTIVITIES['2.12'].name, 'College/University Union');
+    assert.equal(ACTIVITIES['2.13'].name, 'Department Student Association Activities');
+    assert.equal(ACTIVITIES['2.14'].name, 'Class Representative');
+    assert.equal(ACTIVITIES['2.15'].name, 'Industrial Visit Coordinator (Min 6 Days)');
+    assert.equal(ACTIVITIES['2.16'].name, 'Placement Cell (Min 1 Academic Year)');
+    assert.equal(ACTIVITIES['2.17'].name, 'IEDC Cell (Min 1 Academic Year)');
+    assert.equal(ACTIVITIES['2.18'].name, 'YIP – K-DISC (Min 1 Academic Year)');
+    assert.equal(ACTIVITIES['2.19'].name, 'STRIDE – K-DISC (Min 1 Academic Year)');
     assert.equal(ACTIVITIES['2.20'].name, 'College Magazine Editorial Board');
     assert.equal(ACTIVITIES['2.21'].name, 'Hobby Club Executive/Convenor');
+    assert.equal(ACTIVITIES['2.22'].name, 'ICFOSS / FOSS Activities (Min 1 Academic Year)');
     assert.equal(ACTIVITIES['2.23'].name, 'Short-Term Internship (Min 2 Weeks / 10 Working Days)');
     assert.equal(ACTIVITIES['2.24'].name, 'English Proficiency Certification (TOEFL/IELTS/PTE/BEC)');
     assert.equal(ACTIVITIES['2.25'].name, 'Aptitude Proficiency Certification (GRE/GATE/CAT/GMAT)');
-    assert.equal(ACTIVITIES['1.22'], undefined);
+    assert.deepEqual(getActivitiesByGroup(2).map(activity => activity.id), Array.from({ length: 25 }, (_, i) => `2.${i + 1}`));
 });
 
 test('catalog point amounts and activity caps stay within the handbook limits', () => {
@@ -63,18 +74,65 @@ test('a patent counts its highest saved milestone once across years', () => {
     assert.equal(summary.group3, 40);
 });
 
-test('old v2 snapshots are placed in their corrected Group II buckets', () => {
+test('an event is not counted twice when one record uses an older catalog version', () => {
+    const summary = calculateStudentSummary([
+        certificate('1.1', 5, { event: 'same college arts fest', version: 'ktu-2024-provisional-v2' }),
+        certificate('1.1', 5, { event: 'same college arts fest', version: CATALOG_VERSION }),
+    ]);
+    assert.equal(summary.group1, 5);
+});
+
+test('provisional v2 snapshots are mapped to the corrected handbook IDs and groups', () => {
     const records = [
-        certificate('1.22', 20, { version: 'ktu-2024-provisional-v2', event: 'union role', snapshot: { id: '1.22', group: 1, maxPoints: 30, name: 'College/University Union' } }),
-        certificate('1.23', 5, { version: 'ktu-2024-provisional-v2', event: 'magazine board', snapshot: { id: '1.23', group: 1, maxPoints: 10, name: 'College Magazine Editorial Board' } }),
-        certificate('1.24', 5, { version: 'ktu-2024-provisional-v2', event: 'hobby club', snapshot: { id: '1.24', group: 1, maxPoints: 10, name: 'Hobby Club Executive/Convenor' } }),
+        certificate('1.22', 20, { version: 'ktu-2024-provisional-v2', event: 'union role' }),
+        certificate('1.23', 5, { version: 'ktu-2024-provisional-v2', event: 'magazine board' }),
+        certificate('1.24', 5, { version: 'ktu-2024-provisional-v2', event: 'hobby club' }),
         certificate('2.12', 5, { version: 'ktu-2024-provisional-v2', event: 'department association', snapshot: { id: '2.12', group: 2, maxPoints: 10, name: 'Department Student Association Activities' } }),
+        certificate('2.19', 5, { version: 'ktu-2024-provisional-v2', event: 'foss member', snapshot: { id: '2.19', group: 2, maxPoints: 20, name: 'ICFOSS / FOSS Activities' } }),
+        certificate('2.20', 10, { version: 'ktu-2024-provisional-v2', event: 'internship', snapshot: { id: '2.20', group: 2, maxPoints: 10, name: 'Short-Term Internship' } }),
+        certificate('2.21', 20, { version: 'ktu-2024-provisional-v2', event: 'english test', snapshot: { id: '2.21', group: 2, maxPoints: 30, name: 'English Proficiency' } }),
+        certificate('2.22', 20, { version: 'ktu-2024-provisional-v2', event: 'aptitude test', snapshot: { id: '2.22', group: 2, maxPoints: 30, name: 'Aptitude Proficiency' } }),
+    ];
+    const summary = calculateStudentSummary(records);
+    assert.equal(summary.group1, 0);
+    assert.equal(summary.group2, 40);
+    assert.equal(getActivityForCertificate(records[0]).id, '2.12');
+    assert.equal(getActivityForCertificate(records[1]).id, '2.20');
+    assert.equal(getActivityForCertificate(records[3]).id, '2.13');
+    assert.equal(getActivityForCertificate(records[4]).id, '2.22');
+    assert.equal(getActivityForCertificate(records[5]).id, '2.23');
+    assert.equal(getActivityForCertificate(records[6]).id, '2.24');
+    assert.equal(getActivityForCertificate(records[7]).id, '2.25');
+});
+
+test('deployed provisional v3 records retain their correct handbook IDs and groups', () => {
+    const records = [
+        certificate('2.12', 20, { version: 'ktu-2024-provisional-v3', event: 'union role', snapshot: { id: '2.12', group: 2, maxPoints: 30, name: 'College/University Union' } }),
+        certificate('2.20', 5, { version: 'ktu-2024-provisional-v3', event: 'magazine board', snapshot: { id: '2.20', group: 2, maxPoints: 10, name: 'College Magazine Editorial Board' } }),
+        certificate('2.21', 5, { version: 'ktu-2024-provisional-v3', event: 'hobby club', snapshot: { id: '2.21', group: 2, maxPoints: 10, name: 'Hobby Club Executive/Convenor' } }),
+        certificate('2.13', 5, { version: 'ktu-2024-provisional-v3', event: 'department association', snapshot: { id: '2.13', group: 2, maxPoints: 10, name: 'Department Student Association Activities' } }),
     ];
     const summary = calculateStudentSummary(records);
     assert.equal(summary.group1, 0);
     assert.equal(summary.group2, 35);
     assert.equal(getActivityForCertificate(records[0]).group, 2);
     assert.equal(getActivityForCertificate(records[0]).id, '2.12');
+});
+
+test('v3 awards deduplicate against corrected v4 activity IDs', () => {
+    const summary = calculateStudentSummary([
+        certificate('2.20', 5, {
+            version: 'ktu-2024-provisional-v3',
+            event: 'college magazine editorial board',
+            snapshot: { id: '2.20', group: 2, maxPoints: 10, name: 'College Magazine Editorial Board' },
+        }),
+        certificate('2.20', 5, {
+            version: CATALOG_VERSION,
+            event: 'college magazine editorial board',
+        }),
+    ]);
+    assert.equal(summary.group1, 0);
+    assert.equal(summary.group2, 5);
 });
 
 test('the 40-point group ceiling and lower student-type minima are applied independently', () => {
