@@ -38,3 +38,71 @@ html.dark .role-workspace .students-count,html.dark .role-workspace .faculty-stu
 
 .approval-list{border-top:1px solid var(--rw-line)}.approval-item{display:flex;align-items:center;gap:19px;padding:25px 7px;border-bottom:1px solid var(--rw-line)}.approval-avatar{display:grid;place-items:center;width:50px;height:50px;flex:none;border-radius:50%;background:#ead5e3;color:#713e69;font-size:12px;font-weight:800}.approval-person{flex:1;min-width:0}.approval-person h2{font-family:Manrope,sans-serif;font-size:17px;font-weight:800;color:var(--rw-ink)}.approval-person p{margin-top:4px;font-size:12px;color:var(--rw-ink)}.approval-person>span{display:block;margin-top:8px;font-size:11px;color:var(--rw-muted);overflow-wrap:anywhere}.approval-actions{display:flex;gap:8px}.approval-actions button{display:flex;align-items:center;gap:4px;min-height:39px;padding:0 13px;border:1px solid var(--rw-line);border-radius:10px;background:transparent;color:var(--rw-ink);font-size:11px;font-weight:800;cursor:pointer}.approval-actions button:last-child{border-color:var(--rw-ink);background:var(--rw-ink);color:var(--rw-paper)}.approval-actions button:disabled{opacity:.5;cursor:wait}.approval-actions button span{font-size:15px}html.dark .role-workspace .approval-actions button:last-child{background:#e99fc3;border-color:#e99fc3;color:#312037}
 @media(max-width:640px){.approval-item{align-items:flex-start;flex-wrap:wrap;gap:10px}.approval-avatar{width:40px;height:40px}.approval-person{flex-basis:calc(100% - 55px)}.approval-actions{width:100%;justify-content:flex-end}}
+
+/* Night mode refinement: dark ink surfaces and one warm accent. */
+.role-workspace .role-profile-score strong{display:flex;align-items:baseline;justify-content:flex-end;gap:8px;letter-spacing:0;font-variant-numeric:tabular-nums}
+.role-workspace .role-profile-score strong>span{font-family:Manrope,sans-serif;font-size:47px;font-weight:800;line-height:1;letter-spacing:-.045em}
+.role-workspace .role-profile-score strong>small{font-family:'DM Sans',sans-serif;font-size:17px;font-weight:700;letter-spacing:0;white-space:nowrap;color:#5b4c5f}
+html.dark .role-workspace{
+ --rw-bg:#111926;--rw-paper:#1c2736;--rw-ink:#f7f5f1;--rw-muted:#bcc9d5;
+ --rw-line:#394858;--rw-accent:#ffbd9f;--rw-pink:#ffc4a9;--rw-shadow:0 18px 42px #060c1660;
+ --text:#f7f5f1;--text-secondary:#bcc9d5;--text-muted:#aab9c7;--surface:#1c2736;--surface2:#243243;
+ --border:#394858;--accent:#ffbd9f;--accent-hover:#ffd0b7;
+ background:radial-gradient(circle at 88% 9%,#233447 0,transparent 33%),linear-gradient(155deg,#111926,#172331 62%,#131d2b)!important;
+ color:var(--rw-ink);
+}
+html.dark .role-workspace .role-masthead{background:#172231ee!important;border-color:var(--rw-line);box-shadow:0 8px 27px #050b1640;backdrop-filter:blur(18px)}
+html.dark .role-workspace .role-identity>span{color:#d3b7ac;border-color:#435365}
+html.dark .role-workspace .role-nav button{color:#b7c5d3}
+html.dark .role-workspace .role-nav button:hover,html.dark .role-workspace .role-nav button.active{color:#fff6ef}
+html.dark .role-workspace .role-nav button.active{border-color:#ffbd9f}
+html.dark .role-workspace .role-context,html.dark .role-workspace .role-person-name{color:#b7c5d3}
+html.dark .role-workspace .role-theme,html.dark .role-workspace .role-guidelines{background:#273648;border-color:#405166;color:#f8f2ee}
+html.dark .role-workspace .role-theme:hover,html.dark .role-workspace .role-guidelines:hover{background:#34475b}
+html.dark .role-workspace .role-account{background:#53687b;color:#fff}
+html.dark .role-workspace .role-kicker{color:#ffcaad}
+html.dark .role-workspace .role-intro h1,html.dark .role-workspace .role-section-heading h2,html.dark .role-workspace .role-section-heading p,html.dark .role-workspace .role-intro p{color:var(--rw-ink)}
+html.dark .role-workspace .role-intro p,html.dark .role-workspace .role-section-heading p{color:var(--rw-muted)}
+html.dark .role-workspace .role-intro h1 em{color:#ffbd9f}
+html.dark .role-workspace .role-primary-action,html.dark .role-workspace .submit-form-actions button,html.dark .role-workspace .role-edit-actions button:last-child{background:#ffbd9f;color:#2b1c1a;box-shadow:0 12px 27px #05091344}
+html.dark .role-workspace .student-journey-card,html.dark .role-workspace .faculty-hero-card,html.dark .role-workspace .role-profile-hero{
+ background:linear-gradient(115deg,#344457 0%,#3a4658 52%,#584757 100%)!important;
+ border:1px solid #5a6471;
+ box-shadow:0 22px 48px #070d1845!important;
+}
+html.dark .role-workspace .student-journey-card::before,html.dark .role-workspace .faculty-hero-card::before,html.dark .role-workspace .role-profile-hero::before{
+ background:radial-gradient(circle at 80% 65%,#c8797040,transparent 35%),radial-gradient(circle at 20% 30%,#7190b044,transparent 41%)!important;
+ filter:blur(34px);
+}
+html.dark .role-workspace .journey-number,html.dark .role-workspace .journey-number span,html.dark .role-workspace .journey-copy h2,html.dark .role-workspace .journey-copy p,html.dark .role-workspace .journey-copy button,html.dark .role-workspace .faculty-hero-card h2,html.dark .role-workspace .faculty-hero-card p,html.dark .role-workspace .faculty-hero-card button,html.dark .role-workspace .faculty-hero-count,html.dark .role-workspace .role-profile-hero h1,html.dark .role-workspace .role-profile-hero p{color:#fff8f2}
+html.dark .role-workspace .journey-ring{background:conic-gradient(#ffc4a9 var(--journey-pct),#ffffff35 0);border-color:#ffffff38;box-shadow:0 18px 38px #05091345,inset 0 0 0 13px #263343bb}
+html.dark .role-workspace .journey-ring .material-symbols-outlined{color:#fff1e7}
+html.dark .role-workspace .student-status-panel,html.dark .role-workspace .role-recent-section,html.dark .role-workspace .faculty-notices,html.dark .role-workspace .faculty-side-stat>button,html.dark .role-workspace .faculty-side-stat>div,html.dark .role-workspace .submit-activity-list,html.dark .role-workspace .submit-detail-form,html.dark .role-workspace .role-profile-details,html.dark .role-workspace .role-profile-aside,html.dark .role-workspace .record-item,html.dark .role-workspace .students-count,html.dark .role-workspace .faculty-students-page .record-toolbar select,html.dark .role-workspace .record-toolbar>label,html.dark .role-workspace .record-toolbar>div{
+ background:#1c2736!important;border-color:#394858!important;color:var(--rw-ink);box-shadow:var(--rw-shadow)!important;
+}
+html.dark .role-workspace .student-status-panel button,html.dark .role-workspace .student-status-panel button strong,html.dark .role-workspace .role-recent-row,html.dark .role-workspace .record-item h2,html.dark .role-workspace .faculty-notices h2,html.dark .role-workspace .faculty-notices h3,html.dark .role-workspace .activity-category button strong,html.dark .role-workspace .student-roster-row .roster-person h2,html.dark .role-workspace .role-detail-grid strong{color:var(--rw-ink)}
+html.dark .role-workspace .recent-icon,html.dark .role-workspace .record-item-icon,html.dark .role-workspace .approval-avatar{background:#334356;color:#ffcfb7}
+html.dark .role-workspace .student-group-row,html.dark .role-workspace .student-roster-row{border-color:#394858}
+html.dark .role-workspace .group-index,html.dark .role-workspace .student-group-row>strong{color:#f4d2bf}
+html.dark .role-workspace .group-meter>div,html.dark .role-workspace .roster-group-bars i{background:#3c4a5c}
+html.dark .role-workspace .group-meter i,html.dark .role-workspace .roster-group-bars b{background:linear-gradient(90deg,#f6ab9c,#c891b4)}
+html.dark .role-workspace .student-group-row>strong small,html.dark .role-workspace .group-title p,html.dark .role-workspace .record-item p,html.dark .role-workspace .record-item-foot>span:first-child,html.dark .role-workspace .roster-disclaimer,html.dark .role-workspace .role-detail-grid span{color:var(--rw-muted)}
+html.dark .role-workspace .submit-groups button,html.dark .role-workspace .submit-stage-strip>span{color:#c4d0da;border-color:#394858}
+html.dark .role-workspace .submit-groups button.active,html.dark .role-workspace .submit-stage-strip .active{color:#ffcfb7}
+html.dark .role-workspace .activity-category button,html.dark .role-workspace .submit-field .input,html.dark .role-workspace .role-edit-grid .input,html.dark .role-workspace .record-toolbar input,html.dark .role-workspace .record-toolbar select{
+ background:#263546!important;border:1px solid #435467!important;color:#fffaf5;
+}
+html.dark .role-workspace .activity-category button:hover{background:#304258!important;border-color:#ffbd9f!important}
+html.dark .role-workspace .submit-upload{background:#273849;border-color:#71869a;color:#fff}
+html.dark .role-workspace .submit-preview{background:#2b3c4e;color:#fff;border:1px solid #47596b}
+html.dark .role-workspace .submit-preview p,html.dark .role-workspace .submit-preview>div{color:#ccd8df}
+html.dark .role-workspace .role-profile-avatar{background:#425a70;border-color:#f5d2bf;color:#fff}
+html.dark .role-workspace .role-profile-score strong,html.dark .role-workspace .role-profile-score strong>small,html.dark .role-workspace .role-profile-score>span{color:#fff8f2}
+html.dark .role-workspace .role-profile-score>div{background:#ffffff45}
+html.dark .role-workspace .role-profile-score i{background:#ffbd9f}
+html.dark .role-workspace .role-profile-actions button{color:#fff6ed;border-color:#ead7ce}
+html.dark .role-workspace .role-profile-aside button,html.dark .role-workspace .role-edit-grid label{color:var(--rw-ink)}
+html.dark .role-workspace .role-profile-aside button:hover,html.dark .role-workspace .role-recent-row:hover{color:#ffcfb7}
+html.dark .role-workspace .record-toolbar>div button.active,html.dark .role-workspace .record-item-foot button,html.dark .role-workspace .faculty-record .record-item-foot button,html.dark .role-workspace .approval-actions button:last-child{background:#ffbd9f;color:#2b1c1a;border-color:#ffbd9f}
+html.dark .role-workspace .role-theme:focus-visible,html.dark .role-workspace button:focus-visible,html.dark .role-workspace input:focus-visible,html.dark .role-workspace select:focus-visible,html.dark .role-workspace textarea:focus-visible{outline:2px solid #ffcfb7;outline-offset:2px}
+@media(max-width:800px){.role-workspace .role-profile-score strong{justify-content:flex-start}}
