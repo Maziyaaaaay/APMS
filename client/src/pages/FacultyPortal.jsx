@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, logout } from '../utils/auth';
 import { getCertificates, getUsers, getAccountRequests, reviewAccount, updateCertificate, updateUser, getCirculars, getCertificateFileUrl } from '../utils/storage';
 import { compressImage } from '../utils/imageCompressor';
-import { ACTIVITIES, calculateStudentSummary } from '../utils/points';
+import { getActivityForCertificate, calculateStudentSummary } from '../utils/points';
 import { generateApprovalPDF } from '../utils/pdfGenerator';
 
 const NAV_ITEMS = [
@@ -295,7 +295,7 @@ function DashboardTab({ user, certs, students, pendingCerts, pendingAccounts, ci
                                 <tbody>
                                     {pendingCerts.slice(0, 6).map(cert => {
                                         const student = getStudent(cert);
-                                        const act = ACTIVITIES[cert.activity_id || cert.activityId];
+                                        const act = getActivityForCertificate(cert);
                                         const overdue = isOverdue(cert);
                                         return (
                                             <tr key={cert.id} style={overdue ? { borderLeft: '3px solid var(--warning)' } : {}}>
@@ -365,7 +365,7 @@ export function ReviewsTab({ pendingCerts, students, user, onRefresh }) {
 
     const filtered = pendingCerts.filter(c => {
         const student = getStudent(c);
-        const act = ACTIVITIES[c.activity_id || c.activityId];
+        const act = getActivityForCertificate(c);
         const q = search.toLowerCase();
         return (
             (act?.name || c.activityName || '').toLowerCase().includes(q) ||
@@ -417,7 +417,7 @@ export function ReviewsTab({ pendingCerts, students, user, onRefresh }) {
                             <tbody>
                                 {filtered.map(cert => {
                                     const student = getStudent(cert);
-                                    const act = ACTIVITIES[cert.activity_id || cert.activityId];
+                                    const act = getActivityForCertificate(cert);
                                     const overdue = isOverdue(cert);
                                     return (
                                         <tr key={cert.id} style={overdue ? { borderLeft: '3px solid var(--warning)' } : {}}>
@@ -484,8 +484,7 @@ function ReviewModal({ cert, student, faculty, onClose, onRefresh }) {
     const [filePreviewUrl, setFilePreviewUrl] = useState(cert.file_url?.startsWith('data:') ? cert.file_url : cert.fileData || '');
     const initialPoints = cert.points_awarded ?? cert.pointsAwarded ?? 0;
     const [pointsOverride, setPointsOverride] = useState(initialPoints);
-    const actId = cert.activity_id || cert.activityId;
-    const activity = cert.activity_snapshot || ACTIVITIES[actId];
+    const activity = getActivityForCertificate(cert);
 
     useEffect(() => {
         let active = true;
