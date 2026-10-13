@@ -88,7 +88,7 @@ export default function FacultyPortal() {
     };
 
     return (
-        <div className="portal-layout">
+        <div className="portal-layout faculty-portal">
             <AmbientBackdrop />
             {/* Sidebar overlay (mobile) */}
             <div
@@ -679,133 +679,48 @@ function ReviewModal({ cert, student, faculty, onClose, onRefresh }) {
 ════════════════════════════════════════════════════ */
 function StudentsTab({ certs, students }) {
     const [search, setSearch] = useState('');
-    const [deptFilter, setDept] = useState('');
-    const [classFilter, setClass] = useState('');
-    const [semFilter, setSem] = useState('');
-
-    const currentSems = getCurrentSemesters();
-    const isEven = currentSems[0] === 2;
-    const classOptions = DUAL_CLASS_DEPTS[deptFilter] || [];
-    const handleDeptChange = (val) => { setDept(val); setClass(''); };
-
-    const isFiltered = search || deptFilter || classFilter || semFilter;
-    const clearAll = () => { setSearch(''); setDept(''); setClass(''); setSem(''); };
-
-    const filtered = students.filter(s => {
-        const matchSearch = !search ||
-            s.name.toLowerCase().includes(search.toLowerCase()) ||
-            (s.roll_no || s.rollNo || '').toLowerCase().includes(search.toLowerCase());
-        const matchDept = !deptFilter || s.department === deptFilter;
-        const matchClass = !classFilter || (s.class || '') === classFilter;
-        const matchSem = !semFilter || s.semester === parseInt(semFilter.replace('S', ''));
-        return matchSearch && matchDept && matchClass && matchSem;
+    const [semester, setSemester] = useState('');
+    const filtered = students.filter(student => {
+        const query = search.trim().toLowerCase();
+        const identity = `${student.name || ''} ${student.roll_no || student.rollNo || ''}`.toLowerCase();
+        return (!query || identity.includes(query)) && (!semester || String(student.semester) === semester);
     });
+    const needsAttention = students.filter(student => certs.some(cert =>
+        (cert.student_id || cert.studentId) === student.id && cert.status === 'pending'
+    )).length;
 
     return (
-        <>
-            {/* Filters */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
-                <div className="search-box" style={{ flex: '1 1 220px', minWidth: 180 }}>
-                    <span className="search-box-icon"><span className="material-symbols-outlined">search</span></span>
-                    <input className="input" placeholder="Search by name or roll number…"
-                        value={search} onChange={e => setSearch(e.target.value)} />
-                </div>
-                <select className="input" style={{ flex: '0 0 200px' }} value={deptFilter} onChange={e => handleDeptChange(e.target.value)}>
-                    <option value="">All Departments</option>
-                    {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
-                </select>
-                <select className="input" style={{ flex: '0 0 160px' }} value={semFilter} onChange={e => setSem(e.target.value)}>
-                    <option value="">All Semesters</option>
-                    {currentSems.map(n => <option key={n} value={`S${n}`}>S{n}</option>)}
-                </select>
+        <div className="faculty-roster">
+            <div className="roster-intro">
+                <div><span className="eyebrow">YOUR DEPARTMENT</span><h2>My students<span>.</span></h2><p>See each student’s verified progress and submissions.</p></div>
+                <div className="roster-summary"><strong>{students.length}</strong><span>students</span><strong>{needsAttention}</strong><span>awaiting review</span></div>
             </div>
-
-            {/* Class Division filter */}
-            {classOptions.length > 0 && (
-                <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-                    <button onClick={() => setClass('')} className={`btn btn-sm ${!classFilter ? 'btn-primary' : 'btn-ghost'}`}>All Classes</button>
-                    {classOptions.map(cls => (
-                        <button key={cls} onClick={() => setClass(cls)} className={`btn btn-sm ${classFilter === cls ? 'btn-primary' : 'btn-ghost'}`}>{cls}</button>
-                    ))}
-                </div>
-            )}
-
-            {/* Results header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-                    {filtered.length} student{filtered.length !== 1 ? 's' : ''} found
-                    {isEven ? ' · Even Semester' : ' · Odd Semester'}
-                </span>
-                {isFiltered && (
-                    <button className="btn btn-ghost btn-sm" onClick={clearAll} style={{ fontSize: 11 }}>
-                        <span className="material-symbols-outlined" style={{ fontSize: 13 }}>close</span>
-                        Clear filters
-                    </button>
-                )}
+            <div className="roster-toolbar">
+                <label className="roster-search"><span className="material-symbols-outlined">search</span><input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Find a name or registration number" aria-label="Find a student" /></label>
+                <select value={semester} onChange={e => setSemester(e.target.value)} aria-label="Filter by semester">
+                    <option value="">Every semester</option>
+                    {[1,2,3,4,5,6,7,8].map(number => <option key={number} value={number}>Semester {number}</option>)}
+                </select>
+                <span className="roster-count">{filtered.length} shown</span>
             </div>
-
-            {filtered.length === 0 ? (
-                <div className="empty-state">
-                    <span className="material-symbols-outlined">search</span>
-                    <p>No students match these filters</p>
-                </div>
-            ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 14 }}>
-                    {filtered.map(student => {
-                        const studentCerts = certs.filter(c => (c.student_id || c.studentId) === student.id);
-                        const summary = calculateStudentSummary(studentCerts, student.studentType || student.student_type || 'regular');
-                        const sType = student.studentType || student.student_type || 'regular';
-                        const reqTotal = sType === 'lateral' ? 90 : sType === 'pwd' ? 60 : 120;
-                        const pct = (v, m) => Math.min((v / m) * 100, 100);
-                        const initials = student.name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'ST';
-
-                        return (
-                            <div key={student.id} className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                                <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface2)' }}>
-                                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13, color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
-                                        {student.profile_url || student.profileUrl ? (
-                                            <img src={student.profile_url || student.profileUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                        ) : initials}
-                                    </div>
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{student.name}</div>
-                                        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                                            {student.roll_no || student.rollNo || ' / '} · {student.department || ' / '}
-                                        </div>
-                                    </div>
-                                    {summary.eligible
-                                        ? <span className="badge badge-approved">Estimate meets target</span>
-                                        : <span className="badge badge-pending">Estimated in progress</span>
-                                    }
-                                </div>
-                                <div style={{ padding: '12px 16px' }}>
-                                    {[
-                                        { label: 'Group I', val: summary.group1, color: 'var(--accent)' },
-                                        { label: 'Group II', val: summary.group2, color: 'var(--success)' },
-                                        { label: 'Group III', val: summary.group3, color: '#7c3aed' },
-                                    ].map(g => (
-                                        <div key={g.label} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                                            <span style={{ fontSize: 11, color: 'var(--text-muted)', width: 60, flexShrink: 0 }}>{g.label}</span>
-                                            <div className="progress-track" style={{ flex: 1 }}>
-                                                <div className="progress-fill" style={{ width: `${pct(g.val, 40)}%`, background: g.color }} />
-                                            </div>
-                                            <span style={{ fontSize: 12, fontWeight: 700, color: g.color, width: 28, textAlign: 'right' }}>{g.val}</span>
-                                        </div>
-                                    ))}
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--border)', color: 'var(--text-muted)' }}>
-                                        <span>
-                                            <span className="badge badge-pending" style={{ marginRight: 6 }}>{studentCerts.filter(c => c.status === 'pending').length} pending</span>
-                                            <span className="badge badge-approved">{studentCerts.filter(c => c.status === 'approved').length} approved</span>
-                                        </span>
-                                        <span style={{ fontWeight: 800, color: 'var(--accent)', fontSize: 14 }} title="Provisional estimate from approved submissions">{summary.total}/{reqTotal} est.</span>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            )}
-        </>
+            {filtered.length === 0 ? <div className="roster-empty"><span className="material-symbols-outlined">person_search</span><h3>No students found</h3><p>Try another name or semester.</p></div> :
+            <div className="roster-grid">{filtered.map(student => {
+                const studentCerts = certs.filter(cert => (cert.student_id || cert.studentId) === student.id);
+                const summary = calculateStudentSummary(studentCerts, student.studentType || student.student_type || 'regular');
+                const target = (student.studentType || student.student_type) === 'lateral' ? 90 : (student.studentType || student.student_type) === 'pwd' ? 60 : 120;
+                const waiting = studentCerts.filter(cert => cert.status === 'pending').length;
+                const initials = student.name?.split(' ').map(part => part[0]).join('').slice(0,2).toUpperCase() || 'ST';
+                return <article className="roster-card" key={student.id}>
+                    <div className="roster-card-top"><div className="roster-avatar">{student.profile_url || student.profileUrl ? <img src={student.profile_url || student.profileUrl} alt="" /> : initials}</div><div className="roster-person"><h3>{student.name}</h3><p>{student.roll_no || student.rollNo || 'No registration number'} · S{student.semester || '—'}</p></div>{waiting > 0 && <span className="roster-waiting" title="Pending submissions">{waiting}<span className="material-symbols-outlined">schedule</span></span>}</div>
+                    <div className="roster-score"><strong>{summary.total}</strong><span>of {target} estimated points</span></div>
+                    <div className="roster-progress" role="group" aria-label="Estimated points by group">
+                        {[[summary.group1,'I'],[summary.group2,'II'],[summary.group3,'III']].map(([value,label]) => <div className="roster-group" key={label}><span>Group {label}</span><b>{value || 0}</b><div className="roster-track"><i style={{width:`${Math.min(100,((value || 0)/40)*100)}%`}} /></div></div>)}
+                    </div>
+                    <div className="roster-card-foot"><span>{student.department || 'Your department'}</span><span>{summary.eligible ? 'Estimated target met' : 'In progress'}</span></div>
+                </article>;
+            })}</div>}
+            <p className="roster-note">Totals are estimates from approved submissions. Faculty review determines each certificate’s status.</p>
+        </div>
     );
 }
 
