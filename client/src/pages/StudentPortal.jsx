@@ -75,7 +75,7 @@ export default function StudentPortal() {
     };
 
     return (
-        <div className="portal-layout">
+        <div className="portal-layout student-portal">
             <AmbientBackdrop />
             {/* ── Sidebar overlay (mobile) ── */}
             <div
