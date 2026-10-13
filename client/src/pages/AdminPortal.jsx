@@ -778,7 +778,7 @@ function PointGradingTab() {
             </div>
 
             <div className="point-catalog-list" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {filtered.map(a => {}
+                {filtered.map(a => {
                     const ov = overrides[a.id];
                     const isEditing = editing === a.id;
                     return (
