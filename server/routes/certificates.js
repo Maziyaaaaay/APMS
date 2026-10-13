@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { randomUUID } from 'node:crypto';
 import supabase from '../db/supabase.js';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
-import { ACTIVITIES, CATALOG_VERSION, calculatePoints } from '../../client/src/utils/points.js';
+import { ACTIVITIES, CATALOG_VERSION, calculatePoints, getActivityForCertificate } from '../../client/src/utils/points.js';
 
 const router = createRouter();
 router.use(authMiddleware);
@@ -157,7 +157,7 @@ router.put('/:id', requireRole('faculty'), async (req, res) => {
   }
 
   const { data: current, error: currentError } = await supabase.from('certificates')
-    .select('id, student_id, status, points_awarded, activity_id, activity_snapshot, student:student_id(department_id, account_status)')
+    .select('id, student_id, status, points_awarded, activity_id, activity_snapshot, catalog_version, student:student_id(department_id, account_status)')
     .eq('id', req.params.id).maybeSingle();
   if (currentError) return res.status(500).json({ error: currentError.message });
   if (!current) return res.status(404).json({ error: 'Certificate not found.' });
@@ -167,7 +167,7 @@ router.put('/:id', requireRole('faculty'), async (req, res) => {
   }
   if (status === 'rejected' && !String(notes || '').trim()) return res.status(400).json({ error: 'Explain why the submission is being rejected.' });
   const awarded = status === 'rejected' ? 0 : Number(pointsAwarded);
-  const activity = current.activity_snapshot || ACTIVITIES[current.activity_id];
+  const activity = getActivityForCertificate(current);
   if (!activity || !Number.isInteger(awarded) || awarded < 0 || awarded > activity.maxPoints) {
     return res.status(400).json({ error: `Points must be a whole number between 0 and this activity's ${activity?.maxPoints ?? 0}-point maximum.` });
   }
