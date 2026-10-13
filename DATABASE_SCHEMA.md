@@ -8,6 +8,8 @@ Run `server/db/rebuild.sql` once in the SQL Editor for KTU APMS (`xikqrthyuuqhpt
 
 `server/db/schema.sql` is the complete baseline for an empty database. Do not run the historical migration 001 after the v2 baseline. The snapshot and migration remain historical reference files, not part of the v2 deployment path.
 
+For a database already created from the earlier v2 baseline, apply migrations `003_certificate_academic_year.sql` and `004_circular_priority.sql` from `server/db/migrations/` in Supabase SQL Editor before deploying this code. They preserve existing submissions/circulars; new submissions require an academic year, and existing circulars default to normal priority. Do not apply these incremental migrations after rebuilding from the current `schema.sql` or `rebuild.sql`, since those already include both changes.
+
 ## Data and access
 
 - `departments`: canonical department IDs and names. Faculty scope uses IDs. The legacy display name on users is populated by a database trigger and follows department renames.
@@ -29,10 +31,10 @@ Additional admins can be created or promoted by the super admin. Password, role,
 
 Rebuilding Postgres does not remove stored certificate bytes. Empty the APMS certificate bucket through Supabase Storage before reopening registrations. Do not delete `storage.objects` rows using SQL: that does not reliably remove the stored files. The guarded storage cleanup script remains an alternative for hosted administrators.
 
-Supabase Auth's managed accounts are not used by this app and are not touched. This reset concerns APMS users in `public.users`. The schema, migrations, and private object paths are maintained in the repository; a later platform migration needs an explicit database export and object-copy process, not just a provider switch.
+Supabase Auth's managed accounts are not used by this app and are not touched. This reset concerns APMS users in `public.users`. The data model uses PostgreSQL and the service key stays on the server, so the relational data can move to another PostgreSQL host with a schema-and-data export. Certificate files live separately in private object storage: moving providers also requires a private object copy, a file-path manifest/checksum check, and a server storage-adapter change. A provider switch alone is not a migration.
 
 ## Validation and remaining work
 
 The complete SQL has been executed against an isolated PostgreSQL runtime with stand-ins for Supabase roles/storage tables. Checks cover repeated rebuild, owner uniqueness and handover, account approval audit, session invalidation, faculty department scope, review immutability, transaction rollback on audit failure, table access, and restrictive bucket policy. These checks do not replace verification against the live Supabase environment.
 
-The KTU catalog remains provisional pending full reconciliation of evidence eligibility, academic-year/segment limits, and current official circulars. A snapshot prevents a later catalog edit from silently changing a saved submission's activity definition. Multiple regulation schemes and cross-version equivalence still need explicit policy. Email verification, password recovery, MFA, and deployment abuse controls remain future public-release work.
+The current KTU catalog maps the 2024 handbook's Group I (1.1–1.21), Group II (2.1–2.25), and Group III (3.1–3.17) identifiers. Point totals remain provisional until eligibility evidence, academic-year/segment limits, and the handbook copy are verified by faculty against current KTU publications. The app preserves v3 submission IDs and maps v2 snapshots to the corrected IDs for display and estimates. Email verification, password recovery, MFA, and deployment abuse controls remain future public-release work.

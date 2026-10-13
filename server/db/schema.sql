@@ -112,6 +112,7 @@ create table public.circulars (
   content text not null check (length(trim(content)) > 0),
   source_url text,
   issued_on date,
+  priority text not null default 'normal' check (priority in ('normal', 'urgent', 'info')),
   created_by uuid not null references public.users(id) on delete restrict,
   created_at timestamptz not null default now()
 );
@@ -212,7 +213,7 @@ begin
       raise exception 'Only approved students can submit activity documents.';
     end if;
     if new.status <> 'pending' then raise exception 'New submissions must await review.'; end if;
-    if new.activity_date > current_date then raise exception 'The activity date cannot be in the future.'; end if;
+    if new.activity_date > (now() at time zone 'Asia/Kolkata')::date then raise exception 'The activity date cannot be in the future.'; end if;
     if new.academic_year is null then raise exception 'An academic year is required for a new submission.'; end if;
   else
     if old.status <> 'pending' then raise exception 'A completed review cannot be overwritten.'; end if;

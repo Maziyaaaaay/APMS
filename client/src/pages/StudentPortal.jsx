@@ -915,7 +915,7 @@ function ProfileTab({ user, summary, req, onLogout, onGuidelines, onUpdateUser }
                 {/* Activity Points Card */}
                 <div className="card" style={{ padding:20 }}>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
-                        <span style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.06em' }}>Activity Points Status</span>
+                        <span style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.06em' }}>Estimated Activity Points</span>
                         <div style={{ background:'rgba(45,91,227,0.1)', borderRadius:10, padding:8 }}>
                             <span className="material-symbols-outlined" style={{ color:'var(--accent)', fontSize:22 }}>analytics</span>
                         </div>
@@ -930,6 +930,7 @@ function ProfileTab({ user, summary, req, onLogout, onGuidelines, onUpdateUser }
                     <p style={{ fontSize:12, color:'var(--text-muted)', lineHeight:1.5 }}>
                         You need <strong style={{ color:'var(--primary)' }}>{Math.max(0, req.total - summary.total)} more points</strong> to fulfill the degree requirement.
                     </p>
+                    <small style={{ color:'var(--text-muted)', lineHeight:1.5 }}>Progress estimate from approved submissions. Your faculty advisor verifies final eligibility.</small>
                 </div>
 
                 {/* Need Help */}
@@ -959,9 +960,9 @@ function GuidelinesModal({ onClose }) {
                 <div className="modal-header">
                     <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                         <span className="material-symbols-outlined" style={{ color:'var(--accent)' }}>menu_book</span>
-                        <h2>KTU 2024 Activity Point Rules</h2>
+                        <h2>2024 Activity Point Handbook</h2>
                     </div>
-                    <p style={{ fontSize:12, color:'var(--text-muted)', marginTop:4 }}>APJ Abdul Kalam Technological University  /  Official Guidelines</p>
+                    <p style={{ fontSize:12, color:'var(--text-muted)', marginTop:4 }}>Reference summary · Confirm eligibility with your faculty advisor</p>
                 </div>
                 <div className="modal-body">
                     {KTU_RULES.map((rule, i) => (
@@ -971,8 +972,13 @@ function GuidelinesModal({ onClose }) {
                         </div>
                     ))}
                     <div style={{ marginTop:8, padding:'10px 14px', background:'rgba(45,91,227,0.07)', borderRadius:'var(--radius-sm)', fontSize:12, color:'var(--text-muted)' }}>
-                        📌 Requirements: Regular: 120 pts (40 per group) · Lateral Entry: 90 pts · PwD: 60 pts
+                        Handbook thresholds: Regular 120 (40 per group) · Lateral entry 90 (30 per group) · PwD 60 (20 per group). APMS totals are estimates; your faculty advisor verifies eligibility before they count as final.
                     </div>
+                    <a href="https://www.iiet.org.in/wp-content/uploads/2025/12/KTURegulations2024%E2%80%93ActivityPointsHandbook.pdf" target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm" style={{ marginTop:10 }}>
+                        Open the 2024 handbook copy
+                        <span className="material-symbols-outlined" style={{ fontSize:15 }}>open_in_new</span>
+                    </a>
+                    <small style={{ display:'block', marginTop:8, color:'var(--text-muted)' }}>This copy is hosted by an affiliated institution. Confirm current rules and eligibility with your faculty advisor.</small>
                 </div>
                 <div className="modal-footer">
                     <button className="btn btn-ghost" onClick={onClose}>Close</button>

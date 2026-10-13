@@ -1,36 +1,45 @@
-# KTU activity-points audit — catalog mapping correction
+# KTU activity points audit — 2024 scheme
 
-**Status: not authoritative yet.** Student totals remain provisional until every catalog row, eligibility condition, and segment cap is encoded and reviewed. This update corrects a major numbering and group assignment error found when comparing `client/src/utils/points.js` with the APJAKTU 2024 Activity Points Handbook.
+**Status: progress estimates only. Do not treat APMS totals as official KTU totals.** The catalogue is mapped to the 2024 Activity Points Handbook, but the app does not yet collect all activity-specific eligibility evidence, programme dates, and quota data needed to validate every claim. Faculty review remains necessary.
 
-## Rules confirmed
+## Source checked
 
-- The 2024 handbook specifies 120 points total and 40 from each Group for regular students; 90 total and 30 per Group for lateral-entry students; and 60 total and 20 per Group for PwD students.
-- Each of the three Groups has a 40-point maximum. The per-Group minimum for lateral-entry/PwD students does not reduce the 40-point ceiling.
-- For the same activity/event, participation and winning points cannot be combined; when a winning record exists, the winning points apply. The handbook also sets caps at activity/segment and Group levels.
-- Eligible activity evidence must be from the student's programme period and must be verified; approved skilling courses have their own eligibility requirements.
+The reviewed document is the *APJ Abdul Kalam Technological University Activity Points Handbook – 2024 Scheme* for B.Tech, B.Des, BBA, and BCA. The accessible copy used here is hosted by an affiliated institution and carries the university title and academic officers' names; an official KTU-hosted copy of this same handbook was not found during this audit. KTU separately hosts an older activity-points rules PDF with different totals; it must not be mixed with the 2024 scheme.
 
-The point-summary function was updated so lateral-entry and PwD totals retain up to 40 points per Group while eligibility still checks their lower required minima. All displayed totals remain marked provisional until the catalog work below is complete.
+The handbook states 120 points overall and 40 from each Group for regular students; 90 overall and 30 from each Group for B.Tech lateral-entry students; and 60 overall and 20 from each Group for PwD students. Each Group has a 40-point maximum.
 
-## Confirmed discrepancy and fix
+## Correct catalog structure
 
-- The handbook's Group I ends at **1.21 Swimming Proficiency**. Group II includes **2.12 College Union**, **2.20 College Magazine Editorial Board**, and **2.21 Hobby Clubs**. The previous catalog had these assigned fictitious Group I identifiers (`1.22`–`1.24`), which understated Group II progress and overstated Group I progress for affected students.
-- This also shifted the remaining Group II identifiers. The corrected sequence is **2.11 Professional Society**, **2.12 College Union**, **2.13 Department Student Association**, **2.14 Class Representatives**, **2.15 Industrial Visit Coordinators**, **2.16 Placement Cell**, **2.17 IEDC**, **2.18 YIP**, **2.19 STRIDE**, **2.20 Magazine Editorial Board**, **2.21 Hobby Clubs**, **2.22 ICFOSS/FOSS**, **2.23 Short-Term Internship/Clinical Exposure**, **2.24 English Proficiency**, and **2.25 Aptitude Proficiency**.
-- Catalog version is now `ktu-2024-provisional-v3`. Previously saved v2 submission snapshots are immutable; progress totals, certificate lists, review screens, and generated approval PDFs resolve their old IDs to the handbook's correct groups without rewriting submitted evidence or awarded point values.
-- Caps from the detailed table are being corrected alongside the mapping: College Magazine Publication allows 5 points per magazine, up to 20 overall; an Industrial Visit / Training Report awards 5 points with a 20-point activity maximum; a registered startup earns 30 points, subject to the 40-point Group ceiling. The catalog now also lets the Group ceiling govern repeated Professional Society competition entries where the table gives per-level points but no lower activity cap.
-- Same-event participation/winner records now prefer the winning award, rather than choosing whichever raw point value is larger. Patent stages are grouped by patent title across dates so filed/published/granted milestones are not added as unrelated annual events.
-- The catalog's requested fields still do not capture enough to validate every handbook condition. Examples include proof authority, programme enrollment dates, minimum internship duration, academic year, student-per-class caps, approved-course status, and event-level context. These remain subject to faculty verification, so totals must stay provisional.
+- **Group I has activities 1.1–1.21.** Group I includes sports/arts, community service, NSS/NCC, safety/life skills, and swimming.
+- **Group II has activities 2.1–2.25.** The leadership sequence is 2.11 Professional Society Membership, 2.12 College/University Union, 2.13 Department Student Association, 2.14 Class Representative, 2.15 Industrial Visit Coordinator, 2.16 Placement Cell, 2.17 IEDC, 2.18 YIP, 2.19 STRIDE, 2.20 College Magazine Editorial Board, 2.21 Hobby Clubs, 2.22 ICFOSS/FOSS, 2.23 Short-Term Internship/Clinical Exposure, 2.24 English Proficiency, and 2.25 Aptitude Proficiency.
+- **Group III has activities 3.1–3.17.**
 
-## Implementation gate for authoritative points
+The deployed provisional v3 identifiers match these handbook groups. An earlier v2 catalog used incorrect IDs for the Group II leadership rows and placed Union and club rows under Group I. The current catalog is `ktu-2024-provisional-v4`: new submissions use the handbook IDs, saved v3 records retain their original IDs, and v2 certificate snapshots are mapped for display and estimated totals without rewriting evidence or faculty-awarded points.
 
-The current corrections do not make totals authoritative. Reconcile every remaining activity row against the handbook, capture eligibility evidence and programme dates, model academic-year and per-segment caps, and verify repeat-event handling, highest achievement, participation/winner conflicts, activity caps, 40-point Group ceilings, and student-category thresholds. In particular, academic-year rules currently cannot be inferred reliably from calendar dates; the submission flow needs a defined academic-year field for capped recurring activities. Faculty approval remains the source of credited points; any adjustment must retain an auditable explanation.
+## Calculation rules represented
 
-## Academic-year evidence phase
+- Participation and winner points cannot be combined for the same event; a winning result replaces participation, and the highest achievement level is counted.
+- A submission snapshots its catalog entry, and only faculty-approved submissions contribute to progress estimates.
+- Activity and Group caps are applied. Group I, II, and III each cap at 40 points.
+- Lateral-entry and PwD students retain a 40-point cap per Group while their minimums remain 30 and 20 respectively.
+- Repeated submissions with the same event name and academic year are grouped; patent milestones with the same title are grouped across years.
+- Faculty point adjustments require an explanation. Rejected submissions do not count.
 
-New submissions now require the student to enter the academic year shown on their academic calendar in `YYYY-YY` form. The value is stored on the certificate record, displayed in faculty review, and included in approval PDFs. Repeated event records use that academic year when grouping same-event awards; legacy records without the field continue to use the activity-date year and remain provisional. Faculty must verify the entered year against the document. This change does not encode all activity-specific prerequisites (such as minimum duration, class strength, approved-course status, or semester-level evidence), so calculated totals remain provisional.
+These event-grouping rules are software estimates. The handbook's “same event” and highest-achievement rules still require advisor verification because the app does not have university-issued event identifiers.
+
+## Eligibility that still needs structured evidence
+
+The handbook includes conditions that cannot be established from an activity ID, event name, date, academic year, and uploaded document alone. Examples include:
+
+- Whether the activity occurred during the student's programme period.
+- Required issuing authority, KTU approval, or approved-course-list membership.
+- Minimum duration, attendance, years of membership, semester, or working days.
+- Per-class and per-year limits, class strength, coordinator quotas, and placement-cell representation requirements.
+- Event level, prize rank, journal indexing/quartile, course hours, and other evidence needed for the selected point band.
+
+Until those conditions are captured and verified by faculty, the app shows progress estimates only. Confirm this handbook copy against a university-hosted publication before presenting totals as authoritative.
 
 ## References
 
-- APJ Abdul Kalam Technological University, *Activity Points Handbook – 2024 Scheme* (the handbook bears APJAKTU authorship; this accessible PDF copy is hosted by an affiliated institution): https://www.iiet.org.in/wp-content/uploads/2025/12/KTURegulations2024%E2%80%93ActivityPointsHandbook.pdf — Group I and II tables, pp. 3–12; general rules, pp. 17–18.
-- KTU B.Tech 2024 curriculum page: https://ktu.edu.in/academics/branchcurriculum/hardcoded-btech
-
-Handbook pages 2–4 contain the thresholds and verification principles; pages 5–18 contain the detailed activity table; pages 17–18 contain general calculation and eligibility rules.
+- [APJ Abdul Kalam Technological University, Activity Points Handbook – 2024 Scheme (accessible affiliated-institution copy)](https://www.iiet.org.in/wp-content/uploads/2025/12/KTURegulations2024%E2%80%93ActivityPointsHandbook.pdf) — thresholds and groups, pp. 3–4; activity tables, pp. 5–18; rules, pp. 19–20.
+- [KTU-hosted older Rules for Assigning Activity Points](https://app.ktu.edu.in/downloads/Rules_For_Assigning_Student_Activity_Points.pdf) — older scheme; not the source for 2024 thresholds.

@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import supabase from '../db/supabase.js';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
 import { ACTIVITIES, CATALOG_VERSION, calculatePoints, getActivityForCertificate } from '../../client/src/utils/points.js';
+import { getDateInTimeZone, isValidIsoDate, normalizeAcademicYear } from '../lib/validation.js';
 
 const router = createRouter();
 router.use(authMiddleware);
@@ -67,14 +68,15 @@ router.post('/', requireRole('student'), async (req, res) => {
   if (!activityId) return res.status(400).json({ error: 'activityId is required' });
   const activity = ACTIVITIES[activityId];
   if (!activity) return res.status(400).json({ error: 'Choose an activity from the current catalog.' });
-  if (!String(eventName || '').trim() || String(eventName).trim().length > 180) return res.status(400).json({ error: 'A valid event or activity name is required.' });
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(activityDate || '')) || Number.isNaN(Date.parse(`${activityDate}T00:00:00Z`))) return res.status(400).json({ error: 'A valid activity date is required.' });
-  if (activityDate > new Date().toISOString().slice(0, 10)) return res.status(400).json({ error: 'Activity records must be for a completed activity.' });
-  const normalizedAcademicYear = String(academicYear || '').trim().replace('–', '-');
-  if (!/^\d{4}-\d{2}$/.test(normalizedAcademicYear)
-    || Number(normalizedAcademicYear.slice(5)) !== (Number(normalizedAcademicYear.slice(0, 4)) + 1) % 100) {
+  if (typeof eventName !== 'string' || !eventName.trim() || eventName.trim().length > 180) return res.status(400).json({ error: 'A valid event or activity name is required.' });
+  if (!isValidIsoDate(activityDate)) return res.status(400).json({ error: 'A valid activity date is required.' });
+  if (activityDate > getDateInTimeZone()) return res.status(400).json({ error: 'Activity records must be for a completed activity.' });
+  const normalizedAcademicYear = normalizeAcademicYear(academicYear);
+  if (!normalizedAcademicYear) {
     return res.status(400).json({ error: 'Enter a valid academic year, such as 2025-26.' });
   }
+  if (description !== undefined && (typeof description !== 'string' || description.length > 2000)) return res.status(400).json({ error: 'Activity details must be 2,000 characters or fewer.' });
+  if (fileName !== undefined && fileName !== null && (typeof fileName !== 'string' || fileName.length > 255)) return res.status(400).json({ error: 'The uploaded file name must be 255 characters or fewer.' });
   if (!fileUrl && !uploadReceipt) return res.status(400).json({ error: 'A certificate document is required.' });
   if (activity.type === 'hours' && (!Number.isInteger(Number(hours)) || Number(hours) <= 0)) return res.status(400).json({ error: 'Enter the completed course duration in whole hours.' });
   if ((activity.type === 'level' || activity.type === 'choice') && !activity.levels.some(level => level.label === levelSelected)) return res.status(400).json({ error: 'Choose a valid points option for this activity.' });
