@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 14484)
-Total output lines: 928
-
 import BrandLogo from '../components/BrandLogo';
 import InterfaceIcon from '../components/InterfaceIcon';
 import { AmbientBackdrop, WorkspaceHeading, MetricCard, ActionTile } from '../components/DashboardKit';
@@ -311,7 +308,302 @@ function UsersTab({ students, faculty, onRefresh, currentUser }) {
     return (
         <>
             {/* Sub-tab toggle */}
-            <div style={{ displ…4484 tokens truncated… sourceUrl: sourceUrl.trim(), issuedOn: issuedOn || null, priority }); } catch (err) { alert(err.message); return; }
+            <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+                {[
+                    { key: 'student', label: `Students (${students.length})`, icon: 'school' },
+                    { key: 'faculty', label: `Faculty (${faculty.length})`, icon: 'supervisor_account' },
+                ].map(t => (
+                    <button key={t.key} className={`btn ${userType === t.key ? 'btn-primary' : 'btn-ghost'}`}
+                        onClick={() => { setUserType(t.key); setSearch(''); setShowAdd(false); }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: 16 }}>{t.icon}</span>
+                        {t.label}
+                    </button>
+                ))}
+            </div>
+
+            {/* Search + Add Row */}
+            <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+                <div className="search-box" style={{ flex: 1 }}>
+                    <span className="search-box-icon"><span className="material-symbols-outlined">search</span></span>
+                    <input className="input" placeholder={`Search ${userType}s…`}
+                        value={search} onChange={e => setSearch(e.target.value)} />
+                </div>
+                <button className="btn btn-primary btn-sm" onClick={() => setShowAdd(!showAdd)}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>{showAdd ? 'close' : 'person_add'}</span>
+                    {showAdd ? 'Cancel' : `Create User`}
+                </button>
+            </div>
+
+            {/* Add Form */}
+            {showAdd && (
+                <div className="card" style={{ marginBottom: 20 }}>
+                    <div className="card-header">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span className="material-symbols-outlined" style={{ color: 'var(--accent)', fontSize: 20 }}>person_add</span>
+                            <h3>Add New User</h3>
+                        </div>
+                    </div>
+                    <div className="card-body">
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label className="form-label">Full Name</label>
+                                <input className="input" value={newUser.name} onChange={e => setNewUser(p => ({ ...p, name: e.target.value }))} />
+                            </div>
+                            {newUser.role !== 'student' && <div className="form-group">
+                                <label className="form-label">Username</label>
+                                <input className="input" value={newUser.username} onChange={e => setNewUser(p => ({ ...p, username: e.target.value }))} />
+                            </div>}
+                        </div>
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label className="form-label">Role</label>
+                                <select className="input" value={newUser.role} onChange={e => setNewUser(p => ({ ...p, role: e.target.value }))}>
+                                    <option value="student">Student</option>
+                                    <option value="faculty">Faculty Advisor</option>
+                                    {currentUser?.isSuperAdmin && <option value="admin">Admin</option>}
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Email *</label>
+                                <input className="input" type="email" required value={newUser.email} onChange={e => setNewUser(p => ({ ...p, email: e.target.value }))} />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Phone Number *</label>
+                                <input className="input" type="tel" required value={newUser.phone} onChange={e => setNewUser(p => ({ ...p, phone: e.target.value }))} />
+                            </div>
+                        </div>
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label className="form-label">Department</label>
+                                <select className="input" value={newUser.department} onChange={e => setNewUser(p => ({ ...p, department: e.target.value }))}>
+                                    <option value=""> /  Select Department  / </option>
+                                    {departments.map(d => <option key={d.id || d.name || d} value={d.name || d}>{d.name || d}</option>)}
+                                </select>
+                            </div>
+                            {newUser.role === 'student' && (
+                                <div className="form-group">
+                                    <label className="form-label">KTU Registration Number *</label>
+                                    <input className="input" value={newUser.rollNo} onChange={e => setNewUser(p => ({ ...p, rollNo: e.target.value }))} />
+                                </div>
+                            )}
+                            {newUser.role === 'faculty' && (
+                                <div className="form-group">
+                                    <label className="form-label">Designation</label>
+                                    <input className="input" value={newUser.designation} onChange={e => setNewUser(p => ({ ...p, designation: e.target.value }))} />
+                                </div>
+                            )}
+                            <div className="form-group">
+                                <label className="form-label">Password</label>
+                                <input className="input" type="password" value={newUser.password} onChange={e => setNewUser(p => ({ ...p, password: e.target.value }))} />
+                            </div>
+                        </div>
+                        {newUser.role === 'student' && (
+                            <div className="form-group">
+                                <label className="form-label">Student Type</label>
+                                <select className="input" value={newUser.studentType} onChange={e => setNewUser(p => ({ ...p, studentType: e.target.value }))}>
+                                    <option value="regular">Regular (120 pts)</option>
+                                    <option value="lateral">Lateral Entry (90 pts)</option>
+                                    <option value="pwd">PwD (60 pts)</option>
+                                </select>
+                            </div>
+                        )}
+                        <div style={{ display: 'flex', gap: 10, paddingTop: 8, borderTop: '1px solid var(--border)' }}>
+                            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setShowAdd(false)}>Cancel</button>
+                            <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleAdd}>
+                                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>save</span>
+                                Create Account
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* User List */}
+            {filtered.length === 0 ? (
+                <div className="empty-state">
+                    <span className="material-symbols-outlined">{userType === 'student' ? 'school' : 'supervisor_account'}</span>
+                    <p>No {userType}s found</p>
+                </div>
+            ) : (
+                <div className="table-card">
+                    <div className="table-card-header">
+                        <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{filtered.length} {userType}{filtered.length !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="table-overflow">
+                        <table className="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>{userType === 'student' ? 'Roll No' : 'Designation'}</th>
+                                    <th>Department</th>
+                                    <th>Username</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filtered.map(u => {
+                                    const initials = u.name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '??';
+                                    return (
+                                        <tr key={u.id}>
+                                            <td>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                    <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11, color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
+                                                        {u.profile_url || u.profileUrl ? (
+                                                            <img src={u.profile_url || u.profileUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                        ) : initials}
+                                                    </div>
+                                                    <div>
+                                                        <div className="td-bold">{u.name}</div>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{u.email} · {u.phone || 'No phone'}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="td-muted">{u.roll_no || u.rollNo || u.designation || ' / '}</td>
+                                            <td className="td-muted">{u.department || ' / '}</td>
+                                            <td className="td-muted">@{u.username}</td>
+                                            <td>
+                                                <div style={{ display: 'flex', gap: 6 }}>
+                                                    {currentUser?.isSuperAdmin && (
+                                                        <button className="btn btn-primary btn-sm" style={{ fontSize: 11 }} onClick={() => handlePromote(u.id)} title="Promote to Admin">
+                                                            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>shield</span>
+                                                        </button>
+                                                    )}
+                                                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(u.id)}>
+                                                        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+        </>
+    );
+}
+
+/* ═══════════════════════════════════════════════════
+   DEPARTMENTS TAB
+════════════════════════════════════════════════════ */
+function DepartmentsTab() {
+    const [depts, setDepts] = useState([]);
+    const [newDept, setNewDept] = useState('');
+    const [saved, setSaved] = useState(false);
+
+    useEffect(() => { getDepartmentsWithIds().then(setDepts).catch(console.error); }, []);
+
+    const flash = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
+
+    const handleAdd = async () => {
+        const trimmed = newDept.trim();
+        const names = depts.map(d => d.name);
+        if (!trimmed || names.includes(trimmed)) return;
+        try { await addDepartment(trimmed); } catch (err) { alert(err.message); return; }
+        getDepartmentsWithIds().then(setDepts);
+        setNewDept('');
+        flash();
+    };
+
+    const handleRemove = async (dept) => {
+        if (!window.confirm(`Remove "${dept.name}"? This won't delete existing students in this dept.`)) return;
+        try { await removeDepartment(dept.id); } catch (err) { alert(err.message); return; }
+        getDepartmentsWithIds().then(setDepts);
+        flash();
+    };
+
+    return (
+        <>
+            {saved && (
+                <div className="alert alert-success" style={{ marginBottom: 16 }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>check_circle</span>
+                    Departments updated successfully
+                </div>
+            )}
+
+            <div className="card" style={{ marginBottom: 20 }}>
+                <div className="card-header">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span className="material-symbols-outlined" style={{ color: 'var(--accent)', fontSize: 20 }}>add_circle</span>
+                        <h3>Add New Department</h3>
+                    </div>
+                </div>
+                <div className="card-body">
+                    <div style={{ display: 'flex', gap: 10 }}>
+                        <input className="input" style={{ flex: 1 }}
+                            placeholder="e.g. Biotechnology Engineering"
+                            value={newDept}
+                            onChange={e => setNewDept(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && handleAdd()}
+                        />
+                        <button className="btn btn-primary" onClick={handleAdd}>
+                            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>add</span>
+                            Add
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div className="table-card">
+                <div className="table-card-header">
+                    <h3>Active Departments</h3>
+                    <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{depts.length} total</span>
+                </div>
+                <div className="table-overflow">
+                    <table className="data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Department Name</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {depts.map((dept, i) => (
+                                <tr key={dept.id || dept}>
+                                    <td className="td-muted" style={{ width: 40 }}>{i + 1}</td>
+                                    <td className="td-bold">{dept.name || dept}</td>
+                                    <td>
+                                        <button className="btn btn-danger btn-sm" onClick={() => handleRemove(dept)}>
+                                            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
+                                            Remove
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </>
+    );
+}
+
+/* ═══════════════════════════════════════════════════
+   CIRCULARS TAB
+════════════════════════════════════════════════════ */
+function CircularsTab() {
+    const [circulars, setCirculars] = useState([]);
+    const [title, setTitle] = useState('');
+    const [body, setBody] = useState('');
+    const [sourceUrl, setSourceUrl] = useState('');
+    const [issuedOn, setIssuedOn] = useState('');
+    const [priority, setPri] = useState('normal');
+    const [showForm, setShowForm] = useState(false);
+
+    useEffect(() => { getCirculars().then(setCirculars).catch(console.error); }, []);
+
+    const PRIORITY_COLORS = {
+        normal: { bg: 'rgba(45,91,227,0.08)', text: 'var(--accent)',   border: 'rgba(45,91,227,0.2)',   label: 'Normal' },
+        urgent: { bg: 'rgba(239,68,68,0.08)', text: 'var(--danger)',   border: 'rgba(239,68,68,0.2)',   label: 'Urgent' },
+        info:   { bg: 'rgba(6,182,212,0.08)', text: '#06b6d4',         border: 'rgba(6,182,212,0.2)',   label: 'Info'   },
+    };
+
+    const handlePost = async () => {
+        if (!title.trim() || !body.trim()) return;
+        try { await addCircular({ title: title.trim(), content: body.trim(), sourceUrl: sourceUrl.trim(), issuedOn: issuedOn || null, priority }); } catch (err) { alert(err.message); return; }
         getCirculars().then(setCirculars);
         setTitle(''); setBody(''); setSourceUrl(''); setIssuedOn(''); setPri('normal'); setShowForm(false);
     };
