@@ -267,3 +267,32 @@ html.dark ::selection{background:rgba(121,220,197,.28);color:#f7fbff}
 html.dark .topbar,html.dark .sidebar,html.dark .card,html.dark .glass-panel,html.dark .theme-toggle,html.dark .btn,html.dark .metric-card,html.dark .action-tile{transition:background-color .22s ease,color .22s ease,border-color .22s ease,box-shadow .22s ease,transform .22s ease!important}
 @media(max-width:1120px){html.dark .admin-portal .dashboard-composition{grid-template-columns:minmax(0,1fr);grid-template-areas:'hero' 'queue' 'stats' 'activity' 'insights' 'links'}html.dark .admin-portal .work-queue{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}}
 @media(max-width:767px){html.dark .admin-portal .page-content{padding:24px 18px 42px}html.dark .admin-portal .dashboard-composition{display:flex;flex-direction:column;gap:0}html.dark .admin-portal .campus-hero{width:100%;min-height:230px;margin-bottom:24px;padding:34px 24px;border-radius:22px}html.dark .admin-portal .campus-hero .workspace-heading{max-width:100%}html.dark .admin-portal .campus-hero .workspace-heading h2{max-width:78%;font-size:clamp(36px,9vw,50px)}html.dark .admin-portal .campus-hero .workspace-heading p{font-size:13px;max-width:75%}html.dark .admin-portal .campus-hero-art{right:14px;bottom:14px;top:auto;width:86px;height:86px;border-radius:22px;transform:none!important}html.dark .admin-portal .campus-hero-art span{font-size:48px}html.dark .admin-portal .work-queue{display:flex;flex-direction:column;gap:12px;width:100%;margin-bottom:24px}html.dark .admin-portal .work-queue .section-intro{padding:2px 0 8px}html.dark .admin-portal .work-queue .action-tile{width:100%;max-width:none;min-height:90px;padding:16px;border-radius:16px}html.dark .admin-portal .campus-register,html.dark .admin-portal .activity-feed{width:100%;padding:18px;margin-bottom:22px;border-radius:18px}html.dark .admin-portal .campus-register .metric-grid{grid-template-columns:1fr;gap:8px}html.dark .admin-portal .campus-register .metric-card{min-height:76px;grid-template-columns:auto 1fr auto auto;padding:12px;border-radius:13px}html.dark .admin-portal .metric-value{grid-column:3;grid-row:1;font-size:26px}html.dark .admin-portal .metric-detail{grid-column:2;grid-row:2;text-align:left;font-size:10px}html.dark .admin-portal .metric-label{font-size:12px}html.dark .admin-portal .activity-feed .panel-heading{align-items:flex-start;flex-direction:column;margin-bottom:12px}html.dark .admin-portal .campus-insights{width:100%;margin-bottom:14px}html.dark .admin-portal .workspace-links{width:100%;justify-content:flex-start;gap:8px}}
+
+/* The admin workspace owns local color tokens, so map those too in night mode. */
+html.dark .admin-portal{
+ --admin-ink:#f2f6ff;--admin-muted:#b8c5dc;--admin-plum:#273451;--admin-pink:#79dcc5;--admin-orange:#8f9fe8;--admin-lilac:#91a9e8;
+ --text:#f2f6ff;--text-secondary:#b8c5dc;--text-muted:#8d9bb4;--bg:#0c1221;--bg2:#111a2c;--surface:#151f33;--surface2:#1b2941;
+ --border:rgba(177,195,231,.13);--accent:#79dcc5;--accent-hover:#9be9d7;
+ background:transparent;color:var(--text)
+}
+html.dark .admin-portal::before,html.dark .admin-portal::after{display:none}
+html.dark .admin-portal .topbar{background:rgba(13,20,35,.88);border-bottom:1px solid var(--border)}
+html.dark .admin-portal .topbar-title,html.dark .admin-portal .topbar-user-name{color:var(--text)}
+html.dark .admin-portal .topbar-user-sub{color:var(--text-secondary)}
+html.dark .admin-portal .sidebar{background:linear-gradient(180deg,#111a2d,#0d1526);border-right:1px solid var(--border)}
+html.dark .admin-portal .sidebar-brand-text p{color:var(--text-secondary)}
+html.dark .admin-portal .sidebar-footer div{color:var(--text-secondary)!important}
+html.dark .admin-portal .nav-item{color:var(--text-secondary)}
+html.dark .admin-portal .nav-item .material-symbols-outlined{color:#a7b9e5}
+html.dark .admin-portal .nav-item.active,html.dark .admin-portal .nav-item.active:hover{background:linear-gradient(110deg,#30466b,#315d68);border-color:rgba(164,195,235,.12);color:#f6f9ff}
+html.dark .admin-portal .nav-item.active .material-symbols-outlined{color:#aaf0df}
+html.dark .admin-portal .theme-toggle{border-color:var(--border-strong);background:var(--surface2);color:#a9eee0}
+html.dark .admin-portal .work-queue .section-intro h3,html.dark .admin-portal .campus-register .section-intro h3,html.dark .admin-portal .activity-feed .panel-heading h3{color:var(--text)!important}
+html.dark .admin-portal .work-queue .section-intro>span:last-child{color:var(--text-secondary)}
+html.dark .admin-portal .work-queue .action-tile,html.dark .admin-portal .work-queue .action-tile:first-of-type,html.dark .admin-portal .work-queue .action-tile:last-of-type{background:var(--surface)!important;color:var(--text)}
+html.dark .admin-portal .action-tile-copy strong,html.dark .admin-portal .action-count{color:var(--text)}
+html.dark .admin-portal .action-tile-copy>span{color:var(--text-secondary)}
+html.dark .admin-portal .campus-register .metric-card,html.dark .admin-portal .campus-register .metric-card:nth-child(2),html.dark .admin-portal .campus-register .metric-card:nth-child(3){background:#1b2941;color:var(--text)}
+html.dark .admin-portal .metric-label,html.dark .admin-portal .metric-value{color:var(--text)!important}
+html.dark .admin-portal .feed-copy strong,html.dark .admin-portal .campus-insights summary{color:var(--text)}
+html.dark .admin-portal .feed-copy span,html.dark .admin-portal .designed-empty p{color:var(--text-secondary)}
