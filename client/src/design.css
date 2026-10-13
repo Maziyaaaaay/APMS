@@ -296,3 +296,116 @@ html.dark .admin-portal .campus-register .metric-card,html.dark .admin-portal .c
 html.dark .admin-portal .metric-label,html.dark .admin-portal .metric-value{color:var(--text)!important}
 html.dark .admin-portal .feed-copy strong,html.dark .admin-portal .campus-insights summary{color:var(--text)}
 html.dark .admin-portal .feed-copy span,html.dark .admin-portal .designed-empty p{color:var(--text-secondary)}
+
+
+/* Role workspaces: expressive surfaces, open rhythm, and readable controls. */
+.student-portal,.faculty-portal{--role-ink:#24182d;--role-muted:#6e5c70;--role-line:rgba(111,61,112,.14);--role-card:rgba(255,255,255,.76);--role-shadow:0 22px 60px rgba(91,43,105,.1);background:radial-gradient(circle at 78% 7%,#ffd1be 0,transparent 30%),radial-gradient(circle at 24% 46%,#ead6fb 0,transparent 38%),linear-gradient(135deg,#fff9f5,#f8eaf5 55%,#f4f3ff)!important;color:var(--role-ink);min-height:100vh}
+.student-portal .ambient-backdrop,.faculty-portal .ambient-backdrop{display:none!important}
+.student-portal .sidebar,.faculty-portal .sidebar{width:234px;padding:0 18px;background:linear-gradient(164deg,#421747 0%,#5f275b 55%,#35204b 100%);border-right:1px solid #ffffff24;box-shadow:12px 0 38px rgba(53,25,70,.14);color:white}
+.student-portal .main-content,.faculty-portal .main-content{margin-left:234px;background:transparent!important}
+.student-portal .sidebar-brand,.faculty-portal .sidebar-brand{padding:29px 8px 25px;border-bottom:1px solid #ffffff2b}
+.student-portal .sidebar-brand-text p,.faculty-portal .sidebar-brand-text p{color:#f5d7ef!important;letter-spacing:.12em;font-weight:700}
+.student-portal .sidebar-nav,.faculty-portal .sidebar-nav{padding-top:26px;gap:7px}
+.student-portal .nav-item,.faculty-portal .nav-item{border-radius:13px;padding:13px 14px;color:#f1dfef;font-size:13px;font-weight:650;transition:background .2s,transform .2s!important}
+.student-portal .nav-item:hover,.faculty-portal .nav-item:hover{background:#ffffff1b;color:white;transform:translateX(3px)}
+.student-portal .nav-item.active,.faculty-portal .nav-item.active{background:linear-gradient(110deg,#f390b7,#ffc787)!important;color:#321b38!important;box-shadow:0 10px 22px #2e112738;font-weight:800}
+.student-portal .sidebar-footer,.faculty-portal .sidebar-footer{border-color:#ffffff2b}
+.student-portal .sidebar-footer div,.faculty-portal .sidebar-footer div{color:#fff!important}
+.student-portal .sidebar-help-btn{color:#fff;border-color:#ffffff36;background:#ffffff16;border-radius:11px}
+.student-portal .topbar,.faculty-portal .topbar{height:80px;padding:0 clamp(24px,4vw,62px);background:#fff9!important;border-bottom:1px solid #ffffff9b;backdrop-filter:blur(20px);box-shadow:0 6px 20px #7c3c6c0b}
+.student-portal .topbar-title,.faculty-portal .topbar-title{font-size:14px;font-weight:800;color:var(--role-ink);letter-spacing:-.02em}
+.student-portal .topbar-user-name,.faculty-portal .topbar-user-name{font-weight:800;color:var(--role-ink)}
+.student-portal .topbar-user-sub,.faculty-portal .topbar-user-sub{color:var(--role-muted)}
+.student-portal .theme-toggle,.faculty-portal .theme-toggle{border:1px solid var(--role-line);border-radius:50%;width:40px;height:40px;background:#ffffffb5;color:#6a315e}
+.student-portal .page-content,.faculty-portal .page-content{max-width:1580px;padding:clamp(30px,4.2vw,64px) clamp(24px,4vw,64px) 88px}
+.student-portal .workspace-heading,.faculty-portal .workspace-heading{margin-bottom:30px}
+.student-portal .workspace-heading h2,.faculty-portal .workspace-heading h2{font-size:clamp(35px,4.5vw,60px);line-height:1.05;font-weight:850;letter-spacing:-.065em;color:var(--role-ink);max-width:760px}
+.student-portal .workspace-heading p,.faculty-portal .workspace-heading p{font-size:15px;color:var(--role-muted);margin-top:12px}
+.student-portal .eyebrow,.faculty-portal .eyebrow{color:#a42e75;font-weight:850;letter-spacing:.13em}
+.student-portal .student-progress-panel,.faculty-portal .faculty-focus-panel{border:1px solid #fff9!important;border-radius:28px;background:linear-gradient(116deg,#ffd6b6 0%,#ffa9b9 48%,#cda7f5 100%)!important;box-shadow:0 24px 55px #a7467040!important;padding:clamp(28px,4vw,50px);min-height:250px;overflow:hidden}
+.student-portal .student-progress-panel::before,.faculty-portal .faculty-focus-panel::before{background:radial-gradient(circle at 84% 55%,#fff8d8ab,transparent 30%),radial-gradient(circle at 23% 90%,#fc7ab38c,transparent 45%);filter:blur(22px);animation:apms-color-flow 25s ease-in-out infinite alternate!important}
+.student-portal .student-progress-copy h3,.faculty-portal .faculty-focus-panel h3{font-size:clamp(32px,3vw,48px);font-weight:850;line-height:1.05;letter-spacing:-.055em;color:#301532}
+.student-portal .student-progress-copy p,.faculty-portal .faculty-focus-panel p{color:#513046}
+.student-portal .student-progress-copy small{color:#54314b}
+.student-portal .student-progress-panel .badge{background:#fff9;color:#582c52;border:1px solid #fff9}
+.student-portal .student-progress-panel .progress-orbit{background:#ffffff4d;border:1px solid #fff8;border-radius:24px;padding:28px;backdrop-filter:blur(12px)}
+.student-portal .student-progress-panel .orbit-copy strong{color:#301532}
+.student-portal .metric-grid,.faculty-portal .metric-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;border:0;margin:26px 0 40px}
+.student-portal .metric-card,.faculty-portal .metric-card{display:block;min-width:0;padding:23px;border:1px solid #fff!important;border-radius:20px!important;background:var(--role-card)!important;box-shadow:var(--role-shadow)!important;backdrop-filter:blur(14px);transition:transform .2s,box-shadow .2s!important}
+.student-portal .metric-card:hover,.faculty-portal .metric-card:hover{transform:translateY(-4px);box-shadow:0 24px 55px #763f8740!important}
+.student-portal .metric-icon,.faculty-portal .metric-icon{display:grid;background:#f8d9ef;color:#8b286b;border-radius:13px}
+.student-portal .metric-value,.faculty-portal .metric-value{font-size:40px;color:var(--role-ink);font-weight:850}
+.student-portal .metric-label,.faculty-portal .metric-label{font-weight:750;color:var(--role-ink)}
+.student-portal .metric-detail,.faculty-portal .metric-detail{color:var(--role-muted)}
+.student-portal .group-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.student-portal .group-card{border:1px solid #fff!important;border-radius:20px;padding:26px;background:var(--role-card)!important;box-shadow:var(--role-shadow);backdrop-filter:blur(14px)}
+.student-portal .group-card h4{font-size:22px;font-weight:850;letter-spacing:-.04em;color:var(--role-ink);margin:18px 0 6px}
+.student-portal .group-card p{color:var(--role-muted);min-height:38px}
+.student-portal .section-title h3,.faculty-portal .section-title h3{font-size:24px;font-weight:850;color:var(--role-ink)}
+.student-portal .table-card,.faculty-portal .table-card,.student-portal .card,.faculty-portal .card{border:1px solid #fff!important;border-radius:21px!important;background:var(--role-card)!important;box-shadow:var(--role-shadow)!important;backdrop-filter:blur(14px);overflow:hidden}
+.student-portal .table-card-header,.faculty-portal .table-card-header{background:transparent}
+.student-portal .data-table th,.faculty-portal .data-table th{background:#f8e7f397;color:#6c456a}
+.student-portal .data-table td,.faculty-portal .data-table td{border-color:var(--role-line)}
+.student-portal .btn-primary,.faculty-portal .btn-primary{border:0;border-radius:12px;background:#57254f;color:#fff;box-shadow:0 9px 18px #54244f32}
+.student-portal .btn-primary:hover,.faculty-portal .btn-primary:hover{background:#783365}
+.student-portal .btn-outline,.faculty-portal .btn-outline,.student-portal .btn-ghost,.faculty-portal .btn-ghost{border-radius:11px}
+.student-portal .input,.faculty-portal .input,.student-portal .select,.faculty-portal .select,.student-portal .textarea,.faculty-portal .textarea{border-radius:12px;background:#fffdfa;border-color:#e9d5e4}
+.faculty-roster .roster-intro{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:30px}
+.faculty-roster .roster-intro h2{font-size:clamp(38px,4vw,58px);line-height:1;font-weight:850;letter-spacing:-.06em;margin:9px 0;color:var(--role-ink)}
+.faculty-roster .roster-intro h2 span{color:#e4568f}
+.faculty-roster .roster-intro p{color:var(--role-muted);font-size:14px}
+.faculty-roster .roster-summary{display:grid;grid-template-columns:auto auto;align-items:baseline;column-gap:9px;padding:16px 22px;border:1px solid #fff;border-radius:17px;background:#fff8;backdrop-filter:blur(12px)}
+.faculty-roster .roster-summary strong{font-size:24px;color:#762f69}.faculty-roster .roster-summary span{font-size:11px;color:var(--role-muted)}
+.faculty-roster .roster-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.faculty-roster .roster-search{display:flex;align-items:center;gap:12px;flex:1;padding:0 16px;border:1px solid #e4cadc;border-radius:14px;background:#fffc;min-height:50px;color:#9d5482}
+.faculty-roster .roster-search input{width:100%;border:0;outline:0;background:transparent;color:var(--role-ink);font:inherit;font-size:13px}
+.faculty-roster .roster-toolbar select{min-height:50px;max-width:190px;padding:0 14px;border:1px solid #e4cadc;border-radius:14px;background:#fffc;color:var(--role-ink)}
+.faculty-roster .roster-count{font-size:12px;font-weight:750;color:var(--role-muted)}
+.faculty-roster .roster-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:17px}
+.faculty-roster .roster-card{padding:23px;border:1px solid #fff;border-radius:21px;background:var(--role-card);box-shadow:var(--role-shadow);backdrop-filter:blur(14px)}
+.faculty-roster .roster-card-top{display:flex;align-items:center;gap:12px}
+.faculty-roster .roster-avatar{display:grid;place-items:center;flex:none;width:45px;height:45px;border-radius:15px;background:linear-gradient(135deg,#f5a0b9,#a78ee9);color:#351b39;font-weight:850;overflow:hidden}
+.faculty-roster .roster-avatar img{width:100%;height:100%;object-fit:cover}
+.faculty-roster .roster-person{min-width:0;flex:1}.faculty-roster .roster-person h3{font-size:14px;font-weight:850;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--role-ink)}.faculty-roster .roster-person p{font-size:11px;color:var(--role-muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;margin-top:3px}
+.faculty-roster .roster-waiting{display:flex;align-items:center;gap:3px;padding:5px 8px;border-radius:99px;background:#ffe3e8;color:#9d3a56;font-size:12px;font-weight:800}.faculty-roster .roster-waiting span{font-size:14px}
+.faculty-roster .roster-score{display:flex;align-items:baseline;gap:9px;margin:25px 0 20px}.faculty-roster .roster-score strong{font-size:46px;line-height:1;font-weight:850;letter-spacing:-.07em;color:#702667}.faculty-roster .roster-score span{font-size:12px;color:var(--role-muted)}
+.faculty-roster .roster-progress{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.faculty-roster .roster-group{min-width:0;display:grid;grid-template-columns:1fr auto;gap:8px;color:var(--role-muted);font-size:11px}.faculty-roster .roster-group b{color:var(--role-ink)}.faculty-roster .roster-track{grid-column:1/-1;height:7px;border-radius:99px;background:#e9dceb;overflow:hidden}.faculty-roster .roster-track i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#ec6d9f,#8f77d4)}
+.faculty-roster .roster-card-foot{display:flex;justify-content:space-between;gap:12px;margin-top:21px;padding-top:13px;border-top:1px solid var(--role-line);font-size:10px;color:var(--role-muted)}
+.faculty-roster .roster-empty{padding:70px 20px;text-align:center;border:1px dashed #d2abc9;border-radius:20px;background:#ffffff85}.faculty-roster .roster-empty span{font-size:38px;color:#bb6c9e}.faculty-roster .roster-empty h3{margin:8px 0;color:var(--role-ink)}.faculty-roster .roster-empty p,.faculty-roster .roster-note{color:var(--role-muted);font-size:12px}.faculty-roster .roster-note{margin-top:18px}
+/* Login at night: one composed canvas with a calm luminous edge. */
+html.dark .login-page{background:radial-gradient(circle at 18% 18%,#5252936e,transparent 36%),radial-gradient(circle at 84% 80%,#ba63914d,transparent 38%),#111326!important}
+html.dark .login-brand-panel{background:linear-gradient(145deg,#1b1b38,#343056 58%,#673a60)!important;border:0;color:#fff;box-shadow:none!important}
+html.dark .login-brand-panel::before{opacity:.5;background:radial-gradient(circle at 25% 73%,#be68ad,transparent 33%),radial-gradient(circle at 82% 29%,#e8a071,transparent 40%);filter:blur(42px)}
+html.dark .login-brand-panel::after{background:linear-gradient(90deg,transparent,#19162a45)!important}
+html.dark .login-form-panel{background:#1c1b36e8!important;border:1px solid #ffffff26;border-radius:26px;box-shadow:0 28px 68px #080c1b66!important;backdrop-filter:blur(24px)}
+html.dark .login-form-inner{color:#f9f4fb}
+html.dark .login-heading h2{font-weight:850;letter-spacing:-.06em;color:#fff}
+html.dark .login-heading p{color:#d3c9dc}
+html.dark .login-form-panel .input-icon-wrap .input{background:#272641;border:1px solid #8f83aa88;color:#fff}
+html.dark .login-form-panel .input-icon-wrap .input::placeholder{color:#b8adc8}
+html.dark .login-form-panel .input:focus{border-color:#f0a0c5;outline:2px solid #cf76a544}
+html.dark .login-form-panel .form-label{color:#f6eaf7}
+html.dark .login-form-panel .input-action-btn{color:#d3b9d3}
+html.dark .login-form-panel .input-action-btn:hover{background:#ffffff18}
+html.dark .login-role-tabs{background:#ffffff11;border:1px solid #ffffff27;border-radius:13px;padding:4px}
+html.dark .login-role-tab,html.dark .role-tab{color:#ded0e1}
+html.dark .login-role-tab.active,html.dark .role-tab.active{background:#f6b1cd;color:#321c39;border-radius:9px}
+html.dark .login-submit-btn{background:linear-gradient(100deg,#f396bb,#ffc392);color:#322039;border:0;font-weight:800!important;box-shadow:0 10px 24px #e78ba53b!important}
+html.dark .login-submit-btn:hover{background:linear-gradient(100deg,#f9abc8,#ffd2a8)}
+html.dark .login-brand-panel h2,html.dark .login-brand-panel p{color:#fff}
+html.dark .login-brand-badge,html.dark .login-feature-item span,html.dark .login-brand-footer{color:#eadce7}
+/* Keep the role workspaces legible after switching themes. */
+html.dark .student-portal,html.dark .faculty-portal{--role-ink:#faf2ff;--role-muted:#cbbdd7;--role-line:#ffffff23;--role-card:#24213cdb;--role-shadow:0 20px 55px #08091638;background:radial-gradient(circle at 75% 3%,#46375e,transparent 34%),radial-gradient(circle at 10% 62%,#363c67,transparent 39%),#161629!important}
+html.dark .student-portal .topbar,html.dark .faculty-portal .topbar{background:#25203bca!important;border-color:#ffffff1d}
+html.dark .student-portal .metric-card,html.dark .faculty-portal .metric-card,html.dark .student-portal .group-card,html.dark .student-portal .table-card,html.dark .faculty-portal .table-card,html.dark .student-portal .card,html.dark .faculty-portal .card,html.dark .faculty-roster .roster-card{border-color:#ffffff24!important;background:var(--role-card)!important}
+html.dark .student-portal .student-progress-panel,html.dark .faculty-portal .faculty-focus-panel{background:linear-gradient(116deg,#675b98,#784a7b 55%,#996575)!important;border-color:#ffffff35!important}
+html.dark .student-portal .student-progress-copy h3,html.dark .faculty-portal .faculty-focus-panel h3,html.dark .student-portal .student-progress-copy p,html.dark .faculty-portal .faculty-focus-panel p{color:#fff}
+html.dark .student-portal .student-progress-panel .progress-orbit{background:#ffffff1c}
+html.dark .student-portal .data-table th,html.dark .faculty-portal .data-table th{background:#342b4c;color:#f0dcf1}
+html.dark .faculty-roster .roster-summary,html.dark .faculty-roster .roster-search,html.dark .faculty-roster .roster-toolbar select{background:#28243c;border-color:#ffffff27;color:#fff}
+html.dark .faculty-roster .roster-search input{color:#fff}
+html.dark .faculty-roster .roster-score strong,html.dark .faculty-roster .roster-summary strong{color:#f6a7d0}
+html.dark .faculty-roster .roster-track{background:#4c405d}
+@media(max-width:1000px){.student-portal .metric-grid,.faculty-portal .metric-grid,.student-portal .group-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:767px){.student-portal .sidebar,.faculty-portal .sidebar{width:min(82vw,280px)}.student-portal .main-content,.faculty-portal .main-content{margin-left:0}.student-portal .topbar,.faculty-portal .topbar{height:68px;padding:0 18px}.student-portal .page-content,.faculty-portal .page-content{padding:29px 18px 64px}.student-portal .student-progress-panel,.faculty-portal .faculty-focus-panel{padding:27px;border-radius:22px}.student-portal .metric-grid,.faculty-portal .metric-grid,.student-portal .group-grid{grid-template-columns:1fr;gap:12px}.student-portal .metric-card,.faculty-portal .metric-card{padding:20px}.faculty-roster .roster-intro{display:block}.faculty-roster .roster-summary{display:inline-grid;margin-top:18px}.faculty-roster .roster-toolbar{flex-wrap:wrap}.faculty-roster .roster-search{flex:1 1 100%}.faculty-roster .roster-toolbar select{flex:1}.faculty-roster .roster-grid{grid-template-columns:1fr}.faculty-roster .roster-count{margin-left:auto}html.dark .login-form-panel{border-radius:0;border:0;background:#1c1b36db!important}}
+@media(prefers-reduced-motion:reduce){.student-portal .student-progress-panel::before,.faculty-portal .faculty-focus-panel::before,html.dark .login-brand-panel::before{animation:none!important}}
