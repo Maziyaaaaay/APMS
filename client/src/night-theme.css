@@ -277,3 +277,32 @@ html.dark .admin-portal .point-catalog-row button { min-height: 38px; border-col
 @media(max-width:767px) {
   html.dark .admin-portal .point-catalog-row { padding: 15px !important; border-radius: 13px !important; }
 }
+
+/* Keep the admin-specific tokens in step with the shared night palette. */
+html.dark .admin-portal {
+  --admin-ink: #f5f3fa;
+  --admin-muted: #b7b4c4;
+  --admin-plum: #29273a;
+  --admin-pink: #d6ef78;
+  --admin-orange: #b7a8ed;
+  --admin-lilac: #c7b8f0;
+}
+html.dark .admin-portal .nav-item.active,
+html.dark .admin-portal .nav-item.active:hover {
+  color: #faf8ff;
+  border-color: rgba(214,239,120,.2);
+  background: linear-gradient(112deg, rgba(183,168,237,.24), rgba(214,239,120,.11));
+}
+html.dark .admin-portal .nav-item.active .material-symbols-outlined,
+html.dark .admin-portal .theme-toggle,
+html.dark .admin-portal .campus-register .metric-icon,
+html.dark .admin-portal .work-queue .action-tile .metric-icon,
+html.dark .admin-portal .section-number {
+  color: var(--accent);
+}
+html.dark .admin-portal .campus-register .metric-card,
+html.dark .admin-portal .campus-register .metric-card:nth-child(2),
+html.dark .admin-portal .campus-register .metric-card:nth-child(3) {
+  border: 0;
+  background: rgba(255,255,255,.035);
+}
