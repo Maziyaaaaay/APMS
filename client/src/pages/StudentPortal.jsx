@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, logout } from '../utils/auth';
 import { getCertificatesByStudent, addCertificate, uploadCertificate, updateUser, getCertificateFileUrl } from '../utils/storage';
 import { compressImage } from '../utils/imageCompressor';
-import { ACTIVITIES, getActivitiesByGroup, calculatePoints, calculateStudentSummary, STUDENT_TYPES } from '../utils/points';
+import { ACTIVITIES, getActivityForCertificate, getActivitiesByGroup, calculatePoints, calculateStudentSummary, STUDENT_TYPES } from '../utils/points';
 
 const KTU_RULES = [
     "Only the highest achievement level for the same event is counted.",
@@ -239,7 +239,7 @@ function DashboardTab({ user, certs, summary, req, onSubmit, onViewAll }) {
                             </thead>
                             <tbody>
                                 {recent.map(c => {
-                                    const act = ACTIVITIES[c.activity_id || c.activityId];
+                                    const act = getActivityForCertificate(c);
                                     return (
                                         <tr key={c.id}>
                                             <td className="td-bold">{act?.name || c.activityName}</td>
@@ -582,7 +582,7 @@ function SubmissionsTab({ certs }) {
     const [search,  setSearch]  = useState('');
 
     const filtered = certs.filter(c => {
-        const act    = ACTIVITIES[c.activity_id || c.activityId];
+        const act    = getActivityForCertificate(c);
         const name   = (act?.name || c.activityName || '').toLowerCase();
         const matchS = name.includes(search.toLowerCase());
         const matchF = filter === 'all' || c.status === filter;
@@ -644,7 +644,7 @@ function SubmissionsTab({ certs }) {
                                 </thead>
                                 <tbody>
                                     {filtered.map(c => {
-                                        const act = ACTIVITIES[c.activity_id || c.activityId];
+                                        const act = getActivityForCertificate(c);
                                         return (
                                             <tr key={c.id}>
                                                 <td className="td-bold">{act?.name || c.activityName}<div className="td-muted" style={{fontSize:11,fontWeight:400}}>{c.event_name || 'Legacy submission'}</div></td>
