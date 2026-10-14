@@ -2,13 +2,12 @@ import BrandLogo from '../components/BrandLogo';
 import { AmbientBackdrop } from '../components/DashboardKit';
 import AchievementScene from '../components/AchievementScene';
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { signup } from '../utils/auth';
+import { Link } from 'react-router-dom';
+import { signup, resendSignupConfirmation } from '../utils/auth';
 import { getDepartments } from '../utils/storage';
 import { compressImage } from '../utils/imageCompressor';
 
 export default function SignupPage() {
-  const navigate = useNavigate();
   const [departments, setDepartments] = useState([]);
   const [departmentsLoading, setDepartmentsLoading] = useState(true);
   const [role, setRole] = useState('student');
@@ -20,6 +19,9 @@ export default function SignupPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [confirmationSent, setConfirmationSent] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState('');
   const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'));
 
   useEffect(() => {
@@ -82,7 +84,8 @@ export default function SignupPage() {
       });
       if (result.success) {
         setSuccess(true);
-        setTimeout(() => navigate('/?registered=1'), 1800);
+        setConfirmationSent(result.confirmationSent);
+        setError(result.confirmationSent ? '' : (result.message || 'Your signup is saved. Use the resend option below to request a confirmation email.'));
       } else {
         setError(result.message);
       }
@@ -173,10 +176,27 @@ export default function SignupPage() {
           </div>
 
           {success ? (
-            <div style={{ padding: '32px 0', textAlign: 'center' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 56, color: 'var(--success)', display: 'block', marginBottom: 12 }}>check_circle</span>
-              <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>Request submitted</div>
-                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{role === 'student' ? 'Your department faculty advisor must approve your account before you can sign in.' : 'An administrator must approve your faculty account before you can sign in.'}</div>
+            <div style={{ padding: '28px 0', textAlign: 'center' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 54, color: 'var(--success)', display: 'block', marginBottom: 12 }}>mark_email_read</span>
+              <div style={{ fontSize: 20, fontWeight: 750, color: 'var(--text)', marginBottom: 8 }}>Check your inbox</div>
+              <p style={{ color: 'var(--text-muted)', lineHeight: 1.6, margin: '0 auto 18px', maxWidth: 380 }}>
+                {confirmationSent ? 'Confirm your email address to send your APMS access request for review.' : 'Your signup is saved, but the confirmation email did not send yet. Request a new email below.'}
+              </p>
+              <div style={{ fontWeight: 650, marginBottom: 18 }}>{form.email}</div>
+              {error && <div className="alert alert-error" style={{ marginBottom: 16, textAlign: 'left' }}>{error}</div>}
+              {resendMessage && <div className="alert alert-info" style={{ marginBottom: 16, textAlign: 'left' }}>{resendMessage}</div>}
+              <button type="button" className="btn btn-primary" disabled={resending} onClick={async () => {
+                setResending(true); setResendMessage(''); setError('');
+                try {
+                  await resendSignupConfirmation(form.email);
+                  setConfirmationSent(true);
+                  setResendMessage('A new confirmation link has been sent. Check your inbox and spam folder.');
+                } catch (err) {
+                  setError(err.message || 'Could not resend the confirmation email.');
+                } finally { setResending(false); }
+              }}>{resending ? 'Sending…' : 'Resend confirmation email'}</button>
+              <div style={{ marginTop: 18, color: 'var(--text-muted)', fontSize: 13 }}>After confirmation, {role === 'student' ? 'your department faculty advisor' : 'an administrator'} must approve your account.</div>
+              <Link to="/" style={{ display: 'inline-block', marginTop: 18, color: 'var(--accent)', fontWeight: 650, textDecoration: 'none' }}>Back to sign in</Link>
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
