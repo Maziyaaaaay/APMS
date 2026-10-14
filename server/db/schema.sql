@@ -21,6 +21,7 @@ create table public.users (
   session_version integer not null default 1 check (session_version > 0),
   name text not null check (length(trim(name)) between 1 and 150),
   email text,
+  email_verified_at timestamptz default now(),
   phone text,
   profile_url text,
   department_id uuid references public.departments(id) on delete restrict,
