@@ -60,6 +60,18 @@ export default function Login() {
     return (
         <div className="login-page">
             <AmbientBackdrop />
+            <div className="login-theme-control">
+                <button
+                    className="login-theme-toggle"
+                    type="button"
+                    onClick={() => setDark(current => !current)}
+                    aria-label={dark ? 'Switch to day mode' : 'Switch to night mode'}
+                    title={dark ? 'Switch to day mode' : 'Switch to night mode'}
+                >
+                    <span className="material-symbols-outlined" aria-hidden="true">{dark ? 'light_mode' : 'dark_mode'}</span>
+                    <span>{dark ? 'Day mode' : 'Night mode'}</span>
+                </button>
+            </div>
             {/* ── Left branded panel (desktop only) ── */}
             <div className="login-brand-panel">
                 <div className="login-brand-logo"><BrandLogo />
@@ -75,19 +87,6 @@ export default function Login() {
             {/* ── Right form panel ── */}
             <div className="login-form-panel">
                 <div className="login-form-inner">
-
-                    {/* Theme toggle  /  top right */}
-                    <div style={{ display:'flex', justifyContent:'flex-end', marginBottom: 16 }}>
-                        <button
-                            className="theme-toggle"
-                            onClick={() => setDark(d => !d)}
-                            title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-                        >
-                            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
-                                {dark ? 'light_mode' : 'dark_mode'}
-                            </span>
-                        </button>
-                    </div>
 
                     {/* Mobile logo */}
                     <div className="login-mobile-logo"><BrandLogo />
