@@ -257,6 +257,30 @@ def login_and_read_identity(username, password):
             student_mobile = profile_value(student_contact_table, {"Student Mobile No"})
             department = profile_value(profile_soup, {"Department"})
 
+            # Log only boolean/count diagnostics; never profile values or credentials.
+            email_labels = {
+                "email", "e mail", "email id", "student email",
+                "student email id", "college email id",
+            }
+            email_label_rows = 0
+            for row in profile_soup.find_all("tr"):
+                cells = row.find_all(["th", "td"], recursive=False)
+                if len(cells) < 2:
+                    continue
+                label = normalize_profile_label(cells[0].get_text(" ", strip=True).rstrip(":"))
+                if label in email_labels and EMAIL_PATTERN.search(profile_cell_value(cells[1])):
+                    email_label_rows += 1
+            app.logger.info(
+                "ETLab contact extraction: student_table=%s; email_label_rows=%d; "
+                "email_text_in_profile=%s; email_text_in_student_table=%s; extracted_email=%s; extracted_phone=%s",
+                bool(student_contact_table),
+                email_label_rows,
+                bool(EMAIL_PATTERN.search(profile_soup.get_text(" ", strip=True))),
+                bool(student_contact_table and EMAIL_PATTERN.search(student_contact_table.get_text(" ", strip=True))),
+                bool(student_email),
+                bool(student_mobile),
+            )
+
             return "verified", {
                 "name": name,
                 "registration_number": normalize_registration_number(registration_number),
