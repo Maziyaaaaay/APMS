@@ -3,7 +3,7 @@ import { AmbientBackdrop } from '../components/DashboardKit';
 import AchievementScene from '../components/AchievementScene';
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { signup } from '../utils/auth';
+import { signup, verifyEtlabStudent } from '../utils/auth';
 import { getDepartments } from '../utils/storage';
 import { compressImage } from '../utils/imageCompressor';
 
@@ -20,6 +20,11 @@ export default function SignupPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [etlabUsername, setEtlabUsername] = useState('');
+  const [etlabPassword, setEtlabPassword] = useState('');
+  const [etlabIdentity, setEtlabIdentity] = useState(null);
+  const [etlabProof, setEtlabProof] = useState('');
+  const [verifyingEtlab, setVerifyingEtlab] = useState(false);
   const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'));
 
   useEffect(() => {
@@ -39,6 +44,36 @@ export default function SignupPage() {
 
   const set = (field) => (e) => setForm(p => ({ ...p, [field]: e.target.value }));
 
+  const handleVerifyEtlab = async () => {
+    setError('');
+    if (!form.rollNo.trim() || !etlabUsername.trim() || !etlabPassword) {
+      setError('Enter your KTU registration number and ET Lab login details first.');
+      return;
+    }
+    const password = etlabPassword;
+    setEtlabPassword('');
+    setVerifyingEtlab(true);
+    try {
+      const result = await verifyEtlabStudent({
+        username: etlabUsername.trim(),
+        password,
+        registrationNo: form.rollNo.trim().toUpperCase(),
+      });
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      setEtlabIdentity(result.identity);
+      setEtlabProof(result.proof);
+      setForm(current => ({ ...current, name: result.identity.name, rollNo: result.identity.registrationNo }));
+      setEtlabUsername('');
+    } catch {
+      setError('Could not reach APMS to verify ET Lab. Check your connection and try again.');
+    } finally {
+      setVerifyingEtlab(false);
+    }
+  };
+
   const handleProfilePicChange = async (e) => {
     const f = e.target.files[0];
     if (f) {
@@ -54,11 +89,18 @@ export default function SignupPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    if (role === 'student' && !etlabIdentity) {
+      await handleVerifyEtlab();
+      return;
+    }
     if (form.password !== form.confirmPassword) {
       setError('Passwords do not match.'); return;
     }
     if (form.password.length < 12) {
       setError('Password must be at least 12 characters.'); return;
+    }
+    if (role === 'student' && (!etlabIdentity || !etlabProof)) {
+      setError('Verify your student identity with ET Lab before continuing.'); return;
     }
     if (!form.name.trim() || !(role === 'student' ? form.rollNo.trim() : form.username.trim())) {
       setError(role === 'student' ? 'Name and KTU registration number are required.' : 'Name and username are required.'); return;
@@ -79,6 +121,7 @@ export default function SignupPage() {
         designation: role === 'faculty' ? form.designation.trim() : undefined,
         year: role === 'student' ? form.year : undefined,
         profileUrl: role === 'student' ? form.profileUrl : undefined,
+        etlabVerificationToken: role === 'student' ? etlabProof : undefined,
       });
       if (result.success) {
         setSuccess(true);
@@ -165,7 +208,10 @@ export default function SignupPage() {
                 key={r.key}
                 type="button"
                 className={`role-tab ${role === r.key ? 'active' : ''}`}
-                onClick={() => { setRole(r.key); setError(''); }}
+                onClick={() => {
+                  setRole(r.key); setError(''); setEtlabIdentity(null); setEtlabProof('');
+                  setEtlabUsername(''); setEtlabPassword('');
+                }}
               >
                 {r.label}
               </button>
@@ -187,17 +233,55 @@ export default function SignupPage() {
                 </div>
               )}
 
-              {/* Common fields */}
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">Full Name *</label>
-                  <input className="input" placeholder="e.g. Arjun Menon" value={form.name} onChange={set('name')} required />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">{role === 'student' ? 'KTU Registration Number *' : 'Username *'}</label>
-                  <input className="input" placeholder={role === 'student' ? 'e.g. TVE23CS001' : 'e.g. arjun.menon'} value={role === 'student' ? form.rollNo : form.username} onChange={set(role === 'student' ? 'rollNo' : 'username')} required />
-                </div>
-              </div>
+              {role === 'student' && !etlabIdentity && (
+                <section className="etlab-verification-card" aria-labelledby="etlab-verification-title">
+                  <div className="etlab-verification-heading">
+                    <span className="material-symbols-outlined" aria-hidden="true">school</span>
+                    <div>
+                      <h3 id="etlab-verification-title">Verify your student account</h3>
+                      <p>Use your existing ET Lab login to fill your identity details.</p>
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="ktu-registration">KTU Registration Number *</label>
+                    <input id="ktu-registration" className="input" autoComplete="off" placeholder="e.g. KTE23CS001" value={form.rollNo} onChange={set('rollNo')} required />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="etlab-username">ET Lab Username *</label>
+                    <input id="etlab-username" className="input" autoComplete="username" placeholder="Your ET Lab username" value={etlabUsername} onChange={e => setEtlabUsername(e.target.value)} required />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="etlab-password">ET Lab Password *</label>
+                    <input id="etlab-password" className="input" type="password" autoComplete="current-password" placeholder="Your ET Lab password" value={etlabPassword} onChange={e => setEtlabPassword(e.target.value)} required />
+                  </div>
+                  <button type="button" className="btn btn-outline" onClick={handleVerifyEtlab} disabled={verifyingEtlab}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>{verifyingEtlab ? 'progress_activity' : 'verified_user'}</span>
+                    {verifyingEtlab ? 'Checking ET Lab…' : 'Verify with ET Lab'}
+                  </button>
+                  <p className="etlab-privacy-note">Your ET Lab password is used only for verification and is never saved by APMS.</p>
+                </section>
+              )}
+
+              {(role === 'faculty' || etlabIdentity) && (
+                <>
+                  {role === 'student' ? (
+                    <div className="etlab-verified-identity">
+                      <span className="material-symbols-outlined" aria-hidden="true">verified</span>
+                      <div><strong>{etlabIdentity.name}</strong><span>{etlabIdentity.registrationNo} · Verified with ET Lab</span></div>
+                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setEtlabIdentity(null); setEtlabProof(''); setForm(p => ({ ...p, name: '', rollNo: '' })); }}>Change</button>
+                    </div>
+                  ) : (
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label className="form-label">Full Name *</label>
+                        <input className="input" placeholder="e.g. Arjun Menon" value={form.name} onChange={set('name')} required />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Username *</label>
+                        <input className="input" placeholder="e.g. arjun.menon" value={form.username} onChange={set('username')} required />
+                      </div>
+                    </div>
+                  )}
 
               <div className="form-group">
                 <label className="form-label">Email *</label>
@@ -271,29 +355,35 @@ export default function SignupPage() {
                 </div>
               )}
 
-              {/* Password fields */}
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">Password *</label>
-                  <input className="input" type="password" placeholder="Min. 12 characters" minLength={12} value={form.password} onChange={set('password')} required />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Confirm Password *</label>
-                  <input className="input" type="password" placeholder="Re-enter password" value={form.confirmPassword} onChange={set('confirmPassword')} required />
-                </div>
-              </div>
+              </>
+              )}
 
-              <button
-                type="submit"
-                className="login-submit-btn"
-                disabled={loading || departmentsLoading || !departments.length}
-              >
-                {loading ? (
-                  <><span className="material-symbols-outlined" style={{ fontSize: 18, animation: 'spin 1s linear infinite' }}>refresh</span> Creating account…</>
-                ) : (
-                  <><span className="material-symbols-outlined" style={{ fontSize: 18 }}>person_add</span> Create Account</>
-                )}
-              </button>
+              {(role === 'faculty' || etlabIdentity) && (
+                <>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">APMS Password *</label>
+                      <input className="input" type="password" autoComplete="new-password" placeholder="Min. 12 characters" minLength={12} value={form.password} onChange={set('password')} required />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Confirm APMS Password *</label>
+                      <input className="input" type="password" autoComplete="new-password" placeholder="Re-enter password" value={form.confirmPassword} onChange={set('confirmPassword')} required />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="login-submit-btn"
+                    disabled={loading || departmentsLoading || !departments.length}
+                  >
+                    {loading ? (
+                      <><span className="material-symbols-outlined" style={{ fontSize: 18, animation: 'spin 1s linear infinite' }}>refresh</span> Creating account…</>
+                    ) : (
+                      <><span className="material-symbols-outlined" style={{ fontSize: 18 }}>person_add</span> Create Account</>
+                    )}
+                  </button>
+                </>
+              )}
 
               <div style={{ textAlign: 'center', marginTop: 18, fontSize: 13, color: 'var(--text-muted)' }}>
                 Already have an account?{' '}
