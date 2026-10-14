@@ -594,7 +594,7 @@ function ProfileTab({ user, onLogout, onRefresh, onUpdateUser }) {
         }
         setUploadingBanner(true);
         try {
-            const profileBannerUrl = await compressImage(file, 1800, 0.78);
+            const profileBannerUrl = await compressImage(file, 1800, 0.78, 'image/jpeg');
             const updated = await updateUser({ ...user, profileBannerUrl });
             onUpdateUser(updated);
         } catch (error) {
