@@ -240,6 +240,13 @@ def login_and_read_identity(username, password):
             student_email = profile_email_near_label(student_contact_table, "Student Mobile No", {
                 "Email", "E-mail", "Email Id", "Student Email", "Student Email Id", "College Email Id",
             })
+            if not student_email and student_contact_table:
+                # If the ET Lab markup does not expose the email row as a
+                # conventional table row, extract the email from the table
+                # already anchored to "Student Mobile No". This keeps the
+                # fallback scoped to student contacts and avoids parent email.
+                match = EMAIL_PATTERN.search(student_contact_table.get_text(" ", strip=True))
+                student_email = match.group(0) if match else ""
             if not student_email:
                 college_email_table = profile_table_with_labels(profile_soup, {"College Email Id"})
                 student_email = profile_value(college_email_table, {"College Email Id"})
