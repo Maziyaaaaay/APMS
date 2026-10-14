@@ -29,8 +29,8 @@ router.get('/', async (req, res) => {
 router.get('/approval-requests', requireRole('admin', 'faculty'), async (req, res) => {
   const targetRole = req.user.role === 'admin' ? 'faculty' : 'student';
   let query = supabase.from('users')
-    .select('id, role, account_status, username, name, email, phone, roll_no, department, department_id, designation, year, created_at')
-    .eq('role', targetRole).eq('account_status', 'pending');
+    .select('id, role, account_status, email_verified_at, username, name, email, phone, roll_no, department, department_id, designation, year, created_at')
+    .eq('role', targetRole).eq('account_status', 'pending').not('email_verified_at', 'is', null);
   if (req.user.role === 'faculty') query = query.eq('department_id', req.user.departmentId);
   const { data, error } = await query.order('created_at');
   if (error) return res.status(500).json({ error: error.message });
@@ -255,13 +255,14 @@ router.patch('/:id/approval', requireRole('admin', 'faculty'), async (req, res) 
     return res.status(400).json({ error: 'status must be approved, rejected, or disabled.' });
   }
   const { data: existing, error: lookupError } = await supabase.from('users')
-    .select('id, role, account_status, is_super_admin').eq('id', req.params.id).maybeSingle();
+    .select('id, role, account_status, is_super_admin, email_verified_at').eq('id', req.params.id).maybeSingle();
   if (lookupError) return res.status(500).json({ error: lookupError.message });
   const requiredRole = req.user.role === 'admin' ? 'faculty' : 'student';
   if (!existing || existing.is_super_admin || existing.role !== requiredRole) {
     return res.status(404).json({ error: `Pending ${requiredRole} account not found.` });
   }
   if (existing.account_status !== 'pending') return res.status(409).json({ error: 'This account is no longer waiting for approval.' });
+  if (existing.email_verified_at == null) return res.status(409).json({ error: 'This applicant must confirm their email before approval.' });
   if (req.user.role === 'faculty') {
     const { data: target, error: targetError } = await supabase.from('users').select('department_id').eq('id', req.params.id).maybeSingle();
     if (targetError) return res.status(500).json({ error: targetError.message });

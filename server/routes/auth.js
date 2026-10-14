@@ -51,6 +51,9 @@ router.post('/login', async (req, res) => {
   if (!valid) {
     return res.status(401).json({ error: 'Invalid username or password.' });
   }
+  if (user.email_verified_at == null) {
+    return res.status(403).json({ error: 'Confirm your email address before signing in.', emailVerificationRequired: true });
+  }
   if (user.account_status && user.account_status !== 'approved') {
     const message = user.account_status === 'pending'
       ? (user.role === 'student' ? 'Your account is waiting for your department faculty advisor to approve it.' : 'Your account is waiting for administrator approval.')
@@ -83,6 +86,34 @@ router.post('/login', async (req, res) => {
   res.json({ token, user: safeUser });
 });
 
+router.post('/confirm-email', async (req, res) => {
+  const accessToken = typeof req.body.accessToken === 'string' ? req.body.accessToken : '';
+  if (!accessToken) return res.status(400).json({ error: 'Confirmation token is missing.' });
+
+  const { data: authData, error: authError } = await supabase.auth.getUser(accessToken);
+  if (authError || !authData.user?.email || !(authData.user.email_confirmed_at || authData.user.confirmed_at)) {
+    return res.status(400).json({ error: 'This confirmation link is invalid or has expired. Request a new confirmation email.' });
+  }
+
+  const email = authData.user.email.trim().toLowerCase();
+  const { data: matches, error: lookupError } = await supabase.from('users')
+    .select('id, email_verified_at')
+    .eq('email', email)
+    .limit(2);
+  if (lookupError) return res.status(500).json({ error: 'Could not match this confirmed email to an APMS signup.' });
+  if (!matches?.length) return res.status(404).json({ error: 'No APMS signup was found for this email address.' });
+  if (matches.length !== 1) return res.status(409).json({ error: 'This email is linked to more than one APMS account. Contact an administrator.' });
+
+  if (matches[0].email_verified_at == null) {
+    const { error } = await supabase.from('users')
+      .update({ email_verified_at: new Date().toISOString() })
+      .eq('id', matches[0].id)
+      .is('email_verified_at', null);
+    if (error) return res.status(500).json({ error: 'Email confirmation succeeded, but APMS could not update the signup. Contact an administrator.' });
+  }
+  res.json({ success: true });
+});
+
 router.post('/signup', async (req, res) => {
   const { role, password, name, email, phone, rollNo, department, studentType, designation, year, profileUrl } = req.body;
   const registrationNo = role === 'student' ? String(rollNo || '').trim().toUpperCase() : '';
@@ -108,6 +139,12 @@ router.post('/signup', async (req, res) => {
 
   if (typeof username !== 'string' || !/^[a-z0-9][a-z0-9._-]{2,63}$/i.test(username.trim())) return res.status(400).json({ error: role === 'student' ? 'Enter a valid KTU registration number.' : 'Use 3–64 letters, numbers, dots, underscores, or hyphens for your username.' });
   if (typeof name !== 'string' || !name.trim() || name.trim().length > 150) return res.status(400).json({ error: 'Enter your full name (up to 150 characters).' });
+  const normalizedEmail = email.trim().toLowerCase();
+  const { data: existingEmail, error: emailLookupError } = await supabase.from('users')
+    .select('id').ilike('email', normalizedEmail).limit(1);
+  if (emailLookupError) return res.status(500).json({ error: 'Could not check whether this email is already registered.' });
+  if (existingEmail?.length) return res.status(409).json({ error: 'This email is already linked to an APMS account. Sign in or contact an administrator.' });
+
   const password_hash = await bcrypt.hash(password, 12);
 
   const { data: departmentRow, error: departmentError } = await supabase.from('departments')
@@ -116,7 +153,7 @@ router.post('/signup', async (req, res) => {
   if (!departmentRow) return res.status(400).json({ error: 'Choose a valid department.' });
 
   const insertData = {
-    role, account_status: 'pending', username, password_hash, name: name.trim(), email: email.trim().toLowerCase(), phone: phone.trim(),
+    role, account_status: 'pending', username, password_hash, name: name.trim(), email: email.trim().toLowerCase(), email_verified_at: null, phone: phone.trim(),
     profile_url:  profileUrl || null,
     roll_no:      role === 'student' ? registrationNo : null,
     department:   department || null,
