@@ -61,7 +61,7 @@ export const ACTIVITIES = {
         note: '5 pts per magazine; maximum 5 pts per magazine in an academic year',
     },
     '1.5': {
-        id: '1.5', group: 1, name: 'Driving License (4-Wheeler)',
+        id: '1.5', group: 1, oncePerStudent: true, name: 'Driving License (4-Wheeler)',
         category: 'Community & Outreach',
         type: 'fixed',
         maxPoints: 5,
