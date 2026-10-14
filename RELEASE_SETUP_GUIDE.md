@@ -76,9 +76,6 @@ Expect two rows: `email_verified_at` and `profile_banner_url`.
 3. For SMTP, open **Authentication → Emails → SMTP Settings**. This is separate from Providers. If the project navigation is collapsed, expand **Authentication** first; current Supabase docs place SMTP under the **Emails** section.
 4. Turn on **Enable Custom SMTP**, enter the SMTP host, port, username, password, sender email, and sender name from your email provider, then save.
 5. Configure a sender address on a domain verified with your email provider. The website URL ktuapms.vercel.app does not itself provide an email sender or mail domain.
-   - Use the SMTP host, port, username, and password from your email provider.
-   - Use a sender address on a domain verified with that provider.
-   - Do not paste SMTP credentials into this guide, GitHub, or chat.
 6. Open **Authentication → URL Configuration**.
 7. Set the Site URL to:
 
@@ -89,6 +86,8 @@ Expect two rows: `email_verified_at` and `profile_banner_url`.
    `https://ktuapms.vercel.app/auth/confirm`
 
 Leave the default confirmation template in place unless you have customized it to retain Supabase's confirmation link.
+
+Keep SMTP credentials private; do not paste them into this guide, GitHub, or chat.
 
 Supabase's default email sender is for testing: it only delivers to project-team addresses and has a low send limit. Public signups require a custom SMTP configuration. See [Supabase SMTP setup](https://supabase.com/docs/guides/auth/auth-smtp) and [redirect URL setup](https://supabase.com/docs/guides/auth/redirect-urls).
 
