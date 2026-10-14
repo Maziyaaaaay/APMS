@@ -27,9 +27,9 @@ const NAV_ITEMS = [
 ];
 
 const GROUP_META = [
-    { key: 'group1', label: 'Group I',   sub: 'Co-curricular Activities',    iconBg: 'rgba(45,91,227,0.1)',  iconColor: 'var(--accent)',   fillColor: 'var(--accent)'   },
-    { key: 'group2', label: 'Group II',  sub: 'Professional Development',    iconBg: 'rgba(30,140,90,0.1)',  iconColor: 'var(--success)',  fillColor: 'var(--success)'  },
-    { key: 'group3', label: 'Group III', sub: 'Innovation & Entrepreneurship',iconBg: 'rgba(139,92,246,0.1)',iconColor: '#7c3aed',          fillColor: '#7c3aed'         },
+    { key: 'group1', label: 'Group I', sub: 'Co-curricular Activities' },
+    { key: 'group2', label: 'Group II', sub: 'Professional Development' },
+    { key: 'group3', label: 'Group III', sub: 'Innovation & Entrepreneurship' },
 ];
 
 export default function StudentPortal() {
