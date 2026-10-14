@@ -218,8 +218,14 @@ def verify():
     if (
         not isinstance(username, str) or not username.strip() or len(username) > 100
         or not isinstance(password, str) or not password or len(password) > 256
-        or not isinstance(registration_number, str) or not registration_number.strip()
-        or len(registration_number) > 64
+        or (
+            registration_number is not None
+            and (
+                not isinstance(registration_number, str)
+                or not registration_number.strip()
+                or len(registration_number) > 64
+            )
+        )
     ):
         return jsonify({"error": "invalid_request"}), 400
 
@@ -234,12 +240,13 @@ def verify():
         return jsonify({"error": "profile_unavailable"}), 502
     if result != "verified" or not identity:
         return jsonify({"error": "upstream_unavailable"}), 502
-    if identity["registration_number"] != normalize_registration_number(registration_number):
+    if registration_number and identity["registration_number"] != normalize_registration_number(registration_number):
         return jsonify({"error": "registration_mismatch"}), 403
 
     return jsonify({
         "verified": True,
         "name": identity["name"],
+        "registrationNo": identity["registration_number"],
         "email": identity.get("email", ""),
         "phone": identity.get("phone", ""),
         "department": identity.get("department", ""),
