@@ -428,3 +428,13 @@ html.dark .etlab-verification-card{border-color:rgba(239,168,190,.22);background
 html.dark .etlab-verification-heading>.material-symbols-outlined{background:linear-gradient(140deg,#df5c93,#f19b66);color:#fff}
 html.dark .etlab-verified-identity{background:rgba(90,144,104,.12);border-color:rgba(124,197,143,.24)}
 @media(max-width:520px){.etlab-verification-card{padding:17px;border-radius:15px}.etlab-verification-heading h3{font-size:16px}.etlab-verified-identity{align-items:flex-start;flex-wrap:wrap}.etlab-verified-identity .btn{margin-left:34px}}
+
+
+/* Signup theme control stays reachable in both color modes and while scrolling. */
+.signup-theme-toggle { display: inline-flex !important; }
+
+/* Keep signup typography identical in day and night themes. */
+.signup-page { font-family: 'DM Sans', sans-serif !important; }
+.signup-page .login-heading h2,
+.signup-page .login-brand-panel h2 { font-family: 'Archivo', sans-serif !important; font-weight: 800 !important; letter-spacing: -.035em !important; }
+.signup-page .login-heading h2 { line-height: 1.1 !important; }
