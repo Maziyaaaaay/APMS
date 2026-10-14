@@ -76,9 +76,10 @@ router.post('/login', async (req, res) => {
     studentType:   user.student_type,
     designation:   user.designation,
     profileUrl:    user.profile_url,
+    profileBannerUrl: user.profile_banner_url,
   };
 
-  const { profileUrl, ...jwtPayload } = safeUser;
+  const { profileUrl, profileBannerUrl, ...jwtPayload } = safeUser;
   const token = jwt.sign(jwtPayload, process.env.JWT_SECRET, { expiresIn: '7d' });
   res.json({ token, user: safeUser });
 });
