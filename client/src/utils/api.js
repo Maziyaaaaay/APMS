@@ -17,7 +17,7 @@ async function request(method, path, body = null) {
     res = await fetch(`${BASE_URL}${path}`, {
       method,
       headers,
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(path === '/auth/etlab/verify' ? 55000 : 30000),
       body: body ? JSON.stringify(body) : undefined,
     });
   } catch {
