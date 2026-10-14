@@ -2,7 +2,7 @@ import { createRouter } from '../lib/router.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import supabase from '../db/supabase.js';
-import { EtlabError, normalizeRegistrationNumber, readEtlabSignupProof, verifyEtlabStudent } from '../lib/etlab.js';
+import { EtlabError, readEtlabSignupProof, verifyEtlabStudent } from '../lib/etlab.js';
 
 const router = createRouter();
 const validEmail = value => typeof value === 'string' && value.trim().length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
