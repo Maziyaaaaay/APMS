@@ -114,6 +114,8 @@ export default function FacultyPortal() {
 
 function ApprovedSubmissionsTab({ certs, students }) {
     const [search, setSearch] = useState('');
+    const [fromDate, setFromDate] = useState('');
+    const [toDate, setToDate] = useState('');
     const [openingId, setOpeningId] = useState(null);
     const approved = certs.filter(cert => cert.status === 'approved');
     const rows = approved.map(cert => ({
@@ -122,30 +124,54 @@ function ApprovedSubmissionsTab({ certs, students }) {
         activity: getActivityForCertificate(cert),
     }));
     const query = search.trim().toLowerCase();
-    const filtered = rows.filter(({ cert, student, activity }) => !query ||
-        [student?.name, student?.roll_no, student?.rollNo, activity?.name, cert.event_name]
-            .some(value => String(value || '').toLowerCase().includes(query)));
-
+    const invalidRange = Boolean(fromDate && toDate && fromDate > toDate);
+    const filtered = rows.filter(({ cert, student, activity }) => {
+        const approvedOn = String(cert.reviewed_at || cert.reviewedAt || '').slice(0, 10);
+        const inDateRange = (!fromDate || (approvedOn && approvedOn >= fromDate))
+            && (!toDate || (approvedOn && approvedOn <= toDate));
+        const matchesSearch = !query || [student?.name, student?.roll_no, student?.rollNo, activity?.name, cert.event_name]
+            .some(value => String(value || '').toLowerCase().includes(query));
+        return inDateRange && matchesSearch;
+    });
+    const exportRows = filtered.map(({ cert, student, activity }) => [
+        student?.name || '',
+        student?.roll_no || student?.rollNo || '',
+        activity?.name || cert.activityName || '',
+        cert.event_name || '',
+        cert.activity_date || '',
+        activity?.group ? `Group ${activity.group}` : '',
+        cert.points_awarded ?? cert.pointsAwarded ?? 0,
+        cert.reviewed_at || cert.reviewedAt ? String(cert.reviewed_at || cert.reviewedAt).slice(0, 10) : '',
+    ]);
+    const headers = ['Student', 'KTU registration', 'Activity', 'Certificate or event', 'Date on certificate', 'Group', 'Approved points', 'Approved on'];
+    const rangeLabel = fromDate || toDate
+        ? `${fromDate || 'Any date'} to ${toDate || 'Any date'}`
+        : 'All approval dates';
+    const downloadFile = (content, type, filename) => {
+        const url = URL.createObjectURL(new Blob([content], { type }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    };
     const exportCsv = () => {
         const safe = value => {
             const raw = String(value ?? '');
             const guarded = /^[=+@-]/.test(raw.trimStart()) ? `'${raw}` : raw;
             return `"${guarded.replaceAll('"', '""')}"`;
         };
-        const headers = ['Student', 'KTU registration', 'Activity', 'Certificate or event', 'Date on certificate', 'Group', 'Approved points', 'Approved on'];
-        const data = filtered.map(({ cert, student, activity }) => [
-            student?.name || '', student?.roll_no || student?.rollNo || '',
-            activity?.name || cert.activityName || '', cert.event_name || '',
-            cert.activity_date || '', activity?.group || '',
-            cert.points_awarded ?? cert.pointsAwarded ?? 0, cert.reviewed_at ? cert.reviewed_at.slice(0, 10) : '',
-        ]);
-        const csv = [headers, ...data].map(row => row.map(safe).join(',')).join('\r\n');
-        const url = URL.createObjectURL(new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8' }));
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'apms-approved-submissions.csv';
-        link.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        const csv = [headers, ...exportRows].map(row => row.map(safe).join(',')).join('\r\n');
+        downloadFile('\uFEFF' + csv, 'text/csv;charset=utf-8', 'apms-approved-submissions.csv');
+    };
+    const exportMarkdown = () => {
+        const safe = value => String(value ?? '').replaceAll('|', '\\|').replace(/\r?\n/g, ' ');
+        const table = [
+            `| ${headers.map(safe).join(' | ')} |`,
+            `| ${headers.map(() => '---').join(' | ')} |`,
+            ...exportRows.map(row => `| ${row.map(safe).join(' | ')} |`),
+        ].join('\n');
+        downloadFile(`# APMS approved submissions\n\nApproved on: ${rangeLabel}\n\nRecords: ${filtered.length}\n\n${table}\n`, 'text/markdown;charset=utf-8', 'apms-approved-submissions.md');
     };
     const openProof = async cert => {
         const popup = window.open('about:blank', '_blank');
@@ -161,17 +187,28 @@ function ApprovedSubmissionsTab({ certs, students }) {
         } finally { setOpeningId(null); }
     };
 
-    return <div className="role-records-page">
-        <div className="role-intro"><div><span className="role-kicker">FACULTY RECORD</span><h1>Approved submissions<em>.</em></h1><p>Verified details and awarded points, ready to reference for official entry.</p></div><span className="review-count">{approved.length} approved</span></div>
-        <div className="record-toolbar"><label><span className="material-symbols-outlined">search</span><input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Student, registration number or certificate" /></label><button type="button" onClick={exportCsv} disabled={!filtered.length}>Download CSV <span className="material-symbols-outlined">download</span></button></div>
+    return <div className="role-records-page approved-submissions-page">
+        <div className="role-intro"><div><span className="role-kicker">FACULTY RECORD</span><h1>Approved submissions<em>.</em></h1><p>Choose an approval date range to prepare a focused report.</p></div><span className="review-count">{filtered.length} of {approved.length} approved</span></div>
+        <div className="approved-submission-tools">
+            <label className="approved-submission-search"><span className="material-symbols-outlined">search</span><input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Find a student, registration or event" /></label>
+            <div className="approved-date-range">
+                <label>Approved from<input type="date" value={fromDate} max={toDate || undefined} onChange={event => setFromDate(event.target.value)} /></label>
+                <span aria-hidden="true">to</span>
+                <label>Approved through<input type="date" value={toDate} min={fromDate || undefined} onChange={event => setToDate(event.target.value)} /></label>
+            </div>
+            <div className="approved-export-actions">
+                <button type="button" onClick={exportCsv} disabled={!filtered.length || invalidRange}><span className="material-symbols-outlined">table_view</span>Download CSV</button>
+                <button type="button" onClick={exportMarkdown} disabled={!filtered.length || invalidRange}><span className="material-symbols-outlined">description</span>Download Markdown</button>
+            </div>
+        </div>
+        {invalidRange && <p className="approved-range-error" role="alert">The start date must be before or the same as the end date.</p>}
         {filtered.length ? <div className="record-list">{filtered.map(({ cert, student, activity }) => <article className="record-item faculty-record" key={cert.id}>
             <div className="record-item-head"><span className="record-item-icon material-symbols-outlined">workspace_premium</span><div><span className="role-kicker">{student?.name || 'Student'} · {student?.roll_no || student?.rollNo || 'No registration number'}</span><h2>{cert.event_name || activity?.name || 'Certificate'}</h2><p>{activity?.name || 'Activity'} · Group {activity?.group || '—'} · {cert.activity_date ? `Certificate date ${new Date(`${cert.activity_date}T00:00:00`).toLocaleDateString('en-IN')}` : 'No date shown'}</p></div><span className="badge badge-approved">Approved</span></div>
             <div className="record-item-foot"><span>{cert.level_selected || cert.selectedLevel || 'Verified activity'}</span><strong>{cert.points_awarded ?? cert.pointsAwarded ?? 0} <small>awarded points</small></strong><button type="button" disabled={openingId === cert.id} onClick={() => openProof(cert)}>{openingId === cert.id ? 'Opening…' : 'View proof'} <span className="material-symbols-outlined">open_in_new</span></button></div>
-        </article>)}</div> : <div className="role-empty"><span className="material-symbols-outlined">assignment_turned_in</span><h3>{search ? 'No matching submissions' : 'No approved submissions yet'}</h3><p>{search ? 'Try another search.' : 'Approved certificates will appear here.'}</p></div>}
-        <p className="roster-disclaimer">CSV is a reference export. Confirm the official portal’s required fields before entering or uploading records.</p>
+        </article>)}</div> : <div className="role-empty"><span className="material-symbols-outlined">assignment_turned_in</span><h3>{search || fromDate || toDate ? 'No submissions in this view' : 'No approved submissions yet'}</h3><p>{search || fromDate || toDate ? 'Adjust the search or approval dates.' : 'Approved certificates will appear here.'}</p></div>}
+        <p className="roster-disclaimer">Exports include the visible search results and approval dates. CSV and Markdown are reference reports; confirm official portal requirements before entering records.</p>
     </div>;
 }
-
 function StudentApprovalsTab({ requests, onRefresh }) {
     const [busyId, setBusyId] = useState(null);
     const decide = async (account, status) => {
@@ -420,14 +457,86 @@ function ReviewModal({ cert, student, faculty, onClose, onRefresh }) {
 function StudentsTab({ certs, students }) {
     const [search, setSearch] = useState('');
     const [semester, setSemester] = useState('');
-    const filtered = students.filter(student => {
-        const identity = `${student.name || ''} ${student.roll_no || student.rollNo || ''}`.toLowerCase();
-        return identity.includes(search.trim().toLowerCase()) && (!semester || String(student.semester) === semester);
+    const [progressFilter, setProgressFilter] = useState('all');
+    const [sortOrder, setSortOrder] = useState('remaining');
+    const groups = [
+        { key: 'group1', label: 'Group I' },
+        { key: 'group2', label: 'Group II' },
+        { key: 'group3', label: 'Group III' },
+    ];
+    const rows = students.map(student => {
+        const studentCerts = certs.filter(cert => (cert.student_id || cert.studentId) === student.id);
+        const type = student.studentType || student.student_type || 'regular';
+        const summary = calculateStudentSummary(studentCerts, type);
+        const pending = studentCerts.filter(cert => cert.status === 'pending').length;
+        return { student, studentCerts, summary, pending };
     });
-    const waiting = students.filter(student => certs.some(cert => (cert.student_id || cert.studentId) === student.id && cert.status === 'pending')).length;
-    return <div className="faculty-students-page"><div className="role-intro"><div><span className="role-kicker">YOUR DEPARTMENT</span><h1>Know your students<em>.</em></h1><p>Approved points, group balance, and submissions in one clear view.</p></div><div className="students-count"><strong>{students.length}</strong><span>students</span><strong>{waiting}</strong><span>with pending work</span></div></div><div className="record-toolbar"><label><span className="material-symbols-outlined">search</span><input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Find a name or registration number" /></label><select value={semester} onChange={event => setSemester(event.target.value)} aria-label="Filter by semester"><option value="">All semesters</option>{[1,2,3,4,5,6,7,8].map(number => <option key={number} value={number}>Semester {number}</option>)}</select></div>{filtered.length ? <div className="student-roster-list">{filtered.map(student => {const studentCerts = certs.filter(cert => (cert.student_id || cert.studentId) === student.id);const summary = calculateStudentSummary(studentCerts, student.studentType || student.student_type || 'regular');const type = student.studentType || student.student_type || 'regular';const target = type === 'lateral' ? 90 : type === 'pwd' ? 60 : 120;const pending = studentCerts.filter(cert => cert.status === 'pending').length;const initials = student.name?.split(' ').map(part => part[0]).join('').slice(0,2).toUpperCase() || 'ST';return <article className="student-roster-row" key={student.id}><div className="roster-person"><span className="roster-avatar">{student.profile_url || student.profileUrl ? <img src={student.profile_url || student.profileUrl} alt="" /> : initials}</span><div><h2>{student.name}</h2><p>{student.roll_no || student.rollNo || 'Registration unavailable'} · S{student.semester || '—'}</p></div></div><div className="roster-group-bars">{[[summary.group1,'I'],[summary.group2,'II'],[summary.group3,'III']].map(([points,group]) => <div key={group}><span>{group}</span><i><b style={{width:`${Math.min(100,((points || 0)/40)*100)}%`}} /></i><strong>{points || 0}</strong></div>)}</div><div className="roster-total"><strong>{summary.total}<small>/{target}</small></strong><span>{pending ? `${pending} awaiting review` : summary.eligible ? 'Estimated target met' : 'In progress'}</span></div></article>})}</div> : <div className="role-empty"><span className="material-symbols-outlined">person_search</span><h3>No students found</h3><p>Try another search or semester.</p></div>}<p className="roster-disclaimer">Point totals are estimates from approved submissions. Faculty review determines certificate status.</p></div>;
+    const completed = rows.filter(row => row.summary.eligible).length;
+    const pendingCount = rows.reduce((sum, row) => sum + row.pending, 0);
+    const visible = rows.filter(({ student, summary, pending }) => {
+        const identity = `${student.name || ''} ${student.roll_no || student.rollNo || ''}`.toLowerCase();
+        const matchesSearch = identity.includes(search.trim().toLowerCase());
+        const matchesSemester = !semester || String(student.semester || '') === semester;
+        const matchesProgress = progressFilter === 'all'
+            || (progressFilter === 'complete' && summary.eligible)
+            || (progressFilter === 'incomplete' && !summary.eligible)
+            || (progressFilter === 'pending' && pending > 0);
+        return matchesSearch && matchesSemester && matchesProgress;
+    }).sort((a, b) => {
+        if (sortOrder === 'name') return String(a.student.name || '').localeCompare(String(b.student.name || ''));
+        if (sortOrder === 'points') return b.summary.total - a.summary.total;
+        return (b.summary.required - b.summary.total) - (a.summary.required - a.summary.total);
+    });
+    return <div className="faculty-students-page">
+        <div className="role-intro">
+            <div><span className="role-kicker">YOUR DEPARTMENT</span><h1>Student progress<em>.</em></h1><p>See approved points by group, each student’s remaining target, and pending reviews.</p></div>
+            <span className="review-count">{visible.length} shown · {students.length} total</span>
+        </div>
+        <div className="faculty-student-metrics">
+            <article><span className="material-symbols-outlined">groups</span><div><strong>{students.length}</strong><small>Students</small></div></article>
+            <article><span className="material-symbols-outlined">task_alt</span><div><strong>{completed}</strong><small>Target met</small></div></article>
+            <article><span className="material-symbols-outlined">pending_actions</span><div><strong>{rows.length - completed}</strong><small>Points needed</small></div></article>
+            <article><span className="material-symbols-outlined">hourglass_top</span><div><strong>{pendingCount}</strong><small>Pending certificates</small></div></article>
+        </div>
+        <div className="faculty-student-filters">
+            <label className="faculty-student-search"><span className="material-symbols-outlined">search</span><input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Search name or KTU registration" /></label>
+            <select value={semester} onChange={event => setSemester(event.target.value)} aria-label="Filter by semester"><option value="">All semesters</option>{[1,2,3,4,5,6,7,8].map(number => <option key={number} value={number}>Semester {number}</option>)}</select>
+            <select value={progressFilter} onChange={event => setProgressFilter(event.target.value)} aria-label="Filter by progress"><option value="all">All progress</option><option value="incomplete">Points needed</option><option value="complete">Target met</option><option value="pending">Pending review</option></select>
+            <select value={sortOrder} onChange={event => setSortOrder(event.target.value)} aria-label="Sort students"><option value="remaining">Most points remaining</option><option value="points">Highest points first</option><option value="name">Name A–Z</option></select>
+        </div>
+        {visible.length ? <div className="faculty-student-list">
+            {visible.map(({ student, summary, pending }) => {
+                const initials = student.name?.split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase() || 'ST';
+                const totalRemaining = Math.max(0, summary.required - summary.total);
+                return <article className="faculty-student-card" key={student.id}>
+                    <div className="faculty-student-person">
+                        <span className="roster-avatar">{student.profile_url || student.profileUrl ? <img src={student.profile_url || student.profileUrl} alt="" /> : initials}</span>
+                        <div><h2>{student.name || 'Student'}</h2><p>{student.roll_no || student.rollNo || 'Registration unavailable'}</p><span>Semester {student.semester || '—'}</span></div>
+                    </div>
+                    <div className="faculty-student-groups">
+                        {groups.map(group => {
+                            const points = summary[group.key] || 0;
+                            const minimum = summary.perGroupMin;
+                            return <div className="faculty-group-progress" key={group.key}>
+                                <div className="faculty-group-label"><span>{group.label}</span><strong>{points}<small> / 40 pts</small></strong></div>
+                                <div className="faculty-group-track" role="progressbar" aria-label={`${group.label} points`} aria-valuemin="0" aria-valuemax="40" aria-valuenow={points}><span style={{ width: `${Math.min(100, points / 40 * 100)}%` }} /></div>
+                                <small className={points >= minimum ? 'group-minimum met' : 'group-minimum'}>{points >= minimum ? `Minimum ${minimum} met` : `${minimum - points} to ${minimum} minimum`}</small>
+                            </div>;
+                        })}
+                    </div>
+                    <div className="faculty-student-score">
+                        <span>Total points</span>
+                        <strong>{summary.total}<small> / {summary.required}</small></strong>
+                        <div className="faculty-total-track" role="progressbar" aria-label="Total activity points" aria-valuemin="0" aria-valuemax={summary.required} aria-valuenow={Math.min(summary.total, summary.required)}><span style={{ width: `${Math.min(100, summary.total / Math.max(1, summary.required) * 100)}%` }} /></div>
+                        <small className={summary.eligible ? 'faculty-progress-status met' : 'faculty-progress-status'}>{summary.eligible ? 'Target met' : `${totalRemaining} points to target`}</small>
+                        {pending > 0 && <span className="faculty-pending-pill">{pending} awaiting review</span>}
+                    </div>
+                </article>;
+            })}
+        </div> : <div className="role-empty"><span className="material-symbols-outlined">person_search</span><h3>No students match this view</h3><p>Try another search or adjust the filters.</p></div>}
+        <p className="roster-disclaimer">Only approved submissions count toward these totals. Each group shows its points out of 40 and the student type’s minimum target.</p>
+    </div>;
 }
-
 function ProfileTab({ user, onLogout, onRefresh, onUpdateUser }) {
     const [editing, setEditing] = useState(false);
     const [name, setName] = useState(user?.name || '');
