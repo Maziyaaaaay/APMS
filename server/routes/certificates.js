@@ -90,13 +90,25 @@ router.post('/', requireRole('student'), async (req, res) => {
     try { receipt = jwt.verify(uploadReceipt, process.env.JWT_SECRET); }
     catch { return res.status(400).json({ error: 'Upload expired. Upload the document again.' }); }
     if (receipt.purpose !== 'certificate-upload' || receipt.userId !== req.user.id) return res.status(403).json({ error: 'Invalid upload ownership.' });
-    const { data: info, error: infoError } = await supabase.storage.from('apms-certificates').info(receipt.objectPath);
-    if (infoError || !info) return res.status(400).json({ error: 'Document upload is incomplete. Try again.' });
-    const metadata = info.metadata || {};
-    if (Number(metadata.size) !== receipt.size || metadata.mimetype !== receipt.mimeType) return res.status(400).json({ error: 'Uploaded document does not match the declared file.' });
+    if (typeof receipt.objectPath !== 'string' || !receipt.objectPath.startsWith(`${req.user.id}/`) ||
+        !['application/pdf', 'image/jpeg', 'image/png'].includes(receipt.mimeType) ||
+        !Number.isInteger(receipt.size) || receipt.size <= 0 || receipt.size > 10 * 1024 * 1024) {
+      return res.status(403).json({ error: 'Invalid upload receipt.' });
+    }
+    // Storage metadata varies between signed upload methods. Check the stored bytes instead.
+    const { data: document, error: downloadError } = await supabase.storage.from('apms-certificates').download(receipt.objectPath);
+    if (downloadError || !document) return res.status(400).json({ error: 'Document upload is incomplete. Choose the file again.' });
+    const bytes = Buffer.from(await document.arrayBuffer());
+    if (bytes.length !== receipt.size) return res.status(400).json({ error: 'The upload was incomplete. Choose the file again.' });
+    const validFile = receipt.mimeType === 'application/pdf'
+      ? bytes.subarray(0, 5).toString() === '%PDF-'
+      : receipt.mimeType === 'image/png'
+        ? bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+        : bytes.length >= 4 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[bytes.length - 2] === 0xff && bytes[bytes.length - 1] === 0xd9;
+    if (!validFile) return res.status(400).json({ error: 'This file is not a valid PDF, JPG, or PNG. Choose the certificate again.' });
     objectPath = receipt.objectPath;
     fileMimeType = receipt.mimeType;
-    fileSizeBytes = receipt.size;
+    fileSizeBytes = bytes.length;
   } else if (fileUrl) {
     const match = /^data:(application\/pdf|image\/(?:jpeg|png));base64,([A-Za-z0-9+/=]+)$/.exec(fileUrl);
     if (!match) return res.status(400).json({ error: 'Upload a PDF, JPG, or PNG certificate.' });
