@@ -1,4 +1,4 @@
-export function compressImage(file, maxWidth = 400, quality = 0.8) {
+export function compressImage(file, maxWidth = 400, quality = 0.8, outputMimeType = null) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -26,7 +26,7 @@ export function compressImage(file, maxWidth = 400, quality = 0.8) {
 
                 // For PNGs we could use image/png, but JPEG compresses much better for base64 storage
                 // If it's explicitly a transparent PNG, we might want to keep it PNG. However, JPEG is safer.
-                const mimeType = (file.type === 'image/png') ? 'image/png' : 'image/jpeg';
+                const mimeType = outputMimeType || ((file.type === 'image/png') ? 'image/png' : 'image/jpeg');
                 
                 const dataUrl = canvas.toDataURL(mimeType, quality);
                 resolve(dataUrl);
