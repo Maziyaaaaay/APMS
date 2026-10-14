@@ -5,11 +5,11 @@ import { getCurrentUser, logout } from '../utils/auth';
 import { getCertificates, getUsers, getAccountRequests, reviewAccount, updateCertificate, updateUser, getCirculars, getCertificateFileUrl } from '../utils/storage';
 import { compressImage } from '../utils/imageCompressor';
 import { getActivityForCertificate, calculateStudentSummary } from '../utils/points';
-import { generateApprovalPDF } from '../utils/pdfGenerator';
 
 const NAV_ITEMS = [
     { key: 'dashboard',  icon: 'dashboard',      label: 'Dashboard'       },
     { key: 'reviews',    icon: 'fact_check',      label: 'Pending Reviews' },
+    { key: 'submissions', icon: 'assignment_turned_in', label: 'Approved Submissions' },
     { key: 'approvals',  icon: 'how_to_reg',      label: 'Student Requests' },
     { key: 'students',   icon: 'groups',          label: 'My Students'     },
     { key: 'profile',    icon: 'person',          label: 'Profile'         },
@@ -98,6 +98,7 @@ export default function FacultyPortal() {
                             onRefresh={refreshData}
                         />
                     )}
+                    {tab === 'submissions' && <ApprovedSubmissionsTab certs={certs} students={students} />}
                     {tab === 'approvals' && <StudentApprovalsTab requests={accountRequests} onRefresh={refreshData} />}
                     {tab === 'students' && (
                         <StudentsTab certs={certs} students={students} />
@@ -109,6 +110,66 @@ export default function FacultyPortal() {
             </main>
         </div>
     );
+}
+
+function ApprovedSubmissionsTab({ certs, students }) {
+    const [search, setSearch] = useState('');
+    const [openingId, setOpeningId] = useState(null);
+    const approved = certs.filter(cert => cert.status === 'approved');
+    const rows = approved.map(cert => ({
+        cert,
+        student: cert.student || students.find(item => item.id === (cert.student_id || cert.studentId)),
+        activity: getActivityForCertificate(cert),
+    }));
+    const query = search.trim().toLowerCase();
+    const filtered = rows.filter(({ cert, student, activity }) => !query ||
+        [student?.name, student?.roll_no, student?.rollNo, activity?.name, cert.event_name]
+            .some(value => String(value || '').toLowerCase().includes(query)));
+
+    const exportCsv = () => {
+        const safe = value => {
+            const raw = String(value ?? '');
+            const guarded = /^[=+@-]/.test(raw.trimStart()) ? `'${raw}` : raw;
+            return `"${guarded.replaceAll('"', '""')}"`;
+        };
+        const headers = ['Student', 'KTU registration', 'Activity', 'Certificate or event', 'Date on certificate', 'Group', 'Approved points', 'Approved on'];
+        const data = filtered.map(({ cert, student, activity }) => [
+            student?.name || '', student?.roll_no || student?.rollNo || '',
+            activity?.name || cert.activityName || '', cert.event_name || '',
+            cert.activity_date || '', activity?.group || '',
+            cert.points_awarded ?? cert.pointsAwarded ?? 0, cert.reviewed_at ? cert.reviewed_at.slice(0, 10) : '',
+        ]);
+        const csv = [headers, ...data].map(row => row.map(safe).join(',')).join('\r\n');
+        const url = URL.createObjectURL(new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8' }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'apms-approved-submissions.csv';
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    };
+    const openProof = async cert => {
+        const popup = window.open('about:blank', '_blank');
+        if (popup) popup.opener = null;
+        setOpeningId(cert.id);
+        try {
+            const { url } = await getCertificateFileUrl(cert.id);
+            if (popup) popup.location.href = url;
+            else window.location.href = url;
+        } catch (error) {
+            popup?.close();
+            window.alert(error.message);
+        } finally { setOpeningId(null); }
+    };
+
+    return <div className="role-records-page">
+        <div className="role-intro"><div><span className="role-kicker">FACULTY RECORD</span><h1>Approved submissions<em>.</em></h1><p>Verified details and awarded points, ready to reference for official entry.</p></div><span className="review-count">{approved.length} approved</span></div>
+        <div className="record-toolbar"><label><span className="material-symbols-outlined">search</span><input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Student, registration number or certificate" /></label><button type="button" onClick={exportCsv} disabled={!filtered.length}>Download CSV <span className="material-symbols-outlined">download</span></button></div>
+        {filtered.length ? <div className="record-list">{filtered.map(({ cert, student, activity }) => <article className="record-item faculty-record" key={cert.id}>
+            <div className="record-item-head"><span className="record-item-icon material-symbols-outlined">workspace_premium</span><div><span className="role-kicker">{student?.name || 'Student'} · {student?.roll_no || student?.rollNo || 'No registration number'}</span><h2>{cert.event_name || activity?.name || 'Certificate'}</h2><p>{activity?.name || 'Activity'} · Group {activity?.group || '—'} · {cert.activity_date ? `Certificate date ${new Date(`${cert.activity_date}T00:00:00`).toLocaleDateString('en-IN')}` : 'No date shown'}</p></div><span className="badge badge-approved">Approved</span></div>
+            <div className="record-item-foot"><span>{cert.level_selected || cert.selectedLevel || 'Verified activity'}</span><strong>{cert.points_awarded ?? cert.pointsAwarded ?? 0} <small>awarded points</small></strong><button type="button" disabled={openingId === cert.id} onClick={() => openProof(cert)}>{openingId === cert.id ? 'Opening…' : 'View proof'} <span className="material-symbols-outlined">open_in_new</span></button></div>
+        </article>)}</div> : <div className="role-empty"><span className="material-symbols-outlined">assignment_turned_in</span><h3>{search ? 'No matching submissions' : 'No approved submissions yet'}</h3><p>{search ? 'Try another search.' : 'Approved certificates will appear here.'}</p></div>}
+        <p className="roster-disclaimer">CSV is a reference export. Confirm the official portal’s required fields before entering or uploading records.</p>
+    </div>;
 }
 
 function StudentApprovalsTab({ requests, onRefresh }) {
@@ -195,9 +256,6 @@ function ReviewModal({ cert, student, faculty, onClose, onRefresh }) {
                 pointsAwarded: Number(pointsOverride),
                 notes: remark || (action === 'approved' ? 'Approved by SFA' : 'Rejected by SFA'),
             });
-            if (action === 'approved') {
-                generateApprovalPDF({ ...cert, pointsAwarded: Number(pointsOverride) }, student, faculty);
-            }
             setDone(action);
             setTimeout(() => { onRefresh(); onClose(); }, 1500);
         } catch (err) {
@@ -218,7 +276,7 @@ function ReviewModal({ cert, student, faculty, onClose, onRefresh }) {
                         <div style={{ fontSize: 18, fontWeight: 700, marginTop: 12 }}>
                             Certificate {done === 'approved' ? 'Approved!' : 'Rejected'}
                         </div>
-                        {done === 'approved' && <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6 }}>PDF has been downloaded.</div>}
+                        {done === 'approved' && <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6 }}>Added to Approved Submissions.</div>}
                     </div>
                 </div>
             </div>
@@ -248,11 +306,10 @@ function ReviewModal({ cert, student, faculty, onClose, onRefresh }) {
                         {[
                             ['Activity', activity?.name || cert.activityName || 'Unknown Activity'],
                             ['Event', cert.event_name || ' / '],
-                            ['Academic year', cert.academic_year || cert.academicYear || 'Not recorded'],
-                            ['Group', `Group ${activity?.group || '?'}`],
+                                                        ['Group', `Group ${activity?.group || '?'}`],
                             ['Category', activity?.category || ' / '],
                             ['Level', cert.level_selected || cert.selectedLevel || 'N/A'],
-                            ['Activity date', cert.activity_date || cert.activityDate ? new Date(`${cert.activity_date || cert.activityDate}T00:00:00`).toLocaleDateString('en-IN') : 'N/A'],
+                            ['Date on certificate', cert.activity_date || cert.activityDate ? new Date(`${cert.activity_date || cert.activityDate}T00:00:00`).toLocaleDateString('en-IN') : 'Not provided'],
                             ['Description', cert.description || ' / '],
                         ].map(([label, val]) => (
                             <div key={label} style={{ display: 'flex', gap: 10, fontSize: 13, padding: '9px 14px', borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}>
@@ -339,11 +396,11 @@ function ReviewModal({ cert, student, faculty, onClose, onRefresh }) {
                     </button>
                     <button className="btn btn-success" style={{ flex: 1 }} onClick={() => handle('approved')} disabled={submitting}>
                         <span className="material-symbols-outlined" style={{ fontSize: 16 }}>check</span>
-                        Approve + PDF
+                        Approve
                     </button>
                 </div>
                 <div style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', padding: '8px 0 4px' }}>
-                    Approval auto-generates and downloads a PDF certificate
+                    Approved points appear in the student record and Approved Submissions.
                 </div>
             </div>
         </div>
