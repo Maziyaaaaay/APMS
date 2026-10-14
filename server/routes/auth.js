@@ -93,7 +93,16 @@ router.post('/etlab/verify', async (req, res) => {
   }
   try {
     const identity = await verifyEtlabStudent({ username, password, registrationNo });
-    return res.json({ identity: { name: identity.name, registrationNo: identity.registrationNo }, proof: identity.proof });
+    return res.json({
+      identity: {
+        name: identity.name,
+        registrationNo: identity.registrationNo,
+        email: identity.email,
+        phone: identity.phone,
+        department: identity.department,
+      },
+      proof: identity.proof,
+    });
   } catch (error) {
     if (error instanceof EtlabError) return res.status(error.status).json({ error: error.message, code: error.code });
     return res.status(502).json({ error: 'ET Lab verification failed. Please try again later.' });
