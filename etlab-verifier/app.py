@@ -237,7 +237,9 @@ def login_and_read_identity(username, password):
             # Only read the student's own contact table; the profile also has
             # separate parent/family contacts that must not be mixed in.
             student_contact_table = profile_table_with_labels(profile_soup, {"Student Mobile No"})
-            student_email = profile_email_near_label(student_contact_table, "Student Mobile No", {
+            # Scan the full profile for contact rows, anchored to the student's
+            # mobile row. ET Lab can nest or split the visual contact tables.
+            student_email = profile_email_near_label(profile_soup, "Student Mobile No", {
                 "Email", "E-mail", "Email Id", "Student Email", "Student Email Id", "College Email Id",
             })
             if not student_email and student_contact_table:
