@@ -68,13 +68,12 @@ router.post('/', requireRole('student'), async (req, res) => {
   if (!activityId) return res.status(400).json({ error: 'activityId is required' });
   const activity = ACTIVITIES[activityId];
   if (!activity) return res.status(400).json({ error: 'Choose an activity from the current catalog.' });
-  if (typeof eventName !== 'string' || !eventName.trim() || eventName.trim().length > 180) return res.status(400).json({ error: 'A valid event or activity name is required.' });
-  if (!isValidIsoDate(activityDate)) return res.status(400).json({ error: 'A valid activity date is required.' });
-  if (activityDate > getDateInTimeZone()) return res.status(400).json({ error: 'Activity records must be for a completed activity.' });
-  const normalizedAcademicYear = normalizeAcademicYear(academicYear);
-  if (!normalizedAcademicYear) {
-    return res.status(400).json({ error: 'Enter a valid academic year, such as 2025-26.' });
-  }
+  const recordedName = typeof eventName === 'string' && eventName.trim() ? eventName.trim() : activity.name;
+  if (recordedName.length > 180) return res.status(400).json({ error: 'Certificate name must be 180 characters or fewer.' });
+  if (activityDate && !isValidIsoDate(activityDate)) return res.status(400).json({ error: 'Enter a valid date shown on the certificate.' });
+  if (activityDate && activityDate > getDateInTimeZone()) return res.status(400).json({ error: 'The certificate date cannot be in the future.' });
+  const normalizedAcademicYear = academicYear ? normalizeAcademicYear(academicYear) : null;
+  if (academicYear && !normalizedAcademicYear) return res.status(400).json({ error: 'Enter a valid academic year, such as 2025-26.' });
   if (description !== undefined && (typeof description !== 'string' || description.length > 2000)) return res.status(400).json({ error: 'Activity details must be 2,000 characters or fewer.' });
   if (fileName !== undefined && fileName !== null && (typeof fileName !== 'string' || fileName.length > 255)) return res.status(400).json({ error: 'The uploaded file name must be 255 characters or fewer.' });
   if (!fileUrl && !uploadReceipt) return res.status(400).json({ error: 'A certificate document is required.' });
@@ -134,8 +133,8 @@ router.post('/', requireRole('student'), async (req, res) => {
       level_selected: levelSelected,
       hours: activity.type === 'hours' ? Number(hours) : null,
       description,
-      event_name: String(eventName).trim(),
-      activity_date: activityDate,
+      event_name: recordedName,
+      activity_date: activityDate || null,
       academic_year: normalizedAcademicYear,
       points_awarded: submittedPoints,
       file_url: objectPath,
