@@ -69,7 +69,12 @@ export async function verifyEtlabStudent({ username, password, registrationNo })
     body: JSON.stringify({ username, password, registrationNo: expectedRegistrationNo }),
   });
   if (verification.response.status === 401) {
-    throw new EtlabError('invalid_credentials', 'ET Lab username or password was not accepted.', 401);
+    // The verifier uses 401 for both a bad shared key and rejected ET Lab
+    // credentials. Only the explicit error code means the student login failed.
+    if (verification.body?.error === 'invalid_credentials') {
+      throw new EtlabError('invalid_credentials', 'ET Lab username or password was not accepted.', 401);
+    }
+    throw new EtlabError('verifier_unauthorized', 'ET Lab verification is not connected correctly. Contact the APMS administrator.', 503);
   }
   if (verification.response.status === 403) {
     throw new EtlabError('registration_mismatch', 'The COET ET Lab profile does not match the KTU registration number entered.', 403);
