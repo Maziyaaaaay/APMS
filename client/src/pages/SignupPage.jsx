@@ -103,7 +103,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="login-page">
+    <div className="login-page signup-page">
       <AmbientBackdrop />
       <div className="login-brand-panel">
         <div className="login-brand-logo"><BrandLogo /></div>
@@ -121,9 +121,10 @@ export default function SignupPage() {
 
       <div className="login-form-panel">
         <div className="login-form-inner" style={{ maxWidth: 480 }}>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
-            <button className="theme-toggle" type="button" onClick={() => setDark(value => !value)} title={dark ? 'Switch to light mode' : 'Switch to dark mode'}>
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>{dark ? 'light_mode' : 'dark_mode'}</span>
+          <div className="login-theme-control">
+            <button className="login-theme-toggle signup-theme-toggle" type="button" onClick={() => setDark(value => !value)} aria-label={dark ? 'Switch to day mode' : 'Switch to night mode'} title={dark ? 'Switch to day mode' : 'Switch to night mode'}>
+              <span className="material-symbols-outlined" aria-hidden="true">{dark ? 'light_mode' : 'dark_mode'}</span>
+              <span>{dark ? 'Day mode' : 'Night mode'}</span>
             </button>
           </div>
           <div className="login-mobile-logo"><BrandLogo /></div>
