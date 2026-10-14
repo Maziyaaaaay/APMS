@@ -32,14 +32,6 @@ export async function signup(userData) {
   }
 }
 
-export async function verifyEtlabStudent(credentials) {
-  try {
-    return await api.post('/auth/etlab/verify', credentials);
-  } catch (err) {
-    return { error: err.message };
-  }
-}
-
 export function logout() {
   api.setToken(null);
   localStorage.removeItem('apms_user');

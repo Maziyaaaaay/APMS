@@ -115,14 +115,14 @@ export default function Login() {
                     <form onSubmit={handleLogin}>
                         {/* Username */}
                         <div className="form-group">
-                            <label className="form-label" htmlFor="username">{role === 'student' ? 'KTU Registration Number' : 'Username'}</label>
+                            <label className="form-label" htmlFor="username">{role === 'student' ? 'Email or KTU Registration Number' : 'Email or Username'}</label>
                             <div className="input-icon-wrap">
 
                                 <input
                                     className="input"
                                     id="username"
                                     type="text"
-                                    placeholder={role === 'student' ? 'Enter your KTU registration number' : `Enter ${role} username`}
+                                    placeholder={role === 'student' ? 'Enter your email or KTU registration number' : `Enter your ${role} email or username`}
                                     value={username}
                                     onChange={e => setUsername(e.target.value)}
                                     required

@@ -2,7 +2,6 @@ import { createRouter } from '../lib/router.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import supabase from '../db/supabase.js';
-import { EtlabError, readEtlabSignupProof, verifyEtlabStudent } from '../lib/etlab.js';
 
 const router = createRouter();
 const validEmail = value => typeof value === 'string' && value.trim().length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
@@ -31,7 +30,20 @@ router.post('/login', async (req, res) => {
     if (data && data.length > 0) {
       user = data[0];
     } else {
-      // Fallback: try matching by roll number
+      // Also allow signing in with the email address used during registration.
+      const { data: emailMatches, error: emailError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('role', role)
+        .eq('email', username)
+        .limit(1);
+      if (emailError) return res.status(500).json({ error: emailError.message });
+      if (emailMatches && emailMatches.length > 0) {
+        user = emailMatches[0];
+      }
+    }
+    if (!user) {
+      // Fallback: try matching by KTU registration number
       const { data: data2, error: err2 } = await supabase
         .from('users')
         .select('*')
@@ -84,50 +96,11 @@ router.post('/login', async (req, res) => {
   res.json({ token, user: safeUser });
 });
 
-router.post('/etlab/verify', async (req, res) => {
-  const username = typeof req.body.username === 'string' ? req.body.username.trim() : '';
-  const password = typeof req.body.password === 'string' ? req.body.password : '';
-  const registrationNo = typeof req.body.registrationNo === 'string' ? req.body.registrationNo.trim() : '';
-  if (!username || username.length > 100 || !password || password.length > 256 || registrationNo.length > 64) {
-    return res.status(400).json({ error: 'Enter your ET Lab username and password.' });
-  }
-  try {
-    const identity = await verifyEtlabStudent({ username, password, registrationNo });
-    return res.json({
-      identity: {
-        name: identity.name,
-        registrationNo: identity.registrationNo,
-        email: identity.email,
-        phone: identity.phone,
-        department: identity.department,
-      },
-      proof: identity.proof,
-    });
-  } catch (error) {
-    if (error instanceof EtlabError) return res.status(error.status).json({ error: error.message, code: error.code });
-    return res.status(502).json({ error: 'ET Lab verification failed. Please try again later.' });
-  }
-});
-
 router.post('/signup', async (req, res) => {
   let { role, password, email, phone, rollNo, department, studentType, designation, year, profileUrl } = req.body;
   let name = typeof req.body.name === 'string' ? req.body.name.trim() : '';
-  const etlabVerificationToken = typeof req.body.etlabVerificationToken === 'string' ? req.body.etlabVerificationToken : '';
   let registrationNo = role === 'student' ? String(rollNo || '').trim().toUpperCase() : '';
   let username = role === 'student' ? registrationNo : (typeof req.body.username === 'string' ? req.body.username.trim().toLowerCase() : '');
-
-  if (role === 'student') {
-    const verifiedIdentity = readEtlabSignupProof(etlabVerificationToken);
-    if (!verifiedIdentity) return res.status(401).json({ error: 'Verify your ET Lab identity again before creating your account.', code: 'etlab_verification_required' });
-    // Bind every imported profile field to the signed ET Lab verification result.
-    registrationNo = verifiedIdentity.registrationNo;
-    rollNo = verifiedIdentity.registrationNo;
-    username = verifiedIdentity.registrationNo;
-    name = verifiedIdentity.name;
-    email = verifiedIdentity.email;
-    phone = verifiedIdentity.phone;
-    department = verifiedIdentity.department;
-  }
 
   if (!username || !password || !name || !role || !email || !phone) {
     return res.status(400).json({ error: 'Name, email, phone number, and password are required.' });
