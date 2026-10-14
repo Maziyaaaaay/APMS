@@ -80,29 +80,66 @@ def is_login_page(soup, response_url):
     return "/user/login" in urlparse(response_url).path or "login" in page_title(soup)
 
 
+def normalize_profile_label(value):
+    return re.sub(r"[^a-z0-9]+", " ", value.casefold()).strip()
+
+
+def profile_cell_value(cell):
+    # ET Lab may render values as text, form controls, or links. Collect only
+    # the value cell so similarly named parent fields are never mixed in.
+    values = [cell.get_text(" ", strip=True)]
+    for field in cell.find_all(["input", "textarea", "select"]):
+        value = field.get("value") or ""
+        if not value and field.name == "select":
+            selected = field.find("option", selected=True)
+            value = selected.get_text(" ", strip=True) if selected else ""
+        if value:
+            values.append(value)
+    for link in cell.find_all("a", href=True):
+        href = link["href"].strip()
+        if href.casefold().startswith(("mailto:", "tel:")):
+            values.append(href.split(":", 1)[1])
+    return " ".join(dict.fromkeys(" ".join(value.split()) for value in values if value))
+
+
 def profile_value(soup, labels):
-    wanted = {label.casefold() for label in labels}
+    wanted = {normalize_profile_label(label) for label in labels}
+    if soup is None:
+        return ""
     for row in soup.find_all("tr"):
         cells = row.find_all(["th", "td"], recursive=False)
         if len(cells) < 2:
             continue
-        label = " ".join(cells[0].get_text(" ", strip=True).rstrip(":").split()).casefold()
+        label = normalize_profile_label(cells[0].get_text(" ", strip=True).rstrip(":"))
         if label in wanted:
-            return " ".join(cells[1].get_text(" ", strip=True).split())
+            return profile_cell_value(cells[1])
     return ""
 
 
 def profile_table_with_labels(soup, labels):
-    wanted = {label.casefold() for label in labels}
+    wanted = {normalize_profile_label(label) for label in labels}
     for table in soup.find_all("table"):
         for row in table.find_all("tr"):
             cells = row.find_all(["th", "td"], recursive=False)
             if len(cells) < 2:
                 continue
-            label = " ".join(cells[0].get_text(" ", strip=True).rstrip(":").split()).casefold()
+            label = normalize_profile_label(cells[0].get_text(" ", strip=True).rstrip(":"))
             if label in wanted:
                 return table
     return None
+
+
+EMAIL_PATTERN = re.compile(
+    r"[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?"
+    r"(?:\.[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?)+",
+    re.IGNORECASE,
+)
+
+
+def profile_email(soup, labels):
+    value = profile_value(soup, labels)
+    match = EMAIL_PATTERN.search(value)
+    return match.group(0) if match else ""
 
 
 def login_and_read_identity(username, password):
@@ -177,10 +214,12 @@ def login_and_read_identity(username, password):
             # Only read the student's own contact table; the profile also has
             # separate parent/family contacts that must not be mixed in.
             student_contact_table = profile_table_with_labels(profile_soup, {"Student Mobile No"})
-            student_email = profile_value(student_contact_table, {"Email", "College Email Id"})
+            student_email = profile_email(student_contact_table, {
+                "Email", "E-mail", "Email Id", "Student Email", "Student Email Id", "College Email Id",
+            })
             if not student_email:
                 college_email_table = profile_table_with_labels(profile_soup, {"College Email Id"})
-                student_email = profile_value(college_email_table, {"College Email Id"})
+                student_email = profile_email(college_email_table, {"College Email Id"})
             student_mobile = profile_value(student_contact_table, {"Student Mobile No"})
             department = profile_value(profile_soup, {"Department"})
 
