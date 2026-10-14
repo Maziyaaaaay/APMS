@@ -46,8 +46,8 @@ export default function SignupPage() {
 
   const handleVerifyEtlab = async () => {
     setError('');
-    if (!form.rollNo.trim() || !etlabUsername.trim() || !etlabPassword) {
-      setError('Enter your KTU registration number and ET Lab login details first.');
+    if (!etlabUsername.trim() || !etlabPassword) {
+      setError('Enter your ET Lab username and password first.');
       return;
     }
     const password = etlabPassword;
@@ -57,24 +57,33 @@ export default function SignupPage() {
       const result = await verifyEtlabStudent({
         username: etlabUsername.trim(),
         password,
-        registrationNo: form.rollNo.trim().toUpperCase(),
       });
       if (result.error) {
         setError(result.error);
         return;
       }
-      setEtlabIdentity(result.identity);
-      setEtlabProof(result.proof);
       const matchedDepartment = departments.find(department =>
         department.trim().toLowerCase() === String(result.identity.department || '').trim().toLowerCase()
       ) || '';
+      const missing = [
+        !result.identity.email && 'email',
+        !result.identity.phone && 'phone number',
+        !matchedDepartment && 'department',
+      ].filter(Boolean);
+      if (missing.length) {
+        setError(`Your ET Lab profile is missing ${missing.join(', ')}. Update your student profile in ET Lab, then verify again.`);
+        return;
+      }
+      setEtlabIdentity({ ...result.identity, department: matchedDepartment });
+      setEtlabProof(result.proof);
       setForm(current => ({
         ...current,
         name: result.identity.name,
         rollNo: result.identity.registrationNo,
-        email: current.email || result.identity.email || '',
-        phone: current.phone || result.identity.phone || '',
-        department: current.department || matchedDepartment,
+        username: result.identity.registrationNo,
+        email: result.identity.email,
+        phone: result.identity.phone,
+        department: matchedDepartment,
       }));
       setEtlabUsername('');
     } catch {
@@ -103,7 +112,7 @@ export default function SignupPage() {
       await handleVerifyEtlab();
       return;
     }
-    if (form.password !== form.confirmPassword) {
+    if (role !== 'student' && form.password !== form.confirmPassword) {
       setError('Passwords do not match.'); return;
     }
     if (form.password.length < 12) {
@@ -249,12 +258,8 @@ export default function SignupPage() {
                     <span className="material-symbols-outlined" aria-hidden="true">school</span>
                     <div>
                       <h3 id="etlab-verification-title">Verify your student account</h3>
-                      <p>Verify your account and prefill available profile details.</p>
+                      <p>Sign in once to import your verified student profile.</p>
                     </div>
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label" htmlFor="ktu-registration">KTU Registration Number *</label>
-                    <input id="ktu-registration" className="input" autoComplete="off" placeholder="e.g. KTE23CS001" value={form.rollNo} onChange={set('rollNo')} required />
                   </div>
                   <div className="form-group">
                     <label className="form-label" htmlFor="etlab-username">ET Lab Username *</label>
@@ -278,7 +283,7 @@ export default function SignupPage() {
                     <div className="etlab-verified-identity">
                       <span className="material-symbols-outlined" aria-hidden="true">verified</span>
                       <div><strong>{etlabIdentity.name}</strong><span>{etlabIdentity.registrationNo} · Verified with ET Lab</span></div>
-                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setEtlabIdentity(null); setEtlabProof(''); setForm(p => ({ ...p, name: '', rollNo: '' })); }}>Change</button>
+                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setEtlabIdentity(null); setEtlabProof(''); setForm(p => ({ ...p, name: '', rollNo: '', username: '', email: '', phone: '', department: '' })); }}>Change</button>
                     </div>
                   ) : (
                     <div className="form-row">
@@ -293,23 +298,42 @@ export default function SignupPage() {
                     </div>
                   )}
 
-              <div className="form-group">
-                <label className="form-label">Email *{role === 'student' && etlabIdentity?.email ? ' · from ET Lab' : ''}</label>
-                <input className="input" type="email" placeholder="you@example.com" value={form.email} onChange={set('email')} required />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Phone Number *{role === 'student' && etlabIdentity?.phone ? ' · from ET Lab' : ''}</label>
-                <input className="input" type="tel" autoComplete="tel" placeholder="+91 98765 43210" value={form.phone} onChange={set('phone')} required />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Department</label>
-                <select className="input" value={form.department} onChange={set('department')} required disabled={departmentsLoading}>
-                  <option value=""> /  Select Department  / </option>
-                  {departments.map(d => <option key={d} value={d}>{d}</option>)}
-                </select>
-              </div>
+              {role === 'student' ? (
+                <section className="etlab-verification-card" aria-label="Imported student profile">
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">Email · from ET Lab</label>
+                      <input className="input" type="email" value={form.email} readOnly aria-readonly="true" />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Phone · from ET Lab</label>
+                      <input className="input" type="tel" value={form.phone} readOnly aria-readonly="true" />
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Department · from KTU registration</label>
+                    <input className="input" value={form.department} readOnly aria-readonly="true" />
+                  </div>
+                </section>
+              ) : (
+                <>
+                  <div className="form-group">
+                    <label className="form-label">Email *</label>
+                    <input className="input" type="email" placeholder="you@example.com" value={form.email} onChange={set('email')} required />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Phone Number *</label>
+                    <input className="input" type="tel" autoComplete="tel" placeholder="+91 98765 43210" value={form.phone} onChange={set('phone')} required />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Department</label>
+                    <select className="input" value={form.department} onChange={set('department')} required disabled={departmentsLoading}>
+                      <option value=""> /  Select Department  / </option>
+                      {departments.map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                  </div>
+                </>
+              )}
 
               {/* Student-specific fields */}
               {role === 'student' && (
@@ -370,16 +394,23 @@ export default function SignupPage() {
 
               {(role === 'faculty' || etlabIdentity) && (
                 <>
-                  <div className="form-row">
+                  {role === 'student' ? (
                     <div className="form-group">
                       <label className="form-label">APMS Password *</label>
                       <input className="input" type="password" autoComplete="new-password" placeholder="Min. 12 characters" minLength={12} value={form.password} onChange={set('password')} required />
                     </div>
-                    <div className="form-group">
-                      <label className="form-label">Confirm APMS Password *</label>
-                      <input className="input" type="password" autoComplete="new-password" placeholder="Re-enter password" value={form.confirmPassword} onChange={set('confirmPassword')} required />
+                  ) : (
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label className="form-label">APMS Password *</label>
+                        <input className="input" type="password" autoComplete="new-password" placeholder="Min. 12 characters" minLength={12} value={form.password} onChange={set('password')} required />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Confirm APMS Password *</label>
+                        <input className="input" type="password" autoComplete="new-password" placeholder="Re-enter password" value={form.confirmPassword} onChange={set('confirmPassword')} required />
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <button
                     type="submit"
