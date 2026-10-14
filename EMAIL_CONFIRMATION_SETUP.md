@@ -16,3 +16,6 @@ Email confirmation applies to new self-service signups. Existing APMS accounts k
 6. Deploy the application and test one student and one faculty signup with an address outside the Supabase organization.
 
 A new signup stays out of the faculty/admin approval queue and cannot sign in until the confirmation link is used. After confirmation, students wait for their department faculty advisor; faculty wait for an administrator.
+
+
+For the full launch checklist covering profile banners, conditional academic-year repair, email confirmation, and Vercel, see [RELEASE_SETUP_GUIDE.md](./RELEASE_SETUP_GUIDE.md).
