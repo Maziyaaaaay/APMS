@@ -81,6 +81,24 @@ router.post('/', requireRole('student'), async (req, res) => {
   if ((activity.type === 'level' || activity.type === 'choice') && !activity.levels.some(level => level.label === levelSelected)) return res.status(400).json({ error: 'Choose a valid points option for this activity.' });
   const submittedPoints = calculatePoints(activityId, levelSelected, hours);
 
+  if (activity.oncePerStudent) {
+    const { data: existingClaim, error: claimError } = await supabase
+      .from('certificates')
+      .select('id, status')
+      .eq('student_id', req.user.id)
+      .eq('activity_id', activityId)
+      .in('status', ['pending', 'approved'])
+      .limit(1)
+      .maybeSingle();
+    if (claimError) return res.status(500).json({ error: 'Could not verify whether this one-time activity was already claimed.' });
+    if (existingClaim) {
+      const message = existingClaim.status === 'approved'
+        ? 'This one-time activity has already been claimed and approved.'
+        : 'This one-time activity is already awaiting faculty review.';
+      return res.status(409).json({ error: message });
+    }
+  }
+
   let objectPath = null;
   let fileMimeType = null;
   let fileSizeBytes = null;

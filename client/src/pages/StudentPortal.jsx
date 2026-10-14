@@ -86,7 +86,7 @@ export default function StudentPortal() {
                 <div className="page-content" key={tab}>
                     {loadError && <div role="alert" className="alert alert-danger">{loadError} <button onClick={refreshCerts}>Try again</button></div>}
                     {tab === 'dashboard'   && <DashboardTab   user={user} certs={certs} summary={summary} req={req} onSubmit={() => setTab('submit')} onViewAll={() => setTab('submissions')} />}
-                    {tab === 'submit'      && <SubmitTab      user={user} onSuccess={() => { refreshCerts(); setTab('submissions'); }} />}
+                    {tab === 'submit'      && <SubmitTab      user={user} certs={certs} onSuccess={() => { refreshCerts(); setTab('submissions'); }} />}
                     {tab === 'submissions' && <SubmissionsTab certs={certs} />}
                     {tab === 'profile'     && <ProfileTab     user={user} onUpdateUser={setUser} summary={summary} req={req} onLogout={handleLogout} onGuidelines={() => setShowGuidelines(true)} />}
                 </div>
@@ -121,7 +121,7 @@ function DashboardTab({ user, certs, summary, req, onSubmit, onViewAll }) {
     </div>;
 }
 
-function SubmitTab({ user, onSuccess }) {
+function SubmitTab({ user, certs, onSuccess }) {
     const [step,          setStep]          = useState(0); // 0=select group, 1=fill details
     const [group,         setGroup]         = useState(1);
     const [activityId,    setActivityId]    = useState('');
@@ -137,6 +137,12 @@ function SubmitTab({ user, onSuccess }) {
 
     const activity     = ACTIVITIES[activityId];
     const activities   = getActivitiesByGroup(group);
+    const activeOneTimeClaim = activity?.oncePerStudent
+        ? certs.find(cert => (cert.activity_id || cert.activityId) === activity.id && ['pending', 'approved'].includes(cert.status))
+        : null;
+    const claimMessage = activeOneTimeClaim?.status === 'approved'
+        ? 'Already claimed — this one-time activity has been approved.'
+        : activeOneTimeClaim ? 'Already submitted — this one-time activity is awaiting faculty review.' : '';
     const needsLevel   = activity?.type === 'level' || activity?.type === 'choice';
     const previewPoints = activityId ? calculatePoints(activityId, selectedLevel, hours) : 0;
 
@@ -146,12 +152,25 @@ function SubmitTab({ user, onSuccess }) {
         return acc;
     }, {});
 
-    const handleSelectActivity = (id) => { setActivityId(id); setSelectedLevel(''); setStep(1); };
+    const handleSelectActivity = (id) => {
+        const selected = ACTIVITIES[id];
+        const activeClaim = selected?.oncePerStudent
+            ? certs.find(cert => (cert.activity_id || cert.activityId) === selected.id && ['pending', 'approved'].includes(cert.status))
+            : null;
+        if (activeClaim) return;
+        setActivityId(id);
+        setSelectedLevel('');
+        setStep(1);
+    };
 
     const handleFileChange = (e) => { const f = e.target.files[0]; if (f) { setUploadedFile(f); setSubmitError(''); } };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (activeOneTimeClaim) {
+            setSubmitError(claimMessage);
+            return;
+        }
         setSubmitting(true);
         setSubmitError('');
 
@@ -188,7 +207,17 @@ function SubmitTab({ user, onSuccess }) {
         <div className="submit-stage-strip"><span className={step === 0 ? 'active' : 'done'}><b>01</b> Choose activity</span><span className={step === 1 ? 'active' : ''}><b>02</b> Upload & confirm</span><span><b>03</b> Faculty review</span></div>
         {step === 0 ? <div className="submit-choose-layout">
             <aside className="submit-groups"><span className="role-kicker">FIND YOUR GROUP</span><h2>Where does it belong?</h2>{[1,2,3].map(number => <button key={number} className={group === number ? 'active' : ''} onClick={() => {setGroup(number);setActivityId('')}}><span>0{number}</span><strong>{number === 1 ? 'Co-curricular' : number === 2 ? 'Professional development' : 'Innovation'}</strong><span className="material-symbols-outlined">arrow_forward</span></button>)}</aside>
-            <section className="submit-activity-list"><div className="role-section-heading"><div><span className="role-kicker">GROUP {group}</span><h2>Choose an activity.</h2></div><p>Select the closest match to your certificate.</p></div>{Object.entries(byCategory).map(([category,items]) => <div className="activity-category" key={category}><h3>{category}</h3><div>{items.map(item => <button key={item.id} onClick={() => handleSelectActivity(item.id)}><span className="material-symbols-outlined">workspace_premium</span><span><strong>{item.name}</strong><small>Up to {item.maxPoints} points</small></span><span className="material-symbols-outlined">north_east</span></button>)}</div></div>)}</section>
+            <section className="submit-activity-list"><div className="role-section-heading"><div><span className="role-kicker">GROUP {group}</span><h2>Choose an activity.</h2></div><p>Select the closest match to your certificate.</p></div>{Object.entries(byCategory).map(([category,items]) => <div className="activity-category" key={category}><h3>{category}</h3><div>{items.map(item => {
+                const priorClaim = item.oncePerStudent
+                    ? certs.find(cert => (cert.activity_id || cert.activityId) === item.id && ['pending', 'approved'].includes(cert.status))
+                    : null;
+                const claimStatus = priorClaim?.status === 'approved' ? 'Already claimed' : 'Awaiting review';
+                return <button key={item.id} disabled={Boolean(priorClaim)} aria-disabled={Boolean(priorClaim)} className={priorClaim ? 'activity-already-claimed' : ''} onClick={() => handleSelectActivity(item.id)}>
+                    <span className="material-symbols-outlined">{priorClaim ? 'verified' : 'workspace_premium'}</span>
+                    <span><strong>{item.name}</strong><small>{priorClaim ? claimStatus : 'Up to ' + item.maxPoints + ' points'}</small></span>
+                    {priorClaim ? <span className="activity-claim-status">{claimStatus}</span> : <span className="material-symbols-outlined">north_east</span>}
+                </button>;
+            })}</div></div>)}</section>
         </div> : <div className="submit-detail-layout"><form className="submit-detail-form" onSubmit={handleSubmit}>
             <div className="submit-form-heading"><button type="button" onClick={() => {setStep(0);setActivityId('')}}><span className="material-symbols-outlined">arrow_back</span> All activities</button><span className="role-kicker">GROUP {activity?.group}</span><h2>{activity?.name}</h2><p>{activity?.category} · Up to {activity?.maxPoints} points</p></div>
             <div className="submit-form-fields">
@@ -200,9 +229,10 @@ function SubmitTab({ user, onSuccess }) {
                 <label className="submit-field">Date shown on certificate <small>Optional</small><input className="input" type="date" max={new Date().toISOString().slice(0,10)} value={activityDate} onChange={e => setActivityDate(e.target.value)} /></label>
 
             </div>
+            {activeOneTimeClaim && <div role="status" className="alert alert-danger">{claimMessage}</div>}
             {activity?.note && <div className="submit-note"><span className="material-symbols-outlined">info</span><span><strong>Eligibility note: </strong>{activity.note}</span></div>}
             {submitError && <div role="alert" className="alert alert-error">{submitError}</div>}
-            <div className="submit-form-actions"><span>Submitted points remain provisional until reviewed.</span><button type="submit" disabled={submitting || (needsLevel && !selectedLevel) || !uploadedFile}>{submitting ? 'Submitting…' : 'Submit for review'}<span className="material-symbols-outlined">arrow_forward</span></button></div>
+            <div className="submit-form-actions"><span>Submitted points remain provisional until reviewed.</span><button type="submit" disabled={submitting || Boolean(activeOneTimeClaim) || (needsLevel && !selectedLevel) || !uploadedFile}>{submitting ? 'Submitting…' : 'Submit for review'}<span className="material-symbols-outlined">arrow_forward</span></button></div>
         </form><aside className="submit-preview"><span className="role-kicker">YOUR ESTIMATE</span><strong>{previewPoints}<small>points</small></strong><p>Faculty will confirm the award after checking your certificate.</p><div><span className="material-symbols-outlined">verified_user</span><span>Only authentic, eligible activities count.</span></div></aside></div>}
     </div>;
 }
