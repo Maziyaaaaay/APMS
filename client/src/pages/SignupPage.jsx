@@ -65,7 +65,17 @@ export default function SignupPage() {
       }
       setEtlabIdentity(result.identity);
       setEtlabProof(result.proof);
-      setForm(current => ({ ...current, name: result.identity.name, rollNo: result.identity.registrationNo }));
+      const matchedDepartment = departments.find(department =>
+        department.trim().toLowerCase() === String(result.identity.department || '').trim().toLowerCase()
+      ) || '';
+      setForm(current => ({
+        ...current,
+        name: result.identity.name,
+        rollNo: result.identity.registrationNo,
+        email: current.email || result.identity.email || '',
+        phone: current.phone || result.identity.phone || '',
+        department: current.department || matchedDepartment,
+      }));
       setEtlabUsername('');
     } catch {
       setError('Could not reach APMS to verify ET Lab. Check your connection and try again.');
@@ -239,7 +249,7 @@ export default function SignupPage() {
                     <span className="material-symbols-outlined" aria-hidden="true">school</span>
                     <div>
                       <h3 id="etlab-verification-title">Verify your student account</h3>
-                      <p>Use your existing ET Lab login to fill your identity details.</p>
+                      <p>Verify your account and prefill available profile details.</p>
                     </div>
                   </div>
                   <div className="form-group">
@@ -284,12 +294,12 @@ export default function SignupPage() {
                   )}
 
               <div className="form-group">
-                <label className="form-label">Email *</label>
+                <label className="form-label">Email *{role === 'student' && etlabIdentity?.email ? ' · from ET Lab' : ''}</label>
                 <input className="input" type="email" placeholder="you@example.com" value={form.email} onChange={set('email')} required />
               </div>
 
               <div className="form-group">
-                <label className="form-label">Phone Number *</label>
+                <label className="form-label">Phone Number *{role === 'student' && etlabIdentity?.phone ? ' · from ET Lab' : ''}</label>
                 <input className="input" type="tel" autoComplete="tel" placeholder="+91 98765 43210" value={form.phone} onChange={set('phone')} required />
               </div>
 
