@@ -136,8 +136,31 @@ EMAIL_PATTERN = re.compile(
 )
 
 
-def profile_email(soup, labels):
-    value = profile_value(soup, labels)
+def profile_email_near_label(soup, anchor_label, labels):
+    # Some COET layouts wrap many profile sections in one outer table. In that
+    # case the first "Email" row may belong to a parent. Use the email row
+    # closest to the student's own mobile row instead.
+    anchor = normalize_profile_label(anchor_label)
+    wanted = {normalize_profile_label(label) for label in labels}
+    rows = []
+    for row in soup.find_all("tr"):
+        cells = row.find_all(["th", "td"], recursive=False)
+        if len(cells) < 2:
+            continue
+        label = normalize_profile_label(cells[0].get_text(" ", strip=True).rstrip(":"))
+        rows.append((label, profile_cell_value(cells[1])))
+    anchor_indexes = [index for index, (label, _value) in enumerate(rows) if label == anchor]
+    if not anchor_indexes:
+        return ""
+    anchor_index = anchor_indexes[0]
+    candidates = [
+        (abs(index - anchor_index), value)
+        for index, (label, value) in enumerate(rows)
+        if label in wanted and value
+    ]
+    if not candidates:
+        return ""
+    value = min(candidates, key=lambda candidate: candidate[0])[1]
     match = EMAIL_PATTERN.search(value)
     return match.group(0) if match else ""
 
@@ -214,12 +237,14 @@ def login_and_read_identity(username, password):
             # Only read the student's own contact table; the profile also has
             # separate parent/family contacts that must not be mixed in.
             student_contact_table = profile_table_with_labels(profile_soup, {"Student Mobile No"})
-            student_email = profile_email(student_contact_table, {
+            student_email = profile_email_near_label(student_contact_table, "Student Mobile No", {
                 "Email", "E-mail", "Email Id", "Student Email", "Student Email Id", "College Email Id",
             })
             if not student_email:
                 college_email_table = profile_table_with_labels(profile_soup, {"College Email Id"})
-                student_email = profile_email(college_email_table, {"College Email Id"})
+                student_email = profile_value(college_email_table, {"College Email Id"})
+                match = EMAIL_PATTERN.search(student_email)
+                student_email = match.group(0) if match else ""
             student_mobile = profile_value(student_contact_table, {"Student Mobile No"})
             department = profile_value(profile_soup, {"Department"})
 
