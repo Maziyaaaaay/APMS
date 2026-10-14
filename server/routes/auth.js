@@ -139,6 +139,12 @@ router.post('/signup', async (req, res) => {
 
   if (typeof username !== 'string' || !/^[a-z0-9][a-z0-9._-]{2,63}$/i.test(username.trim())) return res.status(400).json({ error: role === 'student' ? 'Enter a valid KTU registration number.' : 'Use 3–64 letters, numbers, dots, underscores, or hyphens for your username.' });
   if (typeof name !== 'string' || !name.trim() || name.trim().length > 150) return res.status(400).json({ error: 'Enter your full name (up to 150 characters).' });
+  const normalizedEmail = email.trim().toLowerCase();
+  const { data: existingEmail, error: emailLookupError } = await supabase.from('users')
+    .select('id').ilike('email', normalizedEmail).limit(1);
+  if (emailLookupError) return res.status(500).json({ error: 'Could not check whether this email is already registered.' });
+  if (existingEmail?.length) return res.status(409).json({ error: 'This email is already linked to an APMS account. Sign in or contact an administrator.' });
+
   const password_hash = await bcrypt.hash(password, 12);
 
   const { data: departmentRow, error: departmentError } = await supabase.from('departments')
