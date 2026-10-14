@@ -214,7 +214,7 @@ router.put('/:id', async (req, res) => {
 
   if (req.user.id === req.params.id) {
     mappedUser.isSuperAdmin = req.user.isSuperAdmin;
-    const { profileUrl, ...jwtPayload } = mappedUser;
+    const { profileUrl, profileBannerUrl, ...jwtPayload } = mappedUser;
     const token = jwt.sign(jwtPayload, process.env.JWT_SECRET, { expiresIn: '7d' });
     return res.json({ user: mappedUser, token });
   }
