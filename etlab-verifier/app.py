@@ -1,7 +1,8 @@
 """COET ET Lab credential verifier for APMS.
 
 Credentials and the ET Lab session remain in this request's memory only. The
-service returns only a verified name and never logs request bodies or cookies.
+service returns verified signup identity and available student contact fields;
+it never logs request bodies or cookies.
 """
 
 from collections import defaultdict, deque
@@ -91,6 +92,19 @@ def profile_value(soup, labels):
     return ""
 
 
+def profile_table_with_labels(soup, labels):
+    wanted = {label.casefold() for label in labels}
+    for table in soup.find_all("table"):
+        for row in table.find_all("tr"):
+            cells = row.find_all(["th", "td"], recursive=False)
+            if len(cells) < 2:
+                continue
+            label = " ".join(cells[0].get_text(" ", strip=True).rstrip(":").split()).casefold()
+            if label in wanted:
+                return table
+    return None
+
+
 def login_and_read_identity(username, password):
     # A fresh, request-local session prevents one student's ET Lab cookies from
     # ever being reused for another student.
@@ -159,9 +173,23 @@ def login_and_read_identity(username, password):
             })
             if not name or len(name) > 150 or not registration_number:
                 return "profile_unavailable", None
+
+            # Only read the student's own contact table; the profile also has
+            # separate parent/family contacts that must not be mixed in.
+            student_contact_table = profile_table_with_labels(profile_soup, {"Student Mobile No"})
+            student_email = profile_value(student_contact_table, {"Email", "College Email Id"})
+            if not student_email:
+                college_email_table = profile_table_with_labels(profile_soup, {"College Email Id"})
+                student_email = profile_value(college_email_table, {"College Email Id"})
+            student_mobile = profile_value(student_contact_table, {"Student Mobile No"})
+            department = profile_value(profile_soup, {"Department"})
+
             return "verified", {
                 "name": name,
                 "registration_number": normalize_registration_number(registration_number),
+                "email": student_email[:254],
+                "phone": student_mobile[:32],
+                "department": department[:150],
             }
         except requests.RequestException:
             return "unavailable", None
@@ -209,7 +237,13 @@ def verify():
     if identity["registration_number"] != normalize_registration_number(registration_number):
         return jsonify({"error": "registration_mismatch"}), 403
 
-    return jsonify({"verified": True, "name": identity["name"]})
+    return jsonify({
+        "verified": True,
+        "name": identity["name"],
+        "email": identity.get("email", ""),
+        "phone": identity.get("phone", ""),
+        "department": identity.get("department", ""),
+    })
 
 
 @app.errorhandler(413)
