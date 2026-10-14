@@ -903,3 +903,54 @@ html.dark .insight-card { background: rgba(45,91,227,0.1); border-color: rgba(45
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
+
+
+/* Keep the login theme switch visible outside the centered sign-in card. */
+.login-theme-control {
+  position: fixed;
+  top: max(16px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+  z-index: 100;
+}
+.login-theme-toggle {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 15px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  color: var(--text);
+  box-shadow: 0 8px 24px rgba(25, 20, 35, 0.12);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+.login-theme-toggle:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 11px 28px rgba(25, 20, 35, 0.18);
+}
+.login-theme-toggle:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+.login-theme-toggle .material-symbols-outlined {
+  font-size: 19px;
+}
+@media (max-width: 480px) {
+  .login-theme-control {
+    top: max(12px, env(safe-area-inset-top));
+    right: max(12px, env(safe-area-inset-right));
+  }
+  .login-theme-toggle {
+    min-height: 40px;
+    padding-inline: 12px;
+    font-size: 12px;
+  }
+}
