@@ -294,7 +294,7 @@ def login_and_read_identity(username, password):
 
 @app.get("/api/status")
 def status():
-    return jsonify({"status": "ok", "institution": "COET"})
+    return jsonify({"status": "ok", "institution": "COET", "build": "email-diagnostic-ffdf66a"})
 
 
 @app.post("/api/verify")
