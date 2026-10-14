@@ -127,7 +127,6 @@ function SubmitTab({ user, onSuccess }) {
     const [activityId,    setActivityId]    = useState('');
     const [selectedLevel, setSelectedLevel] = useState('');
     const [hours,         setHours]         = useState('');
-    const [description,   setDescription]   = useState('');
     const [eventName,     setEventName]     = useState('');
     const [activityDate,  setActivityDate]  = useState('');
     const [academicYear,  setAcademicYear]  = useState('');
@@ -168,7 +167,6 @@ function SubmitTab({ user, onSuccess }) {
                 activityName:  activity.name,
                 levelSelected: selectedLevel,
                 hours: activity.type === 'hours' ? parseFloat(hours) : null,
-                description,
                 eventName: eventName.trim(),
                 activityDate,
                 academicYear: academicYear.trim(),
@@ -188,23 +186,24 @@ function SubmitTab({ user, onSuccess }) {
 
     if (success) return <div className="role-complete"><span className="material-symbols-outlined">check_circle</span><h2>Submitted for review.</h2><p>Your faculty advisor will check the document. You can track its status in My Submissions.</p></div>;
     return <div className="student-submit-page">
-        <div className="role-intro"><div><span className="role-kicker">NEW SUBMISSION</span><h1>Show what you did<em>.</em></h1><p>Choose an activity, add the details, then attach its proof.</p></div></div>
-        <div className="submit-stage-strip"><span className={step === 0 ? 'active' : 'done'}><b>01</b> Choose activity</span><span className={step === 1 ? 'active' : ''}><b>02</b> Add details & proof</span><span><b>03</b> Faculty review</span></div>
+        <div className="role-intro"><div><span className="role-kicker">NEW SUBMISSION</span><h1>Show what you did<em>.</em></h1><p>Choose an activity, upload proof, and confirm the essential details.</p></div></div>
+        <div className="submit-stage-strip"><span className={step === 0 ? 'active' : 'done'}><b>01</b> Choose activity</span><span className={step === 1 ? 'active' : ''}><b>02</b> Upload & confirm</span><span><b>03</b> Faculty review</span></div>
         {step === 0 ? <div className="submit-choose-layout">
             <aside className="submit-groups"><span className="role-kicker">FIND YOUR GROUP</span><h2>Where does it belong?</h2>{[1,2,3].map(number => <button key={number} className={group === number ? 'active' : ''} onClick={() => {setGroup(number);setActivityId('')}}><span>0{number}</span><strong>{number === 1 ? 'Co-curricular' : number === 2 ? 'Professional development' : 'Innovation'}</strong><span className="material-symbols-outlined">arrow_forward</span></button>)}</aside>
             <section className="submit-activity-list"><div className="role-section-heading"><div><span className="role-kicker">GROUP {group}</span><h2>Choose an activity.</h2></div><p>Select the closest match to your certificate.</p></div>{Object.entries(byCategory).map(([category,items]) => <div className="activity-category" key={category}><h3>{category}</h3><div>{items.map(item => <button key={item.id} onClick={() => handleSelectActivity(item.id)}><span className="material-symbols-outlined">workspace_premium</span><span><strong>{item.name}</strong><small>Up to {item.maxPoints} points</small></span><span className="material-symbols-outlined">north_east</span></button>)}</div></div>)}</section>
         </div> : <div className="submit-detail-layout"><form className="submit-detail-form" onSubmit={handleSubmit}>
             <div className="submit-form-heading"><button type="button" onClick={() => {setStep(0);setActivityId('')}}><span className="material-symbols-outlined">arrow_back</span> All activities</button><span className="role-kicker">GROUP {activity?.group}</span><h2>{activity?.name}</h2><p>{activity?.category} · Up to {activity?.maxPoints} points</p></div>
             <div className="submit-form-fields">
+                <div className="submit-field submit-field-wide"><label htmlFor="certificate-file">Certificate or proof <span>*</span></label><label className="submit-upload" htmlFor="certificate-file"><span className="material-symbols-outlined">{uploadedFile ? 'draft' : 'upload_file'}</span><strong>{uploadedFile ? uploadedFile.name : 'Choose a document'}</strong><small>{uploadedFile ? `${(uploadedFile.size/1024).toFixed(1)} KB · Select to change` : 'PDF, JPG or PNG · 10 MB maximum'}</small></label><input id="certificate-file" ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} required /></div>
+                <p className="submit-field submit-field-wide">Confirm the activity details below. Certificates vary, so your faculty advisor will verify them before points count.</p>
                 {needsLevel && <label className="submit-field">Achievement level <span>*</span><select className="input" value={selectedLevel} onChange={e => setSelectedLevel(e.target.value)} required><option value="">Choose your level</option>{activity.levels.map(level => <option key={level.label} value={level.label}>{level.label} · {level.points} pts</option>)}</select></label>}
                 {activity?.type === 'hours' && <label className="submit-field">Course duration <span>*</span><input className="input" type="number" min="1" max="40" value={hours} onChange={e => setHours(e.target.value)} placeholder="Hours completed" required /></label>}
                 <label className="submit-field">Event or activity name <span>*</span><input className="input" value={eventName} onChange={e => setEventName(e.target.value)} maxLength={180} placeholder="Name on your certificate" required /></label>
                 <label className="submit-field">Activity date <span>*</span><input className="input" type="date" max={new Date().toISOString().slice(0,10)} value={activityDate} onChange={e => setActivityDate(e.target.value)} required /></label>
                 <label className="submit-field">Academic year <span>*</span><input className="input" value={academicYear} onChange={e => setAcademicYear(e.target.value)} placeholder="2025-26" maxLength={7} pattern="[0-9]{4}[-–][0-9]{2}" required /></label>
-                <label className="submit-field submit-field-wide">A short note <small>Optional</small><textarea className="input" rows={3} maxLength={2000} value={description} onChange={e => setDescription(e.target.value)} placeholder="Add context that helps your advisor verify this activity." /></label>
-                <div className="submit-field submit-field-wide"><label htmlFor="certificate-file">Certificate or proof <span>*</span></label><label className="submit-upload" htmlFor="certificate-file"><span className="material-symbols-outlined">{uploadedFile ? 'draft' : 'upload_file'}</span><strong>{uploadedFile ? uploadedFile.name : 'Choose a document'}</strong><small>{uploadedFile ? `${(uploadedFile.size/1024).toFixed(1)} KB · Select to change` : 'PDF, JPG or PNG · 10 MB maximum'}</small></label><input id="certificate-file" ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} required /></div>
+
             </div>
-            {activity?.note && <div className="submit-note"><span className="material-symbols-outlined">info</span>{activity.note}</div>}
+            {activity?.note && <div className="submit-note"><span className="material-symbols-outlined">info</span><span><strong>Eligibility note: </strong>{activity.note}</span></div>}
             {submitError && <div role="alert" className="alert alert-error">{submitError}</div>}
             <div className="submit-form-actions"><span>Submitted points remain provisional until reviewed.</span><button type="submit" disabled={submitting || (needsLevel && !selectedLevel) || !uploadedFile}>{submitting ? 'Submitting…' : 'Submit for review'}<span className="material-symbols-outlined">arrow_forward</span></button></div>
         </form><aside className="submit-preview"><span className="role-kicker">YOUR ESTIMATE</span><strong>{previewPoints}<small>points</small></strong><p>Faculty will confirm the award after checking your certificate.</p><div><span className="material-symbols-outlined">verified_user</span><span>Only authentic, eligible activities count.</span></div></aside></div>}
