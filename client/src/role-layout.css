@@ -306,7 +306,7 @@ html:not(.dark) .faculty-portal .faculty-pending-pill{background:#ffebd7;color:#
 html:not(.dark) .faculty-portal .faculty-progress-status.met,
 html:not(.dark) .faculty-portal .group-minimum.met{color:#20715d}
 html:not(.dark) .faculty-portal .approved-export-actions button:first-child,
-html:not(.dark) .faculty-portal .role-workspace .faculty-record .record-item-foot button{
+html:not(.dark) .faculty-portal .faculty-record .record-item-foot button{
  border-color:#a32d59;
  background:linear-gradient(110deg,#8a244e,#c3356c 60%,#e66d5e);
  color:#fff;
