@@ -4,9 +4,9 @@ Email confirmation applies to new self-service signups. Existing APMS accounts k
 
 ## Before deployment
 
-1. In Supabase, open **Authentication → URL Configuration**. Set the Site URL to `https://apms-flax.vercel.app` and add `https://apms-flax.vercel.app/auth/confirm` to the allowed redirect URLs.
+1. In Supabase, open **Authentication → URL Configuration**. Set the Site URL to `https://ktuapms.vercel.app` and add `https://ktuapms.vercel.app/auth/confirm` to the allowed redirect URLs.
 2. In Supabase, open **Authentication → Providers → Email** and enable email confirmations.
-3. Configure custom SMTP under **Authentication → SMTP Settings**. Supabase's built-in mail service is for testing, limits delivery to project team addresses, and currently allows only two messages per hour.
+3. Configure custom SMTP under **Authentication → Emails → SMTP Settings**. Supabase's built-in mail service is for testing, limits delivery to project team addresses, and currently allows only two messages per hour.
 4. In Vercel, add these client environment variables to Production (and Preview if preview testing is needed):
    - `VITE_SUPABASE_URL`: the project URL.
    - `VITE_SUPABASE_ANON_KEY`: the project's publishable/anon key from **Project Settings → API Keys**.
