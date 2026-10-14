@@ -63,7 +63,7 @@ const DEPARTMENT_BY_BRANCH = Object.freeze({
 });
 
 function departmentFromRegistrationNo(registrationNo) {
-  const match = normalizeRegistrationNumber(registrationNo).match(/^[A-Z]{3}\\d{2}([A-Z]{2,3})\\d{2,4}$/);
+  const match = normalizeRegistrationNumber(registrationNo).match(/^[A-Z]{3}\d{2}([A-Z]{2,3})\d{2,4}$/);
   return match ? (DEPARTMENT_BY_BRANCH[match[1]] || '') : '';
 }
 
