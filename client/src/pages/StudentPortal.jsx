@@ -129,7 +129,6 @@ function SubmitTab({ user, onSuccess }) {
     const [hours,         setHours]         = useState('');
     const [eventName,     setEventName]     = useState('');
     const [activityDate,  setActivityDate]  = useState('');
-    const [academicYear,  setAcademicYear]  = useState('');
     const [uploadedFile,  setUploadedFile]  = useState(null);
     const [submitting,    setSubmitting]    = useState(false);
     const [success,       setSuccess]       = useState(false);
@@ -169,7 +168,6 @@ function SubmitTab({ user, onSuccess }) {
                 hours: activity.type === 'hours' ? parseFloat(hours) : null,
                 eventName: eventName.trim(),
                 activityDate,
-                academicYear: academicYear.trim(),
                 uploadReceipt,
                 fileName: uploadedFile?.name || null,
                 pointsAwarded: calculatePoints(activityId, selectedLevel, hours),
@@ -195,12 +193,11 @@ function SubmitTab({ user, onSuccess }) {
             <div className="submit-form-heading"><button type="button" onClick={() => {setStep(0);setActivityId('')}}><span className="material-symbols-outlined">arrow_back</span> All activities</button><span className="role-kicker">GROUP {activity?.group}</span><h2>{activity?.name}</h2><p>{activity?.category} · Up to {activity?.maxPoints} points</p></div>
             <div className="submit-form-fields">
                 <div className="submit-field submit-field-wide"><label htmlFor="certificate-file">Certificate or proof <span>*</span></label><label className="submit-upload" htmlFor="certificate-file"><span className="material-symbols-outlined">{uploadedFile ? 'draft' : 'upload_file'}</span><strong>{uploadedFile ? uploadedFile.name : 'Choose a document'}</strong><small>{uploadedFile ? `${(uploadedFile.size/1024).toFixed(1)} KB · Select to change` : 'PDF, JPG or PNG · 10 MB maximum'}</small></label><input id="certificate-file" ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} required /></div>
-                <p className="submit-field submit-field-wide">Confirm the activity details below. Certificates vary, so your faculty advisor will verify them before points count.</p>
+                <p className="submit-field submit-field-wide">Submitting as <strong>{user?.name}</strong>. Add the certificate name or date only if shown; your faculty advisor will verify the proof.</p>
                 {needsLevel && <label className="submit-field">Achievement level <span>*</span><select className="input" value={selectedLevel} onChange={e => setSelectedLevel(e.target.value)} required><option value="">Choose your level</option>{activity.levels.map(level => <option key={level.label} value={level.label}>{level.label} · {level.points} pts</option>)}</select></label>}
                 {activity?.type === 'hours' && <label className="submit-field">Course duration <span>*</span><input className="input" type="number" min="1" max="40" value={hours} onChange={e => setHours(e.target.value)} placeholder="Hours completed" required /></label>}
-                <label className="submit-field">Event or activity name <span>*</span><input className="input" value={eventName} onChange={e => setEventName(e.target.value)} maxLength={180} placeholder="Name on your certificate" required /></label>
-                <label className="submit-field">Activity date <span>*</span><input className="input" type="date" max={new Date().toISOString().slice(0,10)} value={activityDate} onChange={e => setActivityDate(e.target.value)} required /></label>
-                <label className="submit-field">Academic year <span>*</span><input className="input" value={academicYear} onChange={e => setAcademicYear(e.target.value)} placeholder="2025-26" maxLength={7} pattern="[0-9]{4}[-–][0-9]{2}" required /></label>
+                <label className="submit-field">Certificate or event name <small>Optional</small><input className="input" value={eventName} onChange={e => setEventName(e.target.value)} maxLength={180} placeholder={activity?.name || "Name shown on certificate"} /></label>
+                <label className="submit-field">Date shown on certificate <small>Optional</small><input className="input" type="date" max={new Date().toISOString().slice(0,10)} value={activityDate} onChange={e => setActivityDate(e.target.value)} /></label>
 
             </div>
             {activity?.note && <div className="submit-note"><span className="material-symbols-outlined">info</span><span><strong>Eligibility note: </strong>{activity.note}</span></div>}
