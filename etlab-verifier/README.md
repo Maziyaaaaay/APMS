@@ -9,10 +9,15 @@ It is configured for `https://coet.etlab.in` and is not a general ET Lab proxy.
 - ET Lab usernames, passwords, cookies, and session state are kept in memory only
   for one verification request and are discarded when it finishes.
 - Request bodies, credentials, and cookies are never logged or stored.
-- The service returns the verified name, KTU registration number, and the
-  student's own email/mobile when present. It can return a department only if
-  COET exposes a clearly labeled `Department` field. Contact data is used only
-  to prefill signup fields for the student to review.
+- Students verify with their ET Lab username and password. The service
+  returns the verified name and KTU registration number from the student profile,
+  plus the student's own email/mobile when present. APMS derives department from
+  the branch code in the verified registration number when COET has no explicit
+  department field.
+- Signup imports the verified name, registration number, email, phone, and
+  department. Students manually provide only their profile photo, student type,
+  year of study, and APMS password. ET Lab credentials are used for verification
+  only and are never stored.
 - APMS does not import unrelated personal, family, address, bank, or school
   records from the ET Lab profile.
 - APMS must send the shared `ETLAB_VERIFIER_SHARED_SECRET` in the
