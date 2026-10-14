@@ -88,10 +88,10 @@ export async function verifyEtlabStudent({ username, password, registrationNo })
   }
   const emailCandidate = typeof verification.body.email === 'string' ? verification.body.email.trim() : '';
   const phoneCandidate = typeof verification.body.phone === 'string' ? verification.body.phone.trim() : '';
-  const verifiedEmail = emailCandidate.length <= 254 && /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(emailCandidate)
+  const verifiedEmail = emailCandidate.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailCandidate)
     ? emailCandidate
     : '';
-  const verifiedPhone = phoneCandidate.length <= 32 && /^\\+?[0-9][0-9\\s().-]{7,19}$/.test(phoneCandidate)
+  const verifiedPhone = phoneCandidate.length <= 32 && /^\+?[0-9][0-9\s().-]{7,19}$/.test(phoneCandidate)
     ? phoneCandidate
     : '';
   const departmentCandidate = typeof verification.body.department === 'string' ? verification.body.department.trim() : '';
