@@ -409,3 +409,22 @@ html.dark .faculty-roster .roster-track{background:#4c405d}
 @media(max-width:1000px){.student-portal .metric-grid,.faculty-portal .metric-grid,.student-portal .group-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:767px){.student-portal .sidebar,.faculty-portal .sidebar{width:min(82vw,280px)}.student-portal .main-content,.faculty-portal .main-content{margin-left:0}.student-portal .topbar,.faculty-portal .topbar{height:68px;padding:0 18px}.student-portal .page-content,.faculty-portal .page-content{padding:29px 18px 64px}.student-portal .student-progress-panel,.faculty-portal .faculty-focus-panel{padding:27px;border-radius:22px}.student-portal .metric-grid,.faculty-portal .metric-grid,.student-portal .group-grid{grid-template-columns:1fr;gap:12px}.student-portal .metric-card,.faculty-portal .metric-card{padding:20px}.faculty-roster .roster-intro{display:block}.faculty-roster .roster-summary{display:inline-grid;margin-top:18px}.faculty-roster .roster-toolbar{flex-wrap:wrap}.faculty-roster .roster-search{flex:1 1 100%}.faculty-roster .roster-toolbar select{flex:1}.faculty-roster .roster-grid{grid-template-columns:1fr}.faculty-roster .roster-count{margin-left:auto}html.dark .login-form-panel{border-radius:0;border:0;background:#1c1b36db!important}}
 @media(prefers-reduced-motion:reduce){.student-portal .student-progress-panel::before,.faculty-portal .faculty-focus-panel::before,html.dark .login-brand-panel::before{animation:none!important}}
+
+/* ET Lab student identity verification */
+.etlab-verification-card{margin:4px 0 22px;padding:22px;border:1px solid color-mix(in srgb,var(--accent) 28%,var(--border));background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 9%,var(--surface)),var(--surface));border-radius:18px}
+.etlab-verification-heading{display:flex;align-items:flex-start;gap:13px;margin:0 0 18px}
+.etlab-verification-heading>.material-symbols-outlined{display:grid;place-items:center;width:42px;height:42px;flex:0 0 42px;border-radius:13px;background:var(--accent);color:var(--surface);font-size:22px}
+.etlab-verification-heading h3{margin:0 0 4px;font-size:18px;font-weight:800;color:var(--text)}
+.etlab-verification-heading p,.etlab-privacy-note{margin:0;color:var(--text-secondary);font-size:12px;line-height:1.55}
+.etlab-verification-card .form-group{margin-bottom:14px}
+.etlab-verification-card>.btn{width:100%;justify-content:center}
+.etlab-privacy-note{margin-top:13px;font-size:11px}
+.etlab-verified-identity{display:flex;align-items:center;gap:12px;margin:4px 0 22px;padding:15px 17px;border:1px solid color-mix(in srgb,var(--success) 35%,var(--border));border-radius:14px;background:color-mix(in srgb,var(--success-bg) 65%,var(--surface))}
+.etlab-verified-identity>.material-symbols-outlined{color:var(--success);font-size:24px}
+.etlab-verified-identity>div{display:grid;gap:3px;flex:1;min-width:0}
+.etlab-verified-identity strong{color:var(--text);font-size:14px;font-weight:800}
+.etlab-verified-identity span:not(.material-symbols-outlined){color:var(--text-secondary);font-size:12px}
+html.dark .etlab-verification-card{border-color:rgba(239,168,190,.22);background:linear-gradient(145deg,rgba(154,55,91,.16),var(--surface))}
+html.dark .etlab-verification-heading>.material-symbols-outlined{background:linear-gradient(140deg,#df5c93,#f19b66);color:#fff}
+html.dark .etlab-verified-identity{background:rgba(90,144,104,.12);border-color:rgba(124,197,143,.24)}
+@media(max-width:520px){.etlab-verification-card{padding:17px;border-radius:15px}.etlab-verification-heading h3{font-size:16px}.etlab-verified-identity{align-items:flex-start;flex-wrap:wrap}.etlab-verified-identity .btn{margin-left:34px}}
