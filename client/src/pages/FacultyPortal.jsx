@@ -319,6 +319,12 @@ function ReviewModal({ cert, student, faculty, onClose, onRefresh }) {
                         ))}
                     </div>
 
+                    {activity?.id === '2.26' && (
+                        <div style={{ padding: '10px 12px', marginBottom: 16, borderRadius: 'var(--radius-sm)', background: 'var(--surface2)', border: '1px solid var(--border)', fontSize: 12, lineHeight: 1.5, color: 'var(--text-muted)' }}>
+                            <strong style={{ color: 'var(--text)' }}>Faculty-assessed category:</strong> award 5–20 points based on the evidence. This is not a separately named handbook category; use the state-level reference only if it fits Group II 2.4.
+                        </div>
+                    )}
+
                     {/* Certificate Preview */}
                     {(filePreviewUrl || cert.fileData || cert.file_url) && (
                         <div style={{ marginBottom: 16 }}>
@@ -348,17 +354,18 @@ function ReviewModal({ cert, student, faculty, onClose, onRefresh }) {
                     <div style={{ padding: '14px 16px', borderRadius: 'var(--radius-sm)', marginBottom: 16, background: 'rgba(45,91,227,0.06)', border: '1px solid rgba(45,91,227,0.2)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                             <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Points to Award</span>
-                            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Max: {activity?.maxPoints ?? initialPoints} pts</span>
+                            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{activity?.id === '2.26' ? 'Award 5–20 pts' : `Max: ${activity?.maxPoints ?? initialPoints} pts`}</span>
                         </div>
                         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                             <input
                                 type="number"
                                 className="input"
-                                min={0}
+                                min={activity?.id === '2.26' ? 5 : 0}
                                 max={activity?.maxPoints ?? initialPoints}
                                 value={pointsOverride}
                                 onChange={e => {
-                                    const v = Math.max(0, Math.min(activity?.maxPoints ?? initialPoints, Number(e.target.value)));
+                                    const minimum = activity?.id === '2.26' ? 5 : 0;
+                                    const v = Math.max(minimum, Math.min(activity?.maxPoints ?? initialPoints, Number(e.target.value)));
                                     setPointsOverride(v);
                                 }}
                                 style={{ flex: 1, fontSize: 20, fontWeight: 800, color: 'var(--accent)', textAlign: 'center' }}

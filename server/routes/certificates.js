@@ -190,6 +190,9 @@ router.put('/:id', requireRole('faculty'), async (req, res) => {
   if (!activity || !Number.isInteger(awarded) || awarded < 0 || awarded > activity.maxPoints) {
     return res.status(400).json({ error: `Points must be a whole number between 0 and this activity's ${activity?.maxPoints ?? 0}-point maximum.` });
   }
+  if (status === 'approved' && activity.id === '2.26' && (awarded < 5 || awarded > 20)) {
+    return res.status(400).json({ error: 'Faculty-assessed community competition awards must be between 5 and 20 points.' });
+  }
   if (awarded !== Number(current.points_awarded ?? 0) && !String(notes || '').trim()) {
     return res.status(400).json({ error: 'Add a note explaining any adjustment to the catalog-calculated points.' });
   }
