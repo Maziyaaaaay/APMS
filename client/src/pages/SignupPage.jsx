@@ -65,13 +65,16 @@ export default function SignupPage() {
       const matchedDepartment = departments.find(department =>
         department.trim().toLowerCase() === String(result.identity.department || '').trim().toLowerCase()
       ) || '';
-      const missing = [
+      const missingContact = [
         !result.identity.email && 'email',
         !result.identity.phone && 'phone number',
-        !matchedDepartment && 'department',
       ].filter(Boolean);
-      if (missing.length) {
-        setError(`Your ET Lab profile is missing ${missing.join(', ')}. Update your student profile in ET Lab, then verify again.`);
+      if (missingContact.length) {
+        setError(`Your ET Lab profile is missing ${missingContact.join(' and ')}. Update your student contact details in ET Lab, then verify again.`);
+        return;
+      }
+      if (!matchedDepartment) {
+        setError('Your verified KTU branch does not match an APMS department. Contact the APMS administrator.');
         return;
       }
       setEtlabIdentity({ ...result.identity, department: matchedDepartment });
@@ -269,7 +272,7 @@ export default function SignupPage() {
                     <label className="form-label" htmlFor="etlab-password">ET Lab Password *</label>
                     <input id="etlab-password" className="input" type="password" autoComplete="current-password" placeholder="Your ET Lab password" value={etlabPassword} onChange={e => setEtlabPassword(e.target.value)} required />
                   </div>
-                  <button type="button" className="btn btn-outline" onClick={handleVerifyEtlab} disabled={verifyingEtlab}>
+                  <button type="button" className="btn btn-outline" onClick={handleVerifyEtlab} disabled={verifyingEtlab || departmentsLoading || !departments.length}>
                     <span className="material-symbols-outlined" style={{ fontSize: 18 }}>{verifyingEtlab ? 'progress_activity' : 'verified_user'}</span>
                     {verifyingEtlab ? 'Checking ET Lab…' : 'Verify with ET Lab'}
                   </button>
