@@ -8,7 +8,7 @@ Run `server/db/rebuild.sql` once in the SQL Editor for KTU APMS (`xikqrthyuuqhpt
 
 `server/db/schema.sql` is the complete baseline for an empty database. Do not run the historical migration 001 after the v2 baseline. The snapshot and migration remain historical reference files, not part of the v2 deployment path.
 
-For a database already created from the earlier v2 baseline, apply migrations `003_certificate_academic_year.sql` and `004_circular_priority.sql` from `server/db/migrations/` in Supabase SQL Editor before deploying this code. They are safe to re-run when a column already exists, preserve existing submissions/circulars, and repair the calendar-date guard; new submissions require an academic year, and existing circulars default to normal priority. Do not apply these incremental migrations after rebuilding from the current `schema.sql` or `rebuild.sql`, since those already include both changes.
+For a database already created from the earlier v2 baseline, apply migrations `003_certificate_academic_year.sql` and `004_circular_priority.sql` from `server/db/migrations/` in Supabase SQL Editor before deploying this code. They preserve existing submissions/circulars, and academic year is optional for new submissions. Migration 003 has been corrected in the repository. If the earlier version of migration 003 was already applied, also run `007_optional_academic_year.sql` once; it removes the database trigger's academic-year requirement without changing stored records. Do not apply migrations 003/004 after rebuilding from the current `schema.sql` or `rebuild.sql`, since those already include the columns. The banner feature additionally requires migration `006_profile_cover_banners.sql` before that feature is deployed.
 
 ## Data and access
 
