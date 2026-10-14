@@ -294,6 +294,8 @@ function ProfileTab({ user, summary, req, onLogout, onGuidelines, onUpdateUser }
     const [editRollNo, setEditRollNo] = useState(user?.rollNo || '');
     const [editYear, setEditYear] = useState(user?.year || '');
     const fileInputRef = React.useRef();
+    const bannerInputRef = React.useRef();
+    const [uploadingBanner, setUploadingBanner] = useState(false);
 
     const handlePhotoChange = async (e) => {
         const f = e.target.files[0];
@@ -307,6 +309,38 @@ function ProfileTab({ user, summary, req, onLogout, onGuidelines, onUpdateUser }
             alert(err.message);
         }
         setUploading(false);
+    };
+
+    const handleBannerChange = async (event) => {
+        const file = event.target.files?.[0];
+        event.target.value = '';
+        if (!file) return;
+        if (!file.type.startsWith('image/') || file.size > 10 * 1024 * 1024) {
+            window.alert('Choose an image up to 10 MB.');
+            return;
+        }
+        setUploadingBanner(true);
+        try {
+            const profileBannerUrl = await compressImage(file, 1800, 0.78, 'image/jpeg');
+            const updated = await updateUser({ ...user, profileBannerUrl });
+            onUpdateUser(updated);
+        } catch (error) {
+            window.alert(error.message || 'Could not save the banner.');
+        } finally {
+            setUploadingBanner(false);
+        }
+    };
+
+    const handleRemoveBanner = async () => {
+        setUploadingBanner(true);
+        try {
+            const updated = await updateUser({ ...user, profileBannerUrl: null });
+            onUpdateUser(updated);
+        } catch (error) {
+            window.alert(error.message || 'Could not remove the banner.');
+        } finally {
+            setUploadingBanner(false);
+        }
     };
 
     const handleRemovePhoto = async () => {
@@ -344,7 +378,14 @@ function ProfileTab({ user, summary, req, onLogout, onGuidelines, onUpdateUser }
     };
 
     return <div className="role-profile-page">
-        <section className="role-profile-hero"><div className="role-profile-hero-main"><span className="role-kicker">STUDENT PROFILE</span><div className="role-profile-avatar" onClick={() => fileInputRef.current?.click()} role="button" tabIndex={0} onKeyDown={event => {if(event.key === 'Enter') fileInputRef.current?.click()}} aria-label="Change profile photo">{uploading ? <span className="material-symbols-outlined">progress_activity</span> : user?.profileUrl ? <img src={user.profileUrl} alt="" /> : initials}</div><div><h1>{user?.name}</h1><p>{user?.rollNo} · {user?.department}</p><div className="role-profile-actions"><button onClick={startEditing}><span className="material-symbols-outlined">edit</span>Edit profile</button>{user?.profileUrl && <button onClick={handleRemovePhoto}>Remove photo</button>}</div></div></div><div className="role-profile-score"><strong><span>{summary.total}</span><small> / {req.total}</small></strong><span>estimated points</span><div><i style={{width:`${pct}%`}} /></div></div><input ref={fileInputRef} type="file" accept=".jpg,.jpeg,.png,.webp" hidden onChange={handlePhotoChange} /></section>
+        <section className="role-profile-hero">
+            <div className="role-profile-cover" aria-label="Profile banner" style={user?.profileBannerUrl ? { backgroundImage: 'url("' + user.profileBannerUrl + '")' } : undefined} />
+            <div className="role-profile-cover-actions">
+                <button type="button" onClick={() => bannerInputRef.current?.click()} disabled={uploadingBanner}><span className="material-symbols-outlined">{uploadingBanner ? 'progress_activity' : 'add_photo_alternate'}</span>{uploadingBanner ? 'Saving…' : user?.profileBannerUrl ? 'Change cover' : 'Add cover photo'}</button>
+                {user?.profileBannerUrl && <button type="button" onClick={handleRemoveBanner} disabled={uploadingBanner}>Remove</button>}
+            </div>
+            <input ref={bannerInputRef} type="file" accept="image/*" hidden onChange={handleBannerChange} />
+            <div className="role-profile-hero-main"><span className="role-kicker">STUDENT PROFILE</span><div className="role-profile-avatar" onClick={() => fileInputRef.current?.click()} role="button" tabIndex={0} onKeyDown={event => {if(event.key === 'Enter') fileInputRef.current?.click()}} aria-label="Change profile photo">{uploading ? <span className="material-symbols-outlined">progress_activity</span> : user?.profileUrl ? <img src={user.profileUrl} alt="" /> : initials}</div><div><h1>{user?.name}</h1><p>{user?.rollNo} · {user?.department}</p><div className="role-profile-actions"><button onClick={startEditing}><span className="material-symbols-outlined">edit</span>Edit profile</button>{user?.profileUrl && <button onClick={handleRemovePhoto}>Remove photo</button>}</div></div></div><div className="role-profile-score"><strong><span>{summary.total}</span><small> / {req.total}</small></strong><span>estimated points</span><div><i style={{width:`${pct}%`}} /></div></div><input ref={fileInputRef} type="file" accept=".jpg,.jpeg,.png,.webp" hidden onChange={handlePhotoChange} /></section>
         {saved && <div className="alert alert-success">Profile updated.</div>}
         <div className="role-profile-body"><section className="role-profile-details"><div className="role-section-heading"><div><span className="role-kicker">YOUR DETAILS</span><h2>Personal & academic.</h2></div></div>{!editing ? <div className="role-detail-grid">{[['Email',user?.email],['Phone',user?.phone],['Department',user?.department],['KTU registration',user?.rollNo],['Year',user?.year ? `Year ${user.year}` : null],['Student type',user?.studentType || 'Regular']].map(([label,value]) => <div key={label}><span>{label}</span><strong>{value || 'Not added'}</strong></div>)}</div> : <div className="role-edit-grid"><label>Full name<input className="input" value={editName} onChange={event => setEditName(event.target.value)} /></label><label>Email<input className="input" type="email" value={editEmail} onChange={event => setEditEmail(event.target.value)} /></label><label>Phone<input className="input" type="tel" value={editPhone} onChange={event => setEditPhone(event.target.value)} /></label><label>KTU registration<input className="input" value={editRollNo} onChange={event => setEditRollNo(event.target.value)} /></label><label>Year<select className="input" value={editYear} onChange={event => setEditYear(event.target.value)}><option value="">Choose year</option>{[1,2,3,4].map(year => <option key={year} value={year}>Year {year}</option>)}</select></label><div className="role-edit-actions"><button onClick={() => setEditing(false)}>Cancel</button><button onClick={handleSave}>Save changes</button></div></div>}</section><aside className="role-profile-aside"><span className="role-kicker">QUICK ACCESS</span><button onClick={onGuidelines}><span className="material-symbols-outlined">menu_book</span>Activity guidelines<span className="material-symbols-outlined">arrow_forward</span></button><button onClick={onLogout}><span className="material-symbols-outlined">logout</span>Sign out<span className="material-symbols-outlined">arrow_forward</span></button></aside></div>
     </div>;

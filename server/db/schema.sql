@@ -23,6 +23,7 @@ create table public.users (
   email text,
   phone text,
   profile_url text,
+  profile_banner_url text,
   department_id uuid references public.departments(id) on delete restrict,
   department text, -- compatibility display value; a trigger derives this from department_id
   roll_no text,

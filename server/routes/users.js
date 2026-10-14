@@ -52,7 +52,7 @@ router.get('/:id', async (req, res) => {
   }
   const { data, error } = await supabase
     .from('users')
-    .select('id, role, username, name, email, phone, roll_no, department, class, year, semester, student_type, designation, profile_url')
+    .select('id, role, username, name, email, phone, roll_no, department, class, year, semester, student_type, designation, profile_url, profile_banner_url')
     .eq('id', req.params.id)
     .single();
   if (error) return res.status(404).json({ error: 'User not found' });
@@ -96,7 +96,7 @@ router.put('/:id', async (req, res) => {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
-  const { password, profileUrl, ...rest } = req.body;
+  const { password, profileUrl, profileBannerUrl, ...rest } = req.body;
   const update = { last_modified_by: req.user.id };
 
   if (req.user.role === 'admin' && req.user.id !== req.params.id) {
@@ -110,6 +110,23 @@ router.put('/:id', async (req, res) => {
 
   if (profileUrl !== undefined) {
     update.profile_url = profileUrl;
+  }
+  if (profileBannerUrl !== undefined) {
+    if (profileBannerUrl === null) {
+      update.profile_banner_url = null;
+    } else {
+      const banner = typeof profileBannerUrl === 'string' && profileBannerUrl.length <= 3000000
+        ? /^data:image\/(jpeg|png);base64,([A-Za-z0-9+/]+={0,2})$/.exec(profileBannerUrl)
+        : null;
+      if (!banner) return res.status(400).json({ error: 'Choose a valid JPG or PNG banner image up to 10 MB.' });
+      const bytes = Buffer.from(banner[2], 'base64');
+      const isPng = banner[1] === 'png' && bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+      const isJpeg = banner[1] === 'jpeg' && bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+      if (!bytes.length || bytes.length > 2200000 || (!isPng && !isJpeg)) {
+        return res.status(400).json({ error: 'The banner image is invalid or too large after compression.' });
+      }
+      update.profile_banner_url = profileBannerUrl;
+    }
   }
 
   if (req.user.role === 'admin') {
@@ -172,7 +189,7 @@ router.put('/:id', async (req, res) => {
 
   const { data, error } = await supabase.from('users').update(update)
     .eq('id', req.params.id)
-    .select('id, role, username, name, email, phone, roll_no, department, class, year, semester, student_type, designation, profile_url, session_version').single();
+    .select('id, role, username, name, email, phone, roll_no, department, class, year, semester, student_type, designation, profile_url, profile_banner_url, session_version').single();
 
   if (error) return res.status(400).json({ error: error.message });
 
@@ -192,11 +209,12 @@ router.put('/:id', async (req, res) => {
     studentType:   data.student_type,
     designation:   data.designation,
     profileUrl:    data.profile_url,
+    profileBannerUrl: data.profile_banner_url,
   };
 
   if (req.user.id === req.params.id) {
     mappedUser.isSuperAdmin = req.user.isSuperAdmin;
-    const { profileUrl, ...jwtPayload } = mappedUser;
+    const { profileUrl, profileBannerUrl, ...jwtPayload } = mappedUser;
     const token = jwt.sign(jwtPayload, process.env.JWT_SECRET, { expiresIn: '7d' });
     return res.json({ user: mappedUser, token });
   }

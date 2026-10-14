@@ -535,3 +535,21 @@ html:not(.dark) .admin-portal .data-table th{background:#f1e5ef;color:#6f224a}
 html:not(.dark) .admin-portal .data-table td{border-color:#ead6e3}
 html:not(.dark) .admin-portal .btn-primary{background:linear-gradient(110deg,#87244e,#c3366d 58%,#e76c5d);border-color:transparent;color:#fff}
 html:not(.dark) .admin-portal .btn-primary:hover{filter:saturate(1.1) brightness(1.04)}
+
+
+/* Personal profile cover banners */
+.role-profile-hero{isolation:isolate}
+.role-profile-cover{position:absolute;inset:0 0 96px;background-color:#554666;background-image:linear-gradient(115deg,#423557,#826181 55%,#e49d81);background-position:center 43%;background-size:cover}
+.role-profile-cover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(24,17,32,.2),rgba(24,17,32,.08) 38%,rgba(24,17,32,.62))}
+.role-profile-hero-main,.role-profile-score,.role-profile-decoration{z-index:1}
+.role-profile-hero .role-kicker{color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.55)}
+.role-profile-hero h1,.role-profile-hero p,.role-profile-score strong,.role-profile-score>span{color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.35)}
+.role-profile-actions button{color:#fff;border-color:rgba(255,255,255,.72)}
+.role-profile-cover-actions{position:absolute;z-index:2;top:18px;right:20px;display:flex;gap:8px}
+.role-profile-cover-actions button{display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:0 13px;border:1px solid rgba(255,255,255,.52);border-radius:999px;background:rgba(30,24,36,.48);color:#fff;font:inherit;font-size:12px;font-weight:800;cursor:pointer;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.role-profile-cover-actions button:disabled{opacity:.68;cursor:wait}
+.role-profile-cover-actions .material-symbols-outlined{font-size:17px}
+.role-profile-hero .role-profile-avatar{border-color:rgba(255,255,255,.9)}
+.role-profile-score>div{background:rgba(255,255,255,.35)}
+.role-profile-score i{background:#fff}
+@media(max-width:700px){.role-profile-hero{min-height:360px;padding:26px;align-items:flex-end;flex-direction:column;justify-content:flex-end}.role-profile-cover{inset:0 0 165px}.role-profile-hero-main{width:100%;gap:15px}.role-profile-score{align-self:flex-start;width:100%;text-align:left;min-width:0}.role-profile-cover-actions{top:12px;right:12px}.role-profile-cover-actions button{min-height:35px;padding:0 10px;font-size:11px}}
