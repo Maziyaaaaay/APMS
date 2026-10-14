@@ -86,6 +86,16 @@ export async function verifyEtlabStudent({ username, password, registrationNo })
   if (!verification.response.ok || verification.body?.verified !== true || !verifiedName || verifiedName.length > 150 || !expectedRegistrationNo) {
     throw new EtlabError('unavailable', 'ET Lab could not verify those details right now. Please try again later.', 502);
   }
+  const emailCandidate = typeof verification.body.email === 'string' ? verification.body.email.trim() : '';
+  const phoneCandidate = typeof verification.body.phone === 'string' ? verification.body.phone.trim() : '';
+  const verifiedEmail = emailCandidate.length <= 254 && /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(emailCandidate)
+    ? emailCandidate
+    : '';
+  const verifiedPhone = phoneCandidate.length <= 32 && /^\\+?[0-9][0-9\\s().-]{7,19}$/.test(phoneCandidate)
+    ? phoneCandidate
+    : '';
+  const departmentCandidate = typeof verification.body.department === 'string' ? verification.body.department.trim() : '';
+  const verifiedDepartment = departmentCandidate.length <= 150 ? departmentCandidate : '';
 
   const proof = jwt.sign({
     purpose: 'student_signup',
@@ -98,7 +108,14 @@ export async function verifyEtlabStudent({ username, password, registrationNo })
     expiresIn: VERIFY_TTL_SECONDS,
   });
 
-  return { name: verifiedName, registrationNo: expectedRegistrationNo, proof };
+  return {
+    name: verifiedName,
+    registrationNo: expectedRegistrationNo,
+    email: verifiedEmail,
+    phone: verifiedPhone,
+    department: verifiedDepartment,
+    proof,
+  };
 }
 
 export function readEtlabSignupProof(proof) {
