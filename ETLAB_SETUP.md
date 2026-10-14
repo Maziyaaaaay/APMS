@@ -1,23 +1,51 @@
-# ET Lab student verification setup
+# COET ET Lab student verification setup
 
-Student signup verifies ET Lab identity on the APMS server. The student provides their ET Lab username and password, and APMS requests the RIT ET Lab verification service to sign in and retrieve the student's profile. APMS compares the returned university registration number with the KTU registration number and creates a short-lived signed proof for the next signup step.
+Student signup verifies a student's COET ET Lab login through a verifier hosted
+in the APMS Render workspace. The verifier uses the official COET ET Lab portal
+at `https://coet.etlab.in`, checks the profile's KTU registration number, and
+returns only the verified name. APMS creates a short-lived signed proof for the
+next signup step.
 
-APMS does not store the ET Lab password or the ET Lab session token. The student creates a separate APMS password. Account approval remains with the department faculty advisor.
+APMS and the verifier do not store ET Lab passwords or ET Lab session cookies.
+Each verification uses a fresh session that is discarded when the request ends.
+Students create a separate APMS password. Account approval remains with the
+department faculty advisor.
 
-## Vercel configuration
+## Deploy the verifier on Render
 
-In the APMS Vercel project, open **Settings → Environment Variables** and add this variable for the environments where student signup should work:
+Create a **Python Web Service** from the APMS GitHub repository:
 
-- `ETLAB_API_BASE_URL` = `https://rit-etlab-api.onrender.com`
+- Root directory: `etlab-verifier`
+- Build command: `pip install -r requirements.txt`
+- Start command: `gunicorn app:app --bind 0.0.0.0:$PORT`
+- Health check path: `/api/status`
+- Plan: Free
+- Region: same region as `apms-api`
 
-This is a backend-only setting. Do not name it `VITE_ETLAB_API_BASE_URL` and do not put student credentials in Vercel environment variables. Redeploy after adding it.
+Add `ETLAB_VERIFIER_SHARED_SECRET` as a Render environment variable. Use a new,
+random secret of at least 32 characters. Never place it in the client app, GitHub,
+or a student-facing form.
 
-The endpoint is the public deployment listed by [the ET Lab API repository](https://github.com/devadathanmb/rit-etlab-api). ET Lab credentials entered during signup will be transmitted through APMS to that service for verification. The college should ensure its approval covers that destination. The service is unofficial, relies on scraping, and may be unavailable or break if ET Lab changes. For a wider rollout, host a reviewed copy under an account controlled by the college or APMS team and set the variable to its HTTPS origin.
+After the verifier deploys, copy its HTTPS service origin (for example,
+`https://your-coet-verifier.onrender.com`). In the existing `apms-api` Render
+service, set these environment variables:
+
+- `ETLAB_API_BASE_URL` = the verifier's HTTPS origin
+- `ETLAB_VERIFIER_SHARED_SECRET` = the exact same secret as the verifier
+
+Save the settings and redeploy `apms-api`. The verifier's `/api/verify` route is
+protected by the shared secret and rate-limited. `/api/status` contains no
+student data and is used only for the Render health check.
 
 ## Signup behavior
 
-1. Student enters KTU registration number and ET Lab credentials.
-2. APMS verifies credentials and matches the registration number returned by the ET Lab profile.
-3. Student enters contact and academic details and sets an APMS password.
-4. APMS submits the student account as pending faculty approval.
-5. Student signs in later using the APMS password after approval.
+1. Student enters the KTU registration number and COET ET Lab login details.
+2. APMS asks the COET verifier to sign in, fetches the profile, and checks that
+   the profile registration number matches.
+3. The verifier returns only the profile name. Password and session are dropped.
+4. Student enters contact and academic details and sets a separate APMS password.
+5. APMS submits the account as pending faculty approval.
+
+The integration uses COET ET Lab's web login and profile pages; it is not an
+official ET Lab API. If COET or ET Lab changes those pages, the verifier fails
+closed until its parser is updated.

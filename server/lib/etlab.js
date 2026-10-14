@@ -38,7 +38,7 @@ async function apiRequest(url, options) {
   let response;
   try {
     // The public Render deployment may need time to wake from its idle state.
-    response = await fetch(url, { ...options, signal: AbortSignal.timeout(22_000) });
+    response = await fetch(url, { ...options, signal: AbortSignal.timeout(55_000) });
   } catch {
     throw new EtlabError('unavailable', 'ET Lab verification is temporarily unavailable. Please try again shortly.', 502);
   }
@@ -53,39 +53,38 @@ async function apiRequest(url, options) {
 
 export async function verifyEtlabStudent({ username, password, registrationNo }) {
   const baseUrl = getApiBaseUrl();
-  const login = await apiRequest(`${baseUrl}/api/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({ username, password }),
-  });
-  if (login.response.status === 401 || login.response.status === 403) {
-    throw new EtlabError('invalid_credentials', 'ET Lab username or password was not accepted.', 401);
-  }
-  if (!login.response.ok || typeof login.body?.token !== 'string' || !login.body.token || login.body.token.length > 4096) {
-    throw new EtlabError('unavailable', 'ET Lab could not verify those details right now. Please try again later.', 502);
+  const sharedSecret = process.env.ETLAB_VERIFIER_SHARED_SECRET?.trim();
+  if (!sharedSecret || sharedSecret.length < 32) {
+    throw new EtlabError('not_configured', 'ET Lab verification is not configured yet. Contact the APMS administrator.', 503);
   }
 
-  // The ET Lab session token is used only for this profile request and is never returned or saved.
-  const profile = await apiRequest(`${baseUrl}/api/profile`, {
-    method: 'GET',
-    headers: { Authorization: login.body.token, Accept: 'application/json' },
+  const expectedRegistrationNo = normalizeRegistrationNumber(registrationNo);
+  const verification = await apiRequest(`${baseUrl}/api/verify`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      'X-APMS-Verification-Key': sharedSecret,
+    },
+    body: JSON.stringify({ username, password, registrationNo: expectedRegistrationNo }),
   });
-  if (profile.response.status === 401 || profile.response.status === 403) {
-    throw new EtlabError('session_expired', 'ET Lab verification expired. Please try again.', 401);
+  if (verification.response.status === 401) {
+    throw new EtlabError('invalid_credentials', 'ET Lab username or password was not accepted.', 401);
   }
-  const details = profile.body?.profile_details;
-  const verifiedRegistrationNo = normalizeRegistrationNumber(details?.university_roll_no);
-  const verifiedName = typeof details?.name === 'string' ? details.name.trim() : '';
-  if (!profile.response.ok || !verifiedRegistrationNo || !verifiedName || verifiedName.length > 150) {
-    throw new EtlabError('profile_unavailable', 'ET Lab did not return the required student identity details.', 502);
+  if (verification.response.status === 403) {
+    throw new EtlabError('registration_mismatch', 'The COET ET Lab profile does not match the KTU registration number entered.', 403);
   }
-  if (verifiedRegistrationNo !== normalizeRegistrationNumber(registrationNo)) {
-    throw new EtlabError('registration_mismatch', 'The ET Lab profile does not match the KTU registration number entered.', 403);
+  if (verification.response.status === 429) {
+    throw new EtlabError('rate_limited', 'Too many ET Lab verification attempts. Please wait a minute and try again.', 429);
+  }
+  const verifiedName = typeof verification.body?.name === 'string' ? verification.body.name.trim() : '';
+  if (!verification.response.ok || verification.body?.verified !== true || !verifiedName || verifiedName.length > 150 || !expectedRegistrationNo) {
+    throw new EtlabError('unavailable', 'ET Lab could not verify those details right now. Please try again later.', 502);
   }
 
   const proof = jwt.sign({
     purpose: 'student_signup',
-    registrationNo: verifiedRegistrationNo,
+    registrationNo: expectedRegistrationNo,
     name: verifiedName,
   }, process.env.JWT_SECRET, {
     algorithm: 'HS256',
@@ -94,7 +93,7 @@ export async function verifyEtlabStudent({ username, password, registrationNo })
     expiresIn: VERIFY_TTL_SECONDS,
   });
 
-  return { name: verifiedName, registrationNo: verifiedRegistrationNo, proof };
+  return { name: verifiedName, registrationNo: expectedRegistrationNo, proof };
 }
 
 export function readEtlabSignupProof(proof) {
