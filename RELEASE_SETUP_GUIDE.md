@@ -7,7 +7,7 @@ Use this guide to prepare the existing APMS Supabase project and Vercel deployme
 ## What you need
 
 - Access to the Supabase project `xikqrthyuuqhptunigde` (Tokyo).
-- Access to the Vercel project that serves `https://apms-flax.vercel.app`.
+- Access to the Vercel project that serves `https://ktuapms.vercel.app`.
 - A configured SMTP sender for signup confirmation emails.
 - The linked GitHub pull requests:
   - [PR #23 — profile banners](https://github.com/Maziyaaaaay/APMS/pull/23)
@@ -71,20 +71,22 @@ Expect two rows: `email_verified_at` and `profile_banner_url`.
 
 ## 5. Configure confirmation email in Supabase
 
-1. In the Supabase dashboard, open **Authentication → Providers → Email**.
+1. In the project sidebar, open **Authentication → Providers → Email**.
 2. Turn on **Confirm email** and save.
-3. Open **Authentication → SMTP Settings** and configure a custom SMTP sender.
+3. For SMTP, open **Authentication → Emails → SMTP Settings**. This is separate from Providers. If the project navigation is collapsed, expand **Authentication** first; current Supabase docs place SMTP under the **Emails** section.
+4. Turn on **Enable Custom SMTP**, enter the SMTP host, port, username, password, sender email, and sender name from your email provider, then save.
+5. Configure a sender address on a domain verified with your email provider. The website URL ktuapms.vercel.app does not itself provide an email sender or mail domain.
    - Use the SMTP host, port, username, and password from your email provider.
    - Use a sender address on a domain verified with that provider.
    - Do not paste SMTP credentials into this guide, GitHub, or chat.
-4. Open **Authentication → URL Configuration**.
-5. Set the Site URL to:
+6. Open **Authentication → URL Configuration**.
+7. Set the Site URL to:
 
-   `https://apms-flax.vercel.app`
+   `https://ktuapms.vercel.app`
 
-6. Add this exact allowed redirect URL:
+8. Add this exact allowed redirect URL:
 
-   `https://apms-flax.vercel.app/auth/confirm`
+   `https://ktuapms.vercel.app/auth/confirm`
 
 Leave the default confirmation template in place unless you have customized it to retain Supabase's confirmation link.
 
@@ -121,7 +123,7 @@ Do not use a real student's registration number for testing unless you are ready
 ## If something fails
 
 - **Email address not authorized:** custom SMTP is not configured or the default sender is still active.
-- **Redirect URL rejected:** check that the allowed URL exactly matches `https://apms-flax.vercel.app/auth/confirm`.
+- **Redirect URL rejected:** check that the allowed URL exactly matches `https://ktuapms.vercel.app/auth/confirm`.
 - **Signup says email confirmation is not configured:** check both Vercel variables and redeploy after saving them.
 - **No email arrives:** confirm SMTP credentials and sender-domain verification, then try the resend button on the signup confirmation screen.
 - **A SQL query fails:** stop and keep the exact error text. Do not run a rebuild script to work around it.
