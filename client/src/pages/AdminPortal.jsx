@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 14828)
+Total output lines: 939
+
 import BrandLogo from '../components/BrandLogo';
 import InterfaceIcon from '../components/InterfaceIcon';
 import { AmbientBackdrop, WorkspaceHeading, MetricCard, ActionTile } from '../components/DashboardKit';
@@ -135,7 +138,7 @@ export default function AdminPortal() {
                     {tab !== 'dashboard' && <WorkspaceHeading title={PAGE_TITLES[tab]} description={{users: 'Add and remove students and faculty, and keep campus access organised.', approvals: 'Approve faculty registrations. Student registrations are reviewed by their department advisors.', departments: 'Keep your campus departments organised.', circulars: 'Publish university updates and guidance for your campus.', points: 'Explore activity categories and provisional point rules.', profile: 'Manage your details and account.'}[tab]} />}
                     {loadError && <div role="alert" className="alert alert-danger">{loadError} <button onClick={refresh}>Try again</button></div>}
                     {tab === 'dashboard'   && <DashboardTab user={user} users={users} students={students} faculty={faculty} onNavigate={setTab} />}
-                    {tab === 'users'       && <UsersTab students={students} faculty={faculty} onRefresh={refresh} currentUser={user} />}
+                    {tab === 'users'       && <UsersTab students={users.filter(u => u.role === 'student')} faculty={users.filter(u => u.role === 'faculty')} onRefresh={refresh} currentUser={user} />}
                     {tab === 'approvals'   && <AccountApprovals users={users} onRefresh={refresh} currentUser={user} />}
                     {tab === 'departments' && <DepartmentsTab />}
                     {tab === 'circulars'   && <CircularsTab />}
@@ -165,7 +168,7 @@ function AccountApprovals({ users, onRefresh, currentUser }) {
         }
     };
     const disableAdmin = async (account) => {
-        if (!window.confirm(`Disable admin account ${account.name}?`)) return;
+        if (!window.confirm(`Permanently remove admin account ${account.name} and all account history authored by them? This cannot be undone.`)) return;
         setBusyId(account.id);
         try { await deleteUser(account.id); await onRefresh(); }
         catch (err) { alert(err.message); }
@@ -216,7 +219,7 @@ function AccountApprovals({ users, onRefresh, currentUser }) {
                         <tbody>{administrators.map(account => <tr key={account.id}>
                             <td>{account.name}</td><td>@{account.username}</td>
                             <td><div style={{ display: 'flex', gap: 8 }}>
-                                <button className="btn btn-danger btn-sm" disabled={busyId === account.id} onClick={() => disableAdmin(account)}>Disable</button>
+                                <button className="btn btn-danger btn-sm" disabled={busyId === account.id} onClick={() => disableAdmin(account)}>Remove permanently</button>
                                 {account.account_status === 'approved' && <button className="btn btn-outline btn-sm" disabled={Boolean(busyId)} onClick={() => { setTransferTarget(account); setTransferPassword(''); setTransferError(''); }}>Transfer ownership</button>}
                             </div></td>
                         </tr>)}</tbody>
@@ -294,8 +297,16 @@ function UsersTab({ students, faculty, onRefresh, currentUser }) {
         onRefresh();
     };
 
-    const handleDelete = async (id) => {
-        if (window.confirm('Remove this user?')) { try { await deleteUser(id); } catch (err) { alert(err.message); return; } onRefresh(); }
+    const handleDelete = async (account) => {
+        const message = account.role === 'student'
+            ? `Permanently remove ${account.name} (${account.roll_no || account.rollNo || account.username})? This deletes the account, all of this student's activity submissions and uploaded certificate files. The registration number will become available again. This cannot be undone.`
+            : `Permanently remove ${account.name}? Their account, review history, and circulars they created will be deleted. Student certificates will keep their current decisions and points, but reviewer attribution will be cleared. This cannot be undone.`;
+        if (!window.confirm(message)) return;
+        try {
+            const result = await deleteUser(account.id);
+            if (result.storageCleanupPending) alert('The account was removed, but some certificate files could not be cleaned up. Contact the APMS administrator to finish storage cleanup.');
+        } catch (err) { alert(err.message); return; }
+        onRefresh();
     };
 
     const handlePromote = async (id) => {
@@ -408,53 +419,7 @@ function UsersTab({ students, faculty, onRefresh, currentUser }) {
                             </div>
                         )}
                         <div style={{ display: 'flex', gap: 10, paddingTop: 8, borderTop: '1px solid var(--border)' }}>
-                            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setShowAdd(false)}>Cancel</button>
-                            <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleAdd}>
-                                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>save</span>
-                                Create Account
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* User List */}
-            {filtered.length === 0 ? (
-                <div className="empty-state">
-                    <span className="material-symbols-outlined">{userType === 'student' ? 'school' : 'supervisor_account'}</span>
-                    <p>No {userType}s found</p>
-                </div>
-            ) : (
-                <div className="table-card">
-                    <div className="table-card-header">
-                        <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{filtered.length} {userType}{filtered.length !== 1 ? 's' : ''}</span>
-                    </div>
-                    <div className="table-overflow">
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>{userType === 'student' ? 'Roll No' : 'Designation'}</th>
-                                    <th>Department</th>
-                                    <th>Username</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filtered.map(u => {
-                                    const initials = u.name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '??';
-                                    return (
-                                        <tr key={u.id}>
-                                            <td>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                                    <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11, color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
-                                                        {u.profile_url || u.profileUrl ? (
-                                                            <img src={u.profile_url || u.profileUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                        ) : initials}
-                                                    </div>
-                                                    <div>
-                                                        <div className="td-bold">{u.name}</div>
-                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{u.email} · {u.phone || 'No phone'}</div>
+                    …828 tokens truncated…, color: 'var(--danger)', textTransform: 'capitalize' }}>{u.account_status}</div>}
                                                     </div>
                                                 </div>
                                             </td>
@@ -464,13 +429,15 @@ function UsersTab({ students, faculty, onRefresh, currentUser }) {
                                             <td>
                                                 <div style={{ display: 'flex', gap: 6 }}>
                                                     {currentUser?.isSuperAdmin && (
+                                                        <>
                                                         <button className="btn btn-primary btn-sm" style={{ fontSize: 11 }} onClick={() => handlePromote(u.id)} title="Promote to Admin">
                                                             <span className="material-symbols-outlined" style={{ fontSize: 14 }}>shield</span>
                                                         </button>
+                                                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(u)} title="Permanently remove account">
+                                                            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
+                                                        </button>
+                                                        </>
                                                     )}
-                                                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(u.id)}>
-                                                        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
-                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -777,12 +744,12 @@ function PointGradingTab() {
                 {filtered.length} activities · {Object.keys(overrides).length} with custom notes
             </div>
 
-            <div className="point-catalog-list" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {filtered.map(a => {
                     const ov = overrides[a.id];
                     const isEditing = editing === a.id;
                     return (
-                        <div key={a.id} className="point-catalog-row" style={{ padding: '14px 16px', borderRadius: 'var(--radius)', border: `1px solid ${ov ? 'rgba(45,91,227,0.25)' : 'var(--border)'}`, background: ov ? 'rgba(45,91,227,0.04)' : 'var(--surface)' }}>
+                        <div key={a.id} style={{ padding: '14px 16px', borderRadius: 'var(--radius)', border: `1px solid ${ov ? 'rgba(45,91,227,0.25)' : 'var(--border)'}`, background: ov ? 'rgba(45,91,227,0.04)' : 'var(--surface)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                                 <div style={{ flex: 1 }}>
                                     <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{a.name}</div>
