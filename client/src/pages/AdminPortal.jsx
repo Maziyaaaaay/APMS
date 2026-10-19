@@ -135,7 +135,7 @@ export default function AdminPortal() {
                     {tab !== 'dashboard' && <WorkspaceHeading title={PAGE_TITLES[tab]} description={{users: 'Add and remove students and faculty, and keep campus access organised.', approvals: 'Approve faculty registrations. Student registrations are reviewed by their department advisors.', departments: 'Keep your campus departments organised.', circulars: 'Publish university updates and guidance for your campus.', points: 'Explore activity categories and provisional point rules.', profile: 'Manage your details and account.'}[tab]} />}
                     {loadError && <div role="alert" className="alert alert-danger">{loadError} <button onClick={refresh}>Try again</button></div>}
                     {tab === 'dashboard'   && <DashboardTab user={user} users={users} students={students} faculty={faculty} onNavigate={setTab} />}
-                    {tab === 'users'       && <UsersTab students={students} faculty={faculty} onRefresh={refresh} currentUser={user} />}
+                    {tab === 'users'       && <UsersTab students={users.filter(u => u.role === 'student')} faculty={users.filter(u => u.role === 'faculty')} onRefresh={refresh} currentUser={user} />}
                     {tab === 'approvals'   && <AccountApprovals users={users} onRefresh={refresh} currentUser={user} />}
                     {tab === 'departments' && <DepartmentsTab />}
                     {tab === 'circulars'   && <CircularsTab />}
@@ -165,7 +165,7 @@ function AccountApprovals({ users, onRefresh, currentUser }) {
         }
     };
     const disableAdmin = async (account) => {
-        if (!window.confirm(`Disable admin account ${account.name}?`)) return;
+        if (!window.confirm('Permanently remove admin account ' + account.name + ' and its account history? This cannot be undone.')) return;
         setBusyId(account.id);
         try { await deleteUser(account.id); await onRefresh(); }
         catch (err) { alert(err.message); }
@@ -216,7 +216,7 @@ function AccountApprovals({ users, onRefresh, currentUser }) {
                         <tbody>{administrators.map(account => <tr key={account.id}>
                             <td>{account.name}</td><td>@{account.username}</td>
                             <td><div style={{ display: 'flex', gap: 8 }}>
-                                <button className="btn btn-danger btn-sm" disabled={busyId === account.id} onClick={() => disableAdmin(account)}>Disable</button>
+                                <button className="btn btn-danger btn-sm" disabled={busyId === account.id} onClick={() => disableAdmin(account)}>Remove permanently</button>
                                 {account.account_status === 'approved' && <button className="btn btn-outline btn-sm" disabled={Boolean(busyId)} onClick={() => { setTransferTarget(account); setTransferPassword(''); setTransferError(''); }}>Transfer ownership</button>}
                             </div></td>
                         </tr>)}</tbody>
@@ -294,8 +294,17 @@ function UsersTab({ students, faculty, onRefresh, currentUser }) {
         onRefresh();
     };
 
-    const handleDelete = async (id) => {
-        if (window.confirm('Remove this user?')) { try { await deleteUser(id); } catch (err) { alert(err.message); return; } onRefresh(); }
+    const handleDelete = async (account) => {
+        const identity = account.roll_no || account.rollNo || account.username;
+        const message = account.role === 'student'
+            ? 'Permanently remove ' + account.name + ' (' + identity + ')? This deletes their account, submissions, point history, and uploaded certificate files. Their KTU registration number will become available again. This cannot be undone.'
+            : 'Permanently remove ' + account.name + '? Their account and authored history will be deleted. Student certificate decisions and points remain, but reviewer attribution is cleared. This cannot be undone.';
+        if (!window.confirm(message)) return;
+        try {
+            const result = await deleteUser(account.id);
+            if (result.storageCleanupPending) alert('The account was removed, but some certificate files need storage cleanup. Contact the APMS administrator.');
+        } catch (err) { alert(err.message); return; }
+        onRefresh();
     };
 
     const handlePromote = async (id) => {
@@ -455,6 +464,7 @@ function UsersTab({ students, faculty, onRefresh, currentUser }) {
                                                     <div>
                                                         <div className="td-bold">{u.name}</div>
                                                         <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{u.email} · {u.phone || 'No phone'}</div>
+                                                        {(u.account_status || 'approved') !== 'approved' && <div style={{ fontSize: 10, color: 'var(--danger)', textTransform: 'capitalize' }}>{u.account_status}</div>}
                                                     </div>
                                                 </div>
                                             </td>
@@ -468,7 +478,7 @@ function UsersTab({ students, faculty, onRefresh, currentUser }) {
                                                             <span className="material-symbols-outlined" style={{ fontSize: 14 }}>shield</span>
                                                         </button>
                                                     )}
-                                                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(u.id)}>
+                                                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(u)}>
                                                         <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
                                                     </button>
                                                 </div>

@@ -204,20 +204,43 @@ router.put('/:id', async (req, res) => {
   res.json({ user: mappedUser });
 });
 
-// DELETE /api/users/:id — admin only
-router.delete('/:id', requireRole('admin'), async (req, res) => {
-  if (req.user.id === req.params.id) return res.status(400).json({ error: 'You cannot disable your own account.' });
-  const { data: target, error: targetError } = await supabase.from('users').select('role, is_super_admin, account_status').eq('id', req.params.id).maybeSingle();
+// DELETE /api/users/:id — permanent removal by super admin or department faculty.
+router.delete('/:id', requireRole('admin', 'faculty'), async (req, res) => {
+  if (req.user.id === req.params.id) return res.status(400).json({ error: 'You cannot remove your own account.' });
+  const { data: target, error: targetError } = await supabase.from('users').select('id, role, is_super_admin, department_id').eq('id', req.params.id).maybeSingle();
   if (targetError) return res.status(500).json({ error: targetError.message });
-  if (!target || target.is_super_admin) return res.status(403).json({ error: 'This account cannot be disabled here.' });
-  if (target.role === 'admin' && !req.user.isSuperAdmin) return res.status(403).json({ error: 'Only the super admin can disable admins.' });
-  const { data, error } = await supabase.from('users').update({
-    account_status: 'disabled', approved_by: req.user.id, last_modified_by: req.user.id,
-    review_note: 'Account disabled by administrator.',
-  }).eq('id', req.params.id).eq('account_status', target.account_status).select('id').maybeSingle();
-  if (error) return res.status(400).json({ error: error.message });
-  if (!data) return res.status(409).json({ error: 'The account changed. Refresh and try again.' });
-  res.json({ success: true });
+  if (!target || target.is_super_admin) return res.status(403).json({ error: 'This account cannot be removed.' });
+  const isOwnDepartmentStudent = req.user.role === 'faculty'
+    && target.role === 'student'
+    && target.department_id === req.user.departmentId;
+  if (!req.user.isSuperAdmin && !isOwnDepartmentStudent) {
+    return res.status(403).json({ error: 'Faculty can permanently remove only students in their own department. Other accounts require the super admin.' });
+  }
+
+  let certificatePaths = [];
+  if (target.role === 'student') {
+    const { data, error } = await supabase.from('certificates').select('file_url').eq('student_id', target.id);
+    if (error) return res.status(500).json({ error: 'Could not prepare the student records for removal.' });
+    certificatePaths = (data || []).map(row => row.file_url).filter(Boolean);
+  }
+
+  const { error: removeError } = await supabase.rpc('apms_remove_user', {
+    p_user_id: target.id,
+    p_actor_id: req.user.id,
+  });
+  if (removeError) {
+    if (removeError.message?.includes('function') || removeError.code === 'PGRST202') {
+      return res.status(503).json({ error: 'Permanent removal is not enabled in the database yet. Apply migration 005, then retry.' });
+    }
+    return res.status(400).json({ error: removeError.message || 'Account removal failed.' });
+  }
+
+  let storageCleanupPending = false;
+  for (let offset = 0; offset < certificatePaths.length; offset += 100) {
+    const { error } = await supabase.storage.from('apms-certificates').remove(certificatePaths.slice(offset, offset + 100));
+    if (error) storageCleanupPending = true;
+  }
+  res.json({ success: true, storageCleanupPending });
 });
 
 // PATCH /api/users/:id/role — super admin only: promote a user to admin (or change role)

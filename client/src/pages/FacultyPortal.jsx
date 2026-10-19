@@ -2,7 +2,7 @@ import BrandLogo from '../components/BrandLogo';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, logout } from '../utils/auth';
-import { getCertificates, getUsers, getAccountRequests, reviewAccount, updateCertificate, updateUser, getCirculars, getCertificateFileUrl } from '../utils/storage';
+import { getCertificates, getUsers, getAccountRequests, reviewAccount, updateCertificate, updateUser, deleteUser, getCirculars, getCertificateFileUrl } from '../utils/storage';
 import { compressImage } from '../utils/imageCompressor';
 import { getActivityForCertificate, calculateStudentSummary } from '../utils/points';
 
@@ -101,7 +101,7 @@ export default function FacultyPortal() {
                     {tab === 'submissions' && <ApprovedSubmissionsTab certs={certs} students={students} />}
                     {tab === 'approvals' && <StudentApprovalsTab requests={accountRequests} onRefresh={refreshData} />}
                     {tab === 'students' && (
-                        <StudentsTab certs={certs} students={students} />
+                        <StudentsTab certs={certs} students={students} onRefresh={refreshData} />
                     )}
                     {tab === 'profile' && (
                         <ProfileTab user={user} onLogout={handleLogout} onRefresh={refreshData} onUpdateUser={setUser} />
@@ -221,7 +221,16 @@ function StudentApprovalsTab({ requests, onRefresh }) {
         finally { setBusyId(null); }
     };
 
-    return <div className="role-approvals-page"><div className="role-intro"><div><span className="role-kicker">ACCESS REQUESTS</span><h1>Welcome the right people<em>.</em></h1><p>Check each student’s details before giving them access.</p></div><span className="review-count">{requests.length} waiting</span></div>{requests.length ? <div className="approval-list">{requests.map(account => <article className="approval-item" key={account.id}><div className="approval-avatar">{account.name?.split(' ').map(part => part[0]).join('').slice(0,2).toUpperCase() || 'ST'}</div><div className="approval-person"><h2>{account.name}</h2><p>{account.roll_no || account.username} · {account.department || 'Department not set'}</p><span>{account.email || 'No email'} · {account.phone || 'No phone'} · {account.year ? `Year ${account.year}` : 'Year not provided'}</span></div><div className="approval-actions"><button disabled={busyId === account.id} onClick={() => decide(account,'rejected')}>Reject</button><button disabled={busyId === account.id} onClick={() => decide(account,'approved')}>Approve <span className="material-symbols-outlined">arrow_forward</span></button></div></article>)}</div> : <div className="role-empty"><span className="material-symbols-outlined">how_to_reg</span><h3>No students waiting</h3><p>New registration requests will appear here.</p></div>}</div>;
+    const removeRequest = async account => {
+        const registrationNo = account.roll_no || account.username;
+        if (!window.confirm('Permanently remove ' + account.name + ' (' + registrationNo + ') and free their KTU registration number? They can submit a new signup. This cannot be undone.')) return;
+        setBusyId(account.id);
+        try { await deleteUser(account.id); await onRefresh(); }
+        catch (error) { window.alert(error.message); }
+        finally { setBusyId(null); }
+    };
+
+    return <div className="role-approvals-page"><div className="role-intro"><div><span className="role-kicker">ACCESS REQUESTS</span><h1>Welcome the right people<em>.</em></h1><p>Check each student’s details before giving them access.</p></div><span className="review-count">{requests.length} waiting</span></div>{requests.length ? <div className="approval-list">{requests.map(account => <article className="approval-item" key={account.id}><div className="approval-avatar">{account.name?.split(' ').map(part => part[0]).join('').slice(0,2).toUpperCase() || 'ST'}</div><div className="approval-person"><h2>{account.name}</h2><p>{account.roll_no || account.username} · {account.department || 'Department not set'}</p><span>{account.email || 'No email'} · {account.phone || 'No phone'} · {account.year ? `Year ${account.year}` : 'Year not provided'}</span></div><div className="approval-actions"><button disabled={busyId === account.id} onClick={() => decide(account,'rejected')}>Reject</button><button disabled={busyId === account.id} onClick={() => decide(account,'approved')}>Approve <span className="material-symbols-outlined">arrow_forward</span></button><button className="btn btn-ghost btn-sm" disabled={busyId === account.id} aria-label="Permanently remove signup" title="Remove this request and free the registration number" onClick={() => removeRequest(account)}><span className="material-symbols-outlined">delete</span></button></div></article>)}</div> : <div className="role-empty"><span className="material-symbols-outlined">how_to_reg</span><h3>No students waiting</h3><p>New registration requests will appear here.</p></div>}</div>;
 }
 
 function DashboardTab({ user, students, pendingCerts, pendingAccounts, circulars, onGoReviews, onGoApprovals }) {
@@ -454,11 +463,21 @@ function ReviewModal({ cert, student, faculty, onClose, onRefresh }) {
 /* ═══════════════════════════════════════════════════
    MY STUDENTS TAB  (previously "Progress")
 ════════════════════════════════════════════════════ */
-function StudentsTab({ certs, students }) {
+function StudentsTab({ certs, students, onRefresh }) {
     const [search, setSearch] = useState('');
     const [semester, setSemester] = useState('');
     const [progressFilter, setProgressFilter] = useState('all');
     const [sortOrder, setSortOrder] = useState('remaining');
+    const removeStudent = async student => {
+        const registrationNo = student.roll_no || student.rollNo || student.username;
+        const message = 'Permanently remove ' + student.name + ' (' + registrationNo + ')? This deletes their account, activity submissions, point history, and uploaded certificate files. They can sign up again with this registration number. This cannot be undone.';
+        if (!window.confirm(message)) return;
+        try {
+            const result = await deleteUser(student.id);
+            if (result.storageCleanupPending) window.alert('The account was removed, but some certificate files need storage cleanup by the APMS administrator.');
+            await onRefresh();
+        } catch (error) { window.alert(error.message); }
+    };
     const groups = [
         { key: 'group1', label: 'Group I' },
         { key: 'group2', label: 'Group II' },
@@ -530,6 +549,7 @@ function StudentsTab({ certs, students }) {
                         <div className="faculty-total-track" role="progressbar" aria-label="Total activity points" aria-valuemin="0" aria-valuemax={summary.required} aria-valuenow={Math.min(summary.total, summary.required)}><span style={{ width: `${Math.min(100, summary.total / Math.max(1, summary.required) * 100)}%` }} /></div>
                         <small className={summary.eligible ? 'faculty-progress-status met' : 'faculty-progress-status'}>{summary.eligible ? 'Target met' : `${totalRemaining} points to target`}</small>
                         {pending > 0 && <span className="faculty-pending-pill">{pending} awaiting review</span>}
+                        <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 10 }} onClick={() => removeStudent(student)} title="Permanently remove this student and their APMS records"><span className="material-symbols-outlined" style={{ fontSize: 15 }}>delete</span> Remove student</button>
                     </div>
                 </article>;
             })}
