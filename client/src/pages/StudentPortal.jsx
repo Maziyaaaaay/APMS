@@ -573,7 +573,7 @@ function SubmitTab({ user, onSuccess }) {
                     </div>
 
                     {/* Estimated Points */}
-                    <div style={{ background:'var(--primary)', borderRadius:'var(--radius-lg)', padding:18, position:'relative', overflow:'hidden' }}>
+                    <div className="student-estimate-card" style={{ background:'var(--primary)', borderRadius:'var(--radius-lg)', padding:18, position:'relative', overflow:'hidden' }}>
                         <span className="material-symbols-outlined" style={{ position:'absolute', right:-10, bottom:-10, fontSize:80, color:'rgba(255,255,255,0.08)' }}>military_tech</span>
                         <div style={{ fontSize:11, color:'rgba(255,255,255,0.7)', marginBottom:4, position:'relative' }}>Estimated Points</div>
                         <div style={{ fontSize:32, fontWeight:900, color:'#fff', position:'relative' }}>
@@ -920,7 +920,7 @@ function ProfileTab({ user, summary, req, onLogout, onGuidelines, onUpdateUser }
             {/* Right Column */}
             <div className="student-profile-aside">
                 {/* Activity Points Card */}
-                <div className="card" style={{ padding:20 }}>
+                <div className="card student-profile-points" style={{ padding:20 }}>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
                         <span style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.06em' }}>Estimated Activity Points</span>
                         <div style={{ background:'rgba(45,91,227,0.1)', borderRadius:10, padding:8 }}>
@@ -941,7 +941,7 @@ function ProfileTab({ user, summary, req, onLogout, onGuidelines, onUpdateUser }
                 </div>
 
                 {/* Need Help */}
-                <div style={{ background:'var(--primary)', borderRadius:'var(--radius-lg)', padding:20, position:'relative', overflow:'hidden' }}>
+                <div className="student-help-card" style={{ background:'var(--primary)', borderRadius:'var(--radius-lg)', padding:20, position:'relative', overflow:'hidden' }}>
                     <span className="material-symbols-outlined" style={{ position:'absolute', right:-14, bottom:-14, fontSize:90, color:'rgba(255,255,255,0.08)' }}>help</span>
                     <h4 style={{ fontWeight:700, color:'#fff', marginBottom:6, fontSize:14 }}>Need Help?</h4>
                     <p style={{ fontSize:12, color:'rgba(255,255,255,0.65)', marginBottom:14, lineHeight:1.6 }}>
