@@ -1200,3 +1200,50 @@ html:not(.dark) .admin-portal .campus-insights { border-color: var(--border); }
   html:not(.dark) .portal-layout .sidebar { width: min(290px,86vw); }
   html:not(.dark) .portal-layout .main-content { margin-left: 0; }
 }
+
+/* Softer outlines: let light and spacing define surfaces instead of hard borders. */
+html:not(.dark) .portal-layout {
+  --border: #f3e8ed;
+  --border-strong: #e8d6df;
+}
+html:not(.dark) .portal-layout .card,
+html:not(.dark) .portal-layout .table-card,
+html:not(.dark) .portal-layout .stat-card,
+html:not(.dark) .portal-layout .glass-panel,
+html:not(.dark) .portal-layout .student-progress-panel,
+html:not(.dark) .portal-layout .faculty-focus-panel,
+html:not(.dark) .portal-layout .campus-register,
+html:not(.dark) .portal-layout .activity-feed,
+html:not(.dark) .portal-layout .campus-hero,
+html:not(.dark) .portal-layout .student-submission-tools,
+html:not(.dark) .portal-layout .student-metrics .metric-card,
+html:not(.dark) .portal-layout .group-card,
+html:not(.dark) .portal-layout .work-queue .action-tile,
+html:not(.dark) .portal-layout .student-profile-main .profile-info-item,
+html:not(.dark) .portal-layout .student-profile-aside .settings-item {
+  border-color: rgba(125,70,96,.10) !important;
+  box-shadow: 0 10px 30px rgba(87,45,65,.055) !important;
+}
+html:not(.dark) .portal-layout .card-header,
+html:not(.dark) .portal-layout .table-card-header { border-color: rgba(125,70,96,.09) !important; }
+html:not(.dark) .portal-layout .sidebar,
+html:not(.dark) .portal-layout .sidebar-brand,
+html:not(.dark) .portal-layout .sidebar-footer,
+html:not(.dark) .portal-layout .topbar { border-color: rgba(125,70,96,.10) !important; }
+html:not(.dark) .portal-layout .input,
+html:not(.dark) .portal-layout .select,
+html:not(.dark) .portal-layout .textarea,
+html:not(.dark) .portal-layout .search-input,
+html:not(.dark) .portal-layout .filter-select,
+html:not(.dark) .portal-layout .theme-toggle,
+html:not(.dark) .portal-layout .btn-outline,
+html:not(.dark) .portal-layout .btn-ghost {
+  border-color: rgba(125,70,96,.18);
+}
+html:not(.dark) .portal-layout .input:focus,
+html:not(.dark) .portal-layout .select:focus,
+html:not(.dark) .portal-layout .textarea:focus,
+html:not(.dark) .portal-layout .search-input:focus { border-color: #ce6a91; }
+html:not(.dark) .admin-portal .campus-hero { border-color: rgba(125,70,96,.10) !important; }
+html:not(.dark) .admin-portal .campus-register .metric-card { border-color: rgba(125,70,96,.08) !important; }
+html:not(.dark) .student-portal .student-profile-main .profile-info-item { border-color: rgba(125,70,96,.08) !important; }
