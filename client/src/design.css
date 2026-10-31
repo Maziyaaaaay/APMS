@@ -405,3 +405,32 @@ html.dark .topbar,html.dark .sidebar,html.dark .card,html.dark .glass-panel,html
 @media(prefers-reduced-motion:reduce) {
  html.dark .admin-portal::before,html.dark .admin-portal::after,html.dark .admin-portal .campus-hero::before,html.dark .admin-portal .campus-hero-art {animation:none!important}
 }
+
+
+/* Refined night palette: darker ink surfaces with rose and lilac accents. */
+html.dark {
+ --primary:#d8c8ff;--primary-light:#eadfff;
+ --accent:#ef91b9;--accent-hover:#ffafd0;
+ --bg:#090a12;--bg2:#10111d;--surface:#141522;--surface2:#1c1d2b;
+ --text:#f8f5ff;--text-secondary:#bcb7ca;--text-muted:#9691a5;
+ --border:rgba(225,216,245,.10);--border-strong:rgba(225,216,245,.18);
+ --sidebar-bg:#10111b;--sidebar-hover:rgba(208,190,255,.08);
+}
+html.dark body {background:radial-gradient(ellipse at 80% 70%,rgba(130,93,177,.13),transparent 42%),radial-gradient(ellipse at 12% 10%,rgba(192,74,128,.10),transparent 38%),#090a12}
+html.dark .login-page {background:radial-gradient(ellipse at 82% 72%,rgba(129,100,190,.13),transparent 42%),radial-gradient(ellipse at 14% 12%,rgba(210,89,147,.12),transparent 38%),#090a12}
+html.dark .login-brand-panel {background:linear-gradient(145deg,#11111e,#171525 58%,#211624);border-color:var(--border)}
+html.dark .login-brand-panel::before {background:radial-gradient(ellipse at 35% 66%,rgba(195,66,137,.28),transparent 42%),radial-gradient(ellipse at 80% 38%,rgba(206,129,92,.18),transparent 44%),radial-gradient(ellipse at 55% 85%,rgba(126,100,190,.22),transparent 50%);filter:blur(38px)}
+html.dark .login-brand-panel::after {background:linear-gradient(180deg,rgba(11,10,20,.42),rgba(11,10,20,.08) 38%,rgba(11,10,20,.36))}
+html.dark .login-form-panel {background:rgba(17,17,29,.88);border-color:var(--border);box-shadow:0 28px 90px rgba(0,0,0,.28)}
+html.dark .login-form-panel .input-icon-wrap .input {border-color:rgba(224,214,242,.15);background:rgba(9,10,18,.76);color:var(--text)}
+html.dark .login-form-panel .input-icon-wrap .input::placeholder {color:#9691a5}
+html.dark .login-form-panel .input:focus {outline:2px solid rgba(239,145,185,.20);border-color:#d778a5;box-shadow:0 0 0 3px rgba(215,120,165,.12)}
+html.dark .login-form-panel .input-action-btn {color:#c0b4d0}
+html.dark .login-form-panel .input-action-btn:hover {background:rgba(239,145,185,.10);color:#f3b1cb}
+html.dark .btn-primary,html.dark .login-submit-btn {border:1px solid rgba(255,220,236,.16);background:linear-gradient(108deg,#cf5c91,#d97783 58%,#d99168);color:#fff9ff;box-shadow:0 10px 26px rgba(204,82,135,.20)!important}
+html.dark .btn-primary:hover,html.dark .login-submit-btn:hover {background:linear-gradient(108deg,#db6b9d,#e4868f 58%,#e2a074);box-shadow:0 14px 30px rgba(204,82,135,.26)!important}
+html.dark .theme-toggle {border-color:var(--border-strong);background:rgba(31,29,46,.78);color:#f1b6c9}
+html.dark .theme-toggle:hover {background:rgba(239,145,185,.12);border-color:rgba(239,145,185,.32);color:#ffd5e4}
+html.dark .login-role-tabs {border-color:var(--border)}
+html.dark .login-role-tab.active,html.dark .role-tab.active {background:linear-gradient(110deg,rgba(208,100,151,.23),rgba(143,119,201,.24));color:var(--text)}
+html.dark .checkbox-row label {color:var(--text-secondary)}
