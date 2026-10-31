@@ -847,3 +847,35 @@ html.dark .student-portal .student-activity-choice:hover { background: var(--stu
   .student-portal .student-metrics .metric-label { font-size: 11px; }
   .student-portal .student-submissions-page .student-submission-table tr { padding: 10px; }
 }
+
+/* Final student theme polish: keep accents warm and legible in both themes. */
+.student-portal .btn-primary,.student-portal .btn-primary:hover{background:#a64d31;border-color:#a64d31;color:#fffaf2;box-shadow:none!important}
+.student-portal .group-card:nth-child(1) .group-card-icon{background:#f1e1d7!important}
+.student-portal .group-card:nth-child(1) .group-card-icon .material-symbols-outlined{color:#a64d31!important}
+.student-portal .group-card:nth-child(1) .progress-fill{background:#a64d31!important}
+.student-portal .group-card:nth-child(2) .group-card-icon{background:#e1e8dc!important}
+.student-portal .group-card:nth-child(2) .group-card-icon .material-symbols-outlined{color:#55714f!important}
+.student-portal .group-card:nth-child(2) .progress-fill{background:#55714f!important}
+.student-portal .group-card:nth-child(3) .group-card-icon{background:#eee4d4!important}
+.student-portal .group-card:nth-child(3) .group-card-icon .material-symbols-outlined{color:#8a642f!important}
+.student-portal .group-card:nth-child(3) .progress-fill{background:#8a642f!important}
+.student-portal .student-estimate-card{padding:22px!important;border-radius:4px!important;background:#39473a!important;color:#f8f5ed}
+.student-portal .student-estimate-card p,.student-portal .student-estimate-card div,.student-portal .student-estimate-card small{color:#f0ece2}
+.student-portal .student-help-card{padding:22px!important;border-radius:4px!important}
+.student-portal .student-profile-points .progress-fill{background:#a64d31!important}
+.student-portal .student-profile-points .material-symbols-outlined{color:#a64d31!important}
+html.dark .student-portal .sidebar-brand .apms-brand-image{mix-blend-mode:normal;background:transparent}
+html.dark .student-portal .sidebar-brand .apms-brand-image img{filter:url(#apms-sidebar-cutout)}
+html.dark .student-portal .btn-primary,html.dark .student-portal .btn-primary:hover{background:#df9c78;border-color:#df9c78;color:#1b211d;box-shadow:none!important}
+html.dark .student-portal .student-estimate-card{background:#344439!important}
+html.dark .student-portal .student-profile-points .progress-fill{background:#df9c78!important}
+html.dark .student-portal .student-profile-points .material-symbols-outlined{color:#df9c78!important}
+html.dark .student-portal .group-card:nth-child(1) .group-card-icon{background:#3b302a!important}
+html.dark .student-portal .group-card:nth-child(1) .group-card-icon .material-symbols-outlined{color:#e4a080!important}
+html.dark .student-portal .group-card:nth-child(1) .progress-fill{background:#cf8565!important}
+html.dark .student-portal .group-card:nth-child(2) .group-card-icon{background:#29392e!important}
+html.dark .student-portal .group-card:nth-child(2) .group-card-icon .material-symbols-outlined{color:#a8c69c!important}
+html.dark .student-portal .group-card:nth-child(2) .progress-fill{background:#83a978!important}
+html.dark .student-portal .group-card:nth-child(3) .group-card-icon{background:#3a3528!important}
+html.dark .student-portal .group-card:nth-child(3) .group-card-icon .material-symbols-outlined{color:#e4c17c!important}
+html.dark .student-portal .group-card:nth-child(3) .progress-fill{background:#c5a65f!important}
