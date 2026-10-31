@@ -1150,3 +1150,48 @@ html:not(.dark) .admin-portal .campus-insights { border-color: var(--border); }
   html:not(.dark) .portal-layout .campus-register,
   html:not(.dark) .portal-layout .activity-feed { border-radius: 12px; }
 }
+
+/* Consistent soft corner geometry in both day and night modes. */
+.portal-layout .card,
+.portal-layout .table-card,
+.portal-layout .stat-card,
+.portal-layout .glass-panel,
+.portal-layout .student-progress-panel,
+.portal-layout .faculty-focus-panel,
+.portal-layout .campus-register,
+.portal-layout .activity-feed,
+.portal-layout .campus-hero,
+.portal-layout .student-submission-tools,
+.portal-layout .student-metrics .metric-card,
+.portal-layout .group-card,
+.portal-layout .work-queue .action-tile,
+.portal-layout .student-profile-main .profile-info-item,
+.portal-layout .student-profile-aside .settings-item { border-radius: 14px !important; }
+.portal-layout .card-header,
+.portal-layout .table-card-header { border-radius: 14px 14px 0 0; }
+.portal-layout .btn,
+.portal-layout .input,
+.portal-layout .select,
+.portal-layout .textarea,
+.portal-layout .search-input,
+.portal-layout .filter-select,
+.portal-layout .theme-toggle,
+.portal-layout .nav-item { border-radius: 10px; }
+.portal-layout .badge,
+.portal-layout .settings-icon,
+.portal-layout .metric-icon,
+.portal-layout .group-card-icon { border-radius: 8px; }
+@media (max-width: 767px) {
+  .portal-layout .card,
+  .portal-layout .table-card,
+  .portal-layout .stat-card,
+  .portal-layout .glass-panel,
+  .portal-layout .student-progress-panel,
+  .portal-layout .faculty-focus-panel,
+  .portal-layout .campus-register,
+  .portal-layout .activity-feed,
+  .portal-layout .campus-hero,
+  .portal-layout .student-metrics .metric-card,
+  .portal-layout .group-card,
+  .portal-layout .work-queue .action-tile { border-radius: 12px !important; }
+}
