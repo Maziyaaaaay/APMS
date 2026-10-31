@@ -1,6 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getDateInTimeZone, isValidIsoDate, normalizeAcademicYear } from './validation.js';
+import { getDateInTimeZone, inferKtuBatchYear, isValidIsoDate, normalizeAcademicYear } from './validation.js';
+
+test('KTU registration numbers map to their admission batch', () => {
+  assert.equal(inferKtuBatchYear('TLY24IT032'), 2024);
+  assert.equal(inferKtuBatchYear('KTE2023CS001'), 2023);
+  assert.equal(inferKtuBatchYear('7306667874'), null);
+  assert.equal(inferKtuBatchYear(''), null);
+});
 
 test('date validation rejects normalized but impossible calendar dates', () => {
   assert.equal(isValidIsoDate('2024-02-29'), true);
