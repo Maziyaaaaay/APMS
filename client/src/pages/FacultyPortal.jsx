@@ -1017,7 +1017,6 @@ function ProfileTab({ user, onLogout, onRefresh, onUpdateUser }) {
                     <p>Sign out of your account</p>
                 </div>
             </div>
-        </div>
         <BatchAssignmentModal
             open={batchDialogOpen}
             title="Which batches will you evaluate?"
@@ -1028,5 +1027,6 @@ function ProfileTab({ user, onLogout, onRefresh, onUpdateUser }) {
             busy={savingBatches}
             cancelDisabled={!user?.evaluationBatches?.length}
         />
+        </div>
     );
 }
