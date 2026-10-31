@@ -16,9 +16,9 @@ export function normalizeAcademicYear(value) {
 export function inferKtuBatchYear(registrationNo) {
   if (typeof registrationNo !== 'string') return null;
   const normalized = registrationNo.trim().toUpperCase();
-  const fullYear = normalized.match(/^[A-Z]{2,5}(20\\d{2})[A-Z]/);
+  const fullYear = normalized.match(/^[A-Z]{2,5}(20\d{2})[A-Z]/);
   if (fullYear) return Number(fullYear[1]);
-  const shortYear = normalized.match(/^[A-Z]{2,5}(\\d{2})[A-Z]/);
+  const shortYear = normalized.match(/^[A-Z]{2,5}(\d{2})[A-Z]/);
   return shortYear ? 2000 + Number(shortYear[1]) : null;
 }
 
