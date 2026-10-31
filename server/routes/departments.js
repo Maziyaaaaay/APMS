@@ -8,6 +8,9 @@ const router = createRouter();
 router.get('/', async (_req, res) => {
   const { data, error } = await supabase.from('departments').select('id, name').order('name');
   if (error) return res.status(500).json({ error: error.message });
+  // This small, non-sensitive catalog rarely changes. A short private browser
+  // cache speeds repeated page visits without placing it in a shared CDN cache.
+  res.set('Cache-Control', 'private, max-age=15, must-revalidate');
   res.json(data);
 });
 

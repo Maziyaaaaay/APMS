@@ -13,6 +13,23 @@ button,input,select,textarea{font-family:inherit}
 *,*::before,*::after{box-shadow:none!important;backdrop-filter:none!important;animation:none!important;transition:none!important}
 button,a{transform:none!important}button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:4px}
 .ambient-backdrop,.sidebar::before,.sidebar::after,.nav-item::after,.attention-dot,.empty-orbit,.faculty-focus-art{display:none!important}
+.etlab-verification-card{margin:4px 0 22px;padding:22px;border:1px solid color-mix(in srgb,var(--accent) 28%,var(--border));background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 9%,var(--surface)),var(--surface));border-radius:18px}
+.etlab-verification-heading{display:flex;align-items:flex-start;gap:13px;margin:0 0 18px}
+.etlab-verification-heading>.material-symbols-outlined{display:grid;place-items:center;width:42px;height:42px;flex:0 0 42px;border-radius:13px;background:var(--accent);color:var(--surface);font-size:22px}
+.etlab-verification-heading h3{margin:0 0 4px;font-size:18px;font-weight:800;color:var(--text)}
+.etlab-verification-heading p,.etlab-privacy-note{margin:0;color:var(--text-secondary);font-size:12px;line-height:1.55}
+.etlab-verification-card .form-group{margin-bottom:14px}
+.etlab-verification-card>.btn{width:100%;justify-content:center}
+.etlab-privacy-note{margin-top:13px;font-size:11px}
+.etlab-verified-identity{display:flex;align-items:center;gap:12px;margin:4px 0 22px;padding:15px 17px;border:1px solid color-mix(in srgb,var(--success) 35%,var(--border));border-radius:14px;background:color-mix(in srgb,var(--success-bg) 65%,var(--surface))}
+.etlab-verified-identity>.material-symbols-outlined{color:var(--success);font-size:24px}
+.etlab-verified-identity>div{display:grid;gap:3px;flex:1;min-width:0}
+.etlab-verified-identity strong{color:var(--text);font-size:14px;font-weight:800}
+.etlab-verified-identity span:not(.material-symbols-outlined){color:var(--text-secondary);font-size:12px}
+html.dark .etlab-verification-card{border-color:rgba(239,168,190,.22);background:linear-gradient(145deg,rgba(154,55,91,.16),var(--surface))}
+html.dark .etlab-verification-heading>.material-symbols-outlined{background:linear-gradient(140deg,#df5c93,#f19b66);color:#fff}
+html.dark .etlab-verified-identity{background:rgba(90,144,104,.12);border-color:rgba(124,197,143,.24)}
+@media(max-width:520px){.etlab-verification-card{padding:17px;border-radius:15px}.etlab-verification-heading h3{font-size:16px}.etlab-verified-identity{align-items:flex-start;flex-wrap:wrap}.etlab-verified-identity .btn{margin-left:34px}}
 .portal-layout{background:var(--bg)}
 .sidebar{width:218px;top:0;left:0;bottom:0;background:var(--sidebar-bg);border:0;border-right:1px solid var(--border);border-radius:0;padding:0 20px}
 .sidebar-brand{padding:32px 0;border-bottom:1px solid var(--border);gap:10px}.sidebar-brand-icon{background:var(--text);border-radius:0;width:32px;height:32px}.sidebar-brand-text h1{color:var(--text);font-size:18px;font-weight:900}.sidebar-brand-text p{color:var(--text-secondary);font-size:10px;letter-spacing:.08em}
@@ -77,7 +94,7 @@ body{background:#fff}.sidebar{background:#fff;border-right:1px solid var(--borde
 @media(max-width:767px){.student-progress-panel{display:block;padding:24px}.student-progress-panel .progress-orbit{padding-top:26px}.student-progress-panel .orbit-copy strong{font-size:52px}.faculty-focus-panel{padding:24px}.group-grid{grid-template-columns:1fr!important}.portal-layout .workspace-heading h2{font-size:32px}.portal-layout .workspace-heading .btn{width:auto}.campus-hero-art svg{width:48px!important;height:48px!important}}
 @media(prefers-reduced-motion:reduce){.campus-hero::before,.student-progress-panel::before,.faculty-focus-panel::before{animation:none!important}}
 
-.apms-brand-image{display:block;position:relative;overflow:hidden;width:150px;aspect-ratio:1130 / 318;flex-shrink:0;border-radius:2px}.apms-brand-image img{display:block;position:absolute;max-width:none;width:140.354%;height:311.95%;left:-19.469%;top:-105.975%;object-fit:fill;filter:url(#apms-day-cutout)}.sidebar-brand{flex-direction:column;align-items:flex-start;gap:12px}.sidebar-brand .apms-brand-image{width:148px}.sidebar-brand-text p{margin:0;font-size:10px}.login-brand-logo .apms-brand-image{width:170px}.login-mobile-logo .apms-brand-image{width:140px}
+.apms-brand-image{display:block;position:relative;overflow:hidden;width:150px;aspect-ratio:1130 / 318;flex-shrink:0;border-radius:2px}.apms-brand-image img{display:block;position:absolute;max-width:none;width:140.354%;height:311.95%;left:-19.469%;top:-105.975%;object-fit:fill}.sidebar-brand{flex-direction:column;align-items:flex-start;gap:12px}.sidebar-brand .apms-brand-image{width:148px}.sidebar-brand-text p{margin:0;font-size:10px}.login-brand-logo .apms-brand-image{width:170px}.login-mobile-logo .apms-brand-image{width:140px}
 .apms-brand-image{mix-blend-mode:multiply}
 
 /* Compact brand placement and a certificate-led illustration. */
@@ -164,277 +181,227 @@ body{background:#fff}.sidebar{background:#fff;border-right:1px solid var(--borde
 @media(max-width:767px){.admin-portal .sidebar{width:270px}.admin-portal .main-content{margin-left:0}.admin-portal .topbar{height:68px;padding:0 19px}.admin-portal .topbar-user-info{display:none}.admin-portal .page-content{padding:24px 18px 42px}.admin-portal .dashboard-composition{display:flex;flex-direction:column;gap:0}.admin-portal .campus-hero{width:100%;min-height:230px;margin-bottom:25px;padding:35px 25px;border-radius:25px}.admin-portal .campus-hero .workspace-heading{max-width:100%}.admin-portal .campus-hero .workspace-heading h2{max-width:76%;font-size:clamp(38px,10vw,53px)}.admin-portal .campus-hero .workspace-heading p{font-size:13px;max-width:72%}.admin-portal .campus-hero-art{right:-16px;top:auto;bottom:13px;width:100px;height:100px;border-radius:26px}.admin-portal .campus-hero-art span{font-size:52px}.admin-portal .work-queue{display:flex;flex-direction:column;gap:12px;width:100%;margin-bottom:24px}.admin-portal .work-queue .section-intro{padding:4px 0 8px}.admin-portal .work-queue .section-intro h3{font-size:23px}.admin-portal .work-queue .action-tile{width:100%;min-height:102px;padding:17px;border-radius:19px}.admin-portal .action-tile-copy strong{font-size:15px}.admin-portal .action-count{font-size:30px}.admin-portal .campus-register,.admin-portal .activity-feed{width:100%;padding:19px;margin-bottom:23px;border-radius:21px}.admin-portal .campus-register .metric-grid{grid-template-columns:1fr;gap:9px}.admin-portal .campus-register .metric-card{min-height:76px;grid-template-columns:auto 1fr auto auto;padding:13px;border-radius:15px}.admin-portal .metric-value{grid-column:3;grid-row:1;font-size:27px}.admin-portal .metric-detail{grid-column:2;grid-row:2;text-align:left;font-size:10px}.admin-portal .metric-label{font-size:12px}.admin-portal .activity-feed .panel-heading{align-items:flex-start;flex-direction:column;margin-bottom:12px}.admin-portal .activity-feed .designed-empty{align-items:flex-start;flex-direction:column;gap:6px}.admin-portal .campus-insights{width:100%;margin-bottom:15px}.admin-portal .workspace-links{width:100%;justify-content:flex-start;gap:8px}.admin-portal .workspace-links button{font-size:11px;padding:10px 11px}}
 @media(prefers-reduced-motion:reduce){.admin-portal::before,.admin-portal::after,.admin-portal .campus-hero::before,.admin-portal .campus-hero-art{animation:none!important}}
 
-/* Night mode: deep ink, cool light, and calm layered surfaces. */
-html.dark {
+/* Night mode: ink-violet surfaces with warm coral and lilac light. */
+:root.dark, html.dark {
  color-scheme:dark;
- --primary:#c7d1ff;--primary-light:#d9e1ff;--accent:#79dcc5;--accent-hover:#9be9d7;
- --success:#72dfb7;--success-bg:rgba(75,205,157,.13);
- --warning:#f3c96f;--warning-bg:rgba(243,201,111,.14);
- --danger:#ff8da1;--danger-bg:rgba(255,141,161,.13);
- --bg:#0c1221;--bg2:#111a2c;--surface:#151f33;--surface2:#1b2941;
- --text:#f2f6ff;--text-secondary:#b8c5dc;--text-muted:#8d9bb4;
- --border:rgba(177,195,231,.13);--border-strong:rgba(177,195,231,.23);
- --sidebar-bg:#10182a;--sidebar-text:#bdc8dd;--sidebar-active:#253655;--sidebar-hover:rgba(161,183,232,.08);
- --radius:14px;--radius-sm:10px;--radius-lg:18px;--radius-xl:24px;
- --shadow:0 10px 28px rgba(2,8,20,.24);--shadow-lg:0 20px 52px rgba(2,8,20,.36);--shadow-accent:0 8px 22px rgba(82,196,174,.18);
+ --primary:#d6c7ff;--primary-light:#e7ddff;--accent:#ff8e83;--accent-hover:#ffaaa0;
+ --success:#78dfb5;--success-bg:rgba(91,205,157,.14);
+ --warning:#ffd18a;--warning-bg:rgba(255,199,117,.14);
+ --danger:#ff91a6;--danger-bg:rgba(255,115,146,.14);
+ --bg:#100d1d;--bg2:#171329;--surface:#1c1830;--surface2:#25203b;
+ --text:#f8f4ff;--text-secondary:#c6bdd9;--text-muted:#a39ab8;
+ --border:rgba(226,213,255,.105);--border-strong:rgba(226,213,255,.18);
+ --sidebar-bg:#141126;--sidebar-text:#d1c9e0;--sidebar-active:#302544;--sidebar-hover:rgba(225,205,255,.07);
+ --shadow:0 12px 32px rgba(5,3,17,.28);--shadow-lg:0 24px 58px rgba(5,3,17,.38);--shadow-accent:0 10px 28px rgba(255,117,130,.16);
 }
 html.dark body {
- background:radial-gradient(ellipse at 88% 3%,rgba(80,112,196,.18),transparent 34%),radial-gradient(ellipse at 8% 82%,rgba(49,160,151,.10),transparent 36%),#0c1221;
- background-attachment:fixed;color:var(--text)
+ color:var(--text);
+ background:radial-gradient(ellipse at 86% 4%,rgba(239,90,143,.16),transparent 31%),radial-gradient(ellipse at 72% 16%,rgba(255,159,91,.09),transparent 28%),radial-gradient(ellipse at 8% 76%,rgba(128,102,226,.15),transparent 34%),#100d1d;
+ background-attachment:fixed;
 }
-html.dark .portal-layout,html.dark .main-content,html.dark .admin-portal{background:transparent;color:var(--text)}
-html.dark .sidebar{background:rgba(15,23,40,.94);border-right:1px solid var(--border);box-shadow:8px 0 32px rgba(2,8,20,.12)!important}
-html.dark .sidebar-brand{border-color:var(--border)}
-html.dark .sidebar-brand-text h1,html.dark .sidebar-footer div{color:var(--text)}
-html.dark .sidebar-brand-text p,html.dark .sidebar-footer div div:last-child{color:var(--text-secondary)!important}
-html.dark .sidebar-brand-icon,html.dark .sidebar-footer .user-avatar{background:linear-gradient(145deg,#5269a5,#347e82);color:#f5f8ff!important}
-html.dark .nav-item{color:var(--sidebar-text);border-radius:12px}
-html.dark .nav-item.active,html.dark .nav-item.active:hover{background:linear-gradient(110deg,#30466b,#315d68);color:#f6f9ff;border:1px solid rgba(164,195,235,.12)}
-html.dark .nav-item:hover{background:var(--sidebar-hover);color:var(--text)}
-html.dark .topbar{background:rgba(13,20,35,.82);border-color:var(--border);backdrop-filter:blur(18px)}
-html.dark .topbar-title,html.dark .topbar-user-name{color:var(--text)}
-html.dark .topbar-user-role,html.dark .topbar-user-sub{color:var(--text-secondary)}
-html.dark .theme-toggle{display:flex!important;border:1px solid var(--border-strong);border-radius:12px;background:var(--surface2);color:#a9eee0;box-shadow:0 5px 16px rgba(2,8,20,.18)!important;transition:background .2s,color .2s,border-color .2s!important}
-html.dark .theme-toggle:hover{background:#253956;color:#d7fff5;border-color:rgba(121,220,197,.34)}
-html.dark .page-content{max-width:1580px;padding:clamp(26px,3.5vw,54px) clamp(22px,4vw,60px) 70px}
-html.dark .admin-portal .dashboard-composition{grid-template-columns:minmax(0,1.12fr) minmax(300px,.88fr);grid-template-areas:'hero hero' 'queue queue' 'stats stats' 'activity insights' 'links links';column-gap:24px;row-gap:0}
-html.dark .admin-portal .campus-hero{min-height:258px;margin-bottom:32px;border:1px solid rgba(180,203,245,.17);border-radius:28px;background:linear-gradient(116deg,#202e50 0%,#2d3e68 52%,#27636a 100%);box-shadow:0 22px 52px rgba(3,8,20,.26)!important}
-html.dark .admin-portal .campus-hero::before{background:radial-gradient(ellipse at 78% 64%,rgba(93,220,192,.30),transparent 36%),radial-gradient(ellipse at 30% 36%,rgba(115,147,232,.30),transparent 44%);filter:blur(28px);animation:admin-hero-flow 22s ease-in-out infinite alternate!important}
-html.dark .admin-portal .campus-hero::after{background:linear-gradient(100deg,rgba(11,18,34,.25),transparent 78%)}
-html.dark .admin-portal .campus-hero .workspace-heading h2{color:#f4f7ff}
-html.dark .admin-portal .campus-hero .workspace-heading p{color:#d3def3}
-html.dark .admin-portal .campus-hero .eyebrow,html.dark .eyebrow,html.dark .form-eyebrow{color:#8ce5d2}
-html.dark .admin-portal .campus-hero-art{border-radius:30px;background:rgba(207,224,255,.10);border-color:rgba(218,231,255,.25);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 16px 34px rgba(2,8,20,.18)!important;backdrop-filter:blur(12px)!important}
-html.dark .admin-portal .campus-hero-art span{color:#bcf5e9}
-html.dark .admin-portal .work-queue{grid-template-columns:minmax(210px,.72fr) repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-bottom:30px}
-html.dark .admin-portal .work-queue .section-intro h3,html.dark .admin-portal .campus-register .section-intro h3,html.dark .admin-portal .activity-feed .panel-heading h3{color:var(--text)!important}
-html.dark .admin-portal .work-queue .section-intro>span:last-child{color:var(--text-secondary)}
-html.dark .admin-portal .work-queue .action-tile,html.dark .admin-portal .work-queue .action-tile:first-of-type,html.dark .admin-portal .work-queue .action-tile:last-of-type{max-width:640px;min-height:116px;padding:20px 22px;border:1px solid var(--border);border-radius:18px;background:var(--surface)!important;color:var(--text);box-shadow:0 10px 26px rgba(2,8,20,.18),inset 0 1px 0 rgba(203,220,255,.04)!important;backdrop-filter:none!important;transition:transform .2s,border-color .2s,background .2s!important}
-html.dark .admin-portal .work-queue .action-tile:hover{transform:translateY(-2px)!important;border-color:rgba(121,220,197,.38);background:#1a2940!important;box-shadow:0 14px 30px rgba(2,8,20,.26)!important}
-html.dark .admin-portal .action-tile-copy strong,html.dark .admin-portal .action-count{color:var(--text)}
-html.dark .admin-portal .action-tile-copy>span,html.dark .admin-portal .metric-detail,html.dark .admin-portal .feed-copy span{color:var(--text-secondary)}
-html.dark .admin-portal .action-tile .metric-icon,html.dark .admin-portal .campus-register .metric-icon{background:rgba(121,220,197,.14);color:#8ce5d2;box-shadow:none!important}
-html.dark .admin-portal .campus-register,html.dark .admin-portal .activity-feed,html.dark .admin-portal .campus-insights,html.dark .card,html.dark .glass-panel,html.dark .stat-card,html.dark .table-card,html.dark .modal,html.dark .student-progress-panel,html.dark .faculty-focus-panel{border:1px solid var(--border);border-radius:20px;background:rgba(21,31,51,.92);color:var(--text);box-shadow:0 14px 34px rgba(2,8,20,.18)!important;backdrop-filter:blur(12px)!important}
-html.dark .admin-portal .campus-register{padding:24px 26px 26px;margin-bottom:28px}
-html.dark .admin-portal .campus-register .metric-grid{gap:12px}
-html.dark .admin-portal .campus-register .metric-card,html.dark .admin-portal .campus-register .metric-card:nth-child(2),html.dark .admin-portal .campus-register .metric-card:nth-child(3){border:1px solid var(--border);border-radius:15px;background:#1b2941;color:var(--text);box-shadow:none!important;transition:transform .2s,border-color .2s,background .2s!important}
-html.dark .admin-portal .campus-register .metric-card:hover{transform:translateY(-2px)!important;border-color:rgba(121,220,197,.34);background:#202f4a}
-html.dark .admin-portal .metric-label,html.dark .admin-portal .metric-value{color:var(--text)!important}
-html.dark .admin-portal .activity-feed{padding:24px 26px}
-html.dark .admin-portal .activity-feed .feed-item{border-color:var(--border)}
-html.dark .admin-portal .feed-copy strong,html.dark .admin-portal .campus-insights summary{color:var(--text)}
-html.dark .admin-portal .designed-empty{border:1px dashed var(--border-strong);border-radius:14px;background:rgba(121,220,197,.05)}
-html.dark .admin-portal .designed-empty h4{color:var(--text)}
-html.dark .admin-portal .designed-empty p{color:var(--text-secondary)}
-html.dark .admin-portal .segmented-control{border:1px solid var(--border);border-radius:12px;background:#111a2c}
-html.dark .admin-portal .segmented-control button{border-radius:9px;color:var(--text-secondary)}
-html.dark .admin-portal .segmented-control button[aria-pressed=true]{background:#30466b;color:#f4f7ff;box-shadow:none!important}
-html.dark .admin-portal .campus-insights{padding:20px 22px;background:rgba(21,31,51,.92)}
-html.dark .admin-portal .workspace-links{justify-content:flex-start;gap:10px}
-html.dark .admin-portal .workspace-links button{border:1px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--text-secondary);box-shadow:none!important;transition:background .2s,border-color .2s,color .2s!important}
-html.dark .admin-portal .workspace-links button:hover{background:#253956;border-color:rgba(121,220,197,.3);color:var(--text)}
-html.dark .workspace-heading h2,html.dark .section-intro h3,html.dark .panel-heading h3,html.dark .card-header h3,html.dark .student-progress-copy h3,html.dark .faculty-focus-panel h3,html.dark .campus-progress h3{color:var(--text)}
-html.dark .workspace-heading p,html.dark .section-intro>span:last-child,html.dark .metric-detail,html.dark .feed-copy span,html.dark .campus-insights{color:var(--text-secondary)}
-html.dark .btn-primary,html.dark .login-submit-btn{border:1px solid rgba(121,220,197,.24);border-radius:12px;background:linear-gradient(110deg,#347e7d,#4f75b8);color:#f5f8ff;box-shadow:0 8px 20px rgba(43,108,121,.2)!important}
-html.dark .btn-primary:hover,html.dark .login-submit-btn:hover{background:linear-gradient(110deg,#3c9290,#5b82c8)}
-html.dark .btn-outline,html.dark .btn-ghost{border-color:var(--border-strong);border-radius:11px;background:rgba(176,196,231,.045);color:var(--text)}
-html.dark .btn-outline:hover,html.dark .btn-ghost:hover{background:rgba(176,196,231,.09);border-color:rgba(121,220,197,.3)}
-html.dark .input,html.dark .select,html.dark .textarea,html.dark .search-input,html.dark .filter-select{border-color:var(--border-strong);border-radius:11px;background:#10192b;color:var(--text)}
-html.dark .input::placeholder,html.dark .search-input::placeholder,html.dark .textarea::placeholder{color:#8291ad}
-html.dark .form-label{color:var(--text)}
-html.dark .data-table{color:var(--text)}
-html.dark .data-table th{background:#1c2941;color:var(--text)}
-html.dark .data-table td{border-color:var(--border);color:var(--text-secondary)}
-html.dark .data-table tbody tr:hover{background:rgba(121,220,197,.045)}
-html.dark .badge-info{background:rgba(157,176,255,.12);color:#cbd5ff}
-html.dark .modal-overlay{background:rgba(3,8,18,.74)}
-html.dark .progress-orbit progress::-webkit-progress-bar{background:#263650}
-html.dark .progress-orbit progress::-webkit-progress-value,html.dark .chart-bar{background:linear-gradient(90deg,#79dcc5,#819bea)}
-html.dark .login-page{background:radial-gradient(ellipse at 78% 72%,rgba(72,116,195,.25),transparent 42%),radial-gradient(ellipse at 14% 16%,rgba(53,177,158,.19),transparent 40%),#0c1221;color:var(--text)}
-html.dark .login-brand-panel{background:linear-gradient(145deg,#1c2947,#1e4a55);border-color:var(--border);color:var(--text)}
-html.dark .login-brand-panel::before,html.dark .login-brand-panel::after{display:block}
-html.dark .login-brand-logo h1,html.dark .login-brand-panel h2,html.dark .login-brand-panel p,html.dark .login-heading h2,html.dark .login-heading p{color:var(--text)}
-html.dark .login-brand-footer,html.dark .login-brand-badge,html.dark .login-feature-item span{color:var(--text-secondary)}
-html.dark .login-brand-logo-icon,html.dark .login-mobile-logo-icon{background:linear-gradient(145deg,#5269a5,#347e82)}
-html.dark .login-form-panel{border:1px solid var(--border);border-radius:24px;background:rgba(21,31,51,.82);backdrop-filter:blur(20px)}
-html.dark .login-role-tabs,html.dark .journey-showcase{border-color:var(--border)}
-html.dark .login-role-tab,html.dark .journey-controls button{color:var(--text-secondary)}
-html.dark .login-role-tab.active,html.dark .role-tab.active,html.dark .journey-controls button[aria-pressed=true]{border-radius:10px;background:#30466b;color:var(--text)}
-html.dark .journey-controls button{border-color:var(--border-strong);border-radius:10px}
-html.dark .journey-caption p,html.dark .journey-showcase>small{color:var(--text-secondary)}
-html.dark .workspace-skeleton>span{border-color:var(--border);background:var(--surface)}
-html.dark ::selection{background:rgba(121,220,197,.28);color:#f7fbff}
-html.dark .topbar,html.dark .sidebar,html.dark .card,html.dark .glass-panel,html.dark .theme-toggle,html.dark .btn,html.dark .metric-card,html.dark .action-tile{transition:background-color .22s ease,color .22s ease,border-color .22s ease,box-shadow .22s ease,transform .22s ease!important}
-@media(max-width:1120px){html.dark .admin-portal .dashboard-composition{grid-template-columns:minmax(0,1fr);grid-template-areas:'hero' 'queue' 'stats' 'activity' 'insights' 'links'}html.dark .admin-portal .work-queue{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}}
-@media(max-width:767px){html.dark .admin-portal .page-content{padding:24px 18px 42px}html.dark .admin-portal .dashboard-composition{display:flex;flex-direction:column;gap:0}html.dark .admin-portal .campus-hero{width:100%;min-height:230px;margin-bottom:24px;padding:34px 24px;border-radius:22px}html.dark .admin-portal .campus-hero .workspace-heading{max-width:100%}html.dark .admin-portal .campus-hero .workspace-heading h2{max-width:78%;font-size:clamp(36px,9vw,50px)}html.dark .admin-portal .campus-hero .workspace-heading p{font-size:13px;max-width:75%}html.dark .admin-portal .campus-hero-art{right:14px;bottom:14px;top:auto;width:86px;height:86px;border-radius:22px;transform:none!important}html.dark .admin-portal .campus-hero-art span{font-size:48px}html.dark .admin-portal .work-queue{display:flex;flex-direction:column;gap:12px;width:100%;margin-bottom:24px}html.dark .admin-portal .work-queue .section-intro{padding:2px 0 8px}html.dark .admin-portal .work-queue .action-tile{width:100%;max-width:none;min-height:90px;padding:16px;border-radius:16px}html.dark .admin-portal .campus-register,html.dark .admin-portal .activity-feed{width:100%;padding:18px;margin-bottom:22px;border-radius:18px}html.dark .admin-portal .campus-register .metric-grid{grid-template-columns:1fr;gap:8px}html.dark .admin-portal .campus-register .metric-card{min-height:76px;grid-template-columns:auto 1fr auto auto;padding:12px;border-radius:13px}html.dark .admin-portal .metric-value{grid-column:3;grid-row:1;font-size:26px}html.dark .admin-portal .metric-detail{grid-column:2;grid-row:2;text-align:left;font-size:10px}html.dark .admin-portal .metric-label{font-size:12px}html.dark .admin-portal .activity-feed .panel-heading{align-items:flex-start;flex-direction:column;margin-bottom:12px}html.dark .admin-portal .campus-insights{width:100%;margin-bottom:14px}html.dark .admin-portal .workspace-links{width:100%;justify-content:flex-start;gap:8px}}
+html.dark .portal-layout,html.dark .main-content,html.dark .admin-portal {background:transparent;color:var(--text)}
+html.dark .sidebar {background:rgba(19,16,34,.88);border-right:1px solid var(--border);box-shadow:8px 0 36px rgba(3,2,12,.18)!important;backdrop-filter:blur(22px)}
+html.dark .sidebar-brand {border-color:var(--border)}
+html.dark .sidebar-brand-text h1,html.dark .sidebar-footer div {color:var(--text)}
+html.dark .sidebar-brand-text p,html.dark .sidebar-footer div div:last-child {color:var(--text-secondary)!important}
+html.dark .sidebar-brand-icon,html.dark .sidebar-footer .user-avatar {background:linear-gradient(140deg,#e65d91,#f29968);color:white!important}
+html.dark .nav-item {color:var(--sidebar-text);border-radius:13px;transition:background .2s,color .2s,transform .2s}
+html.dark .nav-item.active,html.dark .nav-item.active:hover {background:linear-gradient(110deg,rgba(220,98,153,.22),rgba(140,112,226,.20));color:#fff;border:1px solid rgba(245,194,230,.12)}
+html.dark .nav-item:hover {background:var(--sidebar-hover);color:#fff;transform:translateX(2px)}
+html.dark .topbar {background:rgba(16,13,29,.72);border-color:var(--border);backdrop-filter:blur(22px)}
+html.dark .topbar-title,html.dark .topbar-user-name {color:var(--text)}
+html.dark .topbar-user-role,html.dark .topbar-user-sub {color:var(--text-secondary)}
+html.dark .theme-toggle {display:flex!important;border:1px solid var(--border-strong);border-radius:14px;background:rgba(38,31,59,.76);color:#ffd0a1;box-shadow:0 8px 20px rgba(4,3,15,.18)!important;transition:background .2s,color .2s,border-color .2s,transform .2s!important}
+html.dark .theme-toggle:hover {transform:translateY(-1px);background:#352846;color:#ffe2bf;border-color:rgba(255,166,150,.36)}
+html.dark .page-content {max-width:1600px;padding:clamp(30px,4vw,60px) clamp(22px,4.6vw,72px) 76px}
+html.dark .admin-portal {--admin-ink:#f8f4ff;--admin-muted:#c6bdd9;--admin-plum:#2d2541;--admin-pink:#f078a5;--admin-orange:#ff9e70;--admin-lilac:#aa95f0;--text:#f8f4ff;--text-secondary:#c6bdd9;--text-muted:#a39ab8;--bg:#100d1d;--bg2:#171329;--surface:#1c1830;--surface2:#25203b;--border:rgba(226,213,255,.105);--accent:#ff8e83;--accent-hover:#ffaaa0}
+html.dark .admin-portal::before,html.dark .admin-portal::after {display:none}
+html.dark .admin-portal .topbar {background:rgba(16,13,29,.74);border-bottom:1px solid var(--border)}
+html.dark .admin-portal .topbar-title,html.dark .admin-portal .topbar-user-name {color:var(--text)}
+html.dark .admin-portal .topbar-user-sub {color:var(--text-secondary)}
+html.dark .admin-portal .sidebar {background:rgba(19,16,34,.9);border-right:1px solid var(--border)}
+html.dark .admin-portal .sidebar-brand-text p,html.dark .admin-portal .sidebar-footer div {color:var(--text-secondary)!important}
+html.dark .admin-portal .nav-item {color:var(--text-secondary)}
+html.dark .admin-portal .nav-item .material-symbols-outlined {color:#c3a8ea}
+html.dark .admin-portal .nav-item.active,html.dark .admin-portal .nav-item.active:hover {background:linear-gradient(110deg,rgba(225,93,148,.23),rgba(137,107,218,.19));border-color:rgba(245,194,230,.12);color:#fff}
+html.dark .admin-portal .nav-item.active .material-symbols-outlined {color:#ffb5a2}
+html.dark .admin-portal .dashboard-composition {max-width:1320px;display:grid;grid-template-columns:minmax(0,1.16fr) minmax(300px,.84fr);grid-template-areas:'hero hero' 'queue queue' 'stats stats' 'activity insights' 'links links';column-gap:26px;row-gap:0}
+html.dark .admin-portal .campus-hero {position:relative;isolation:isolate;min-height:270px;margin-bottom:34px;padding:42px 46px;overflow:hidden;border:1px solid rgba(242,221,255,.12);border-radius:30px;background:linear-gradient(118deg,rgba(48,35,68,.96),rgba(42,36,75,.92) 56%,rgba(39,42,78,.92));box-shadow:0 24px 64px rgba(4,2,16,.32)!important}
+html.dark .admin-portal .campus-hero::before {content:'';position:absolute;z-index:-1;inset:-55%;pointer-events:none;background:radial-gradient(ellipse at 75% 54%,rgba(250,105,151,.48),transparent 30%),radial-gradient(ellipse at 57% 65%,rgba(255,171,105,.34),transparent 28%),radial-gradient(ellipse at 30% 48%,rgba(135,116,241,.42),transparent 36%);filter:blur(34px);animation:apms-night-flow 24s ease-in-out infinite alternate!important}
+html.dark .admin-portal .campus-hero::after {content:'';position:absolute;z-index:-1;inset:0;pointer-events:none;background:linear-gradient(100deg,rgba(17,13,30,.18),transparent 72%)}
+html.dark .admin-portal .campus-hero .workspace-heading h2 {color:#fff8ff}
+html.dark .admin-portal .campus-hero .workspace-heading p {color:#e5dced}
+html.dark .admin-portal .campus-hero .eyebrow,html.dark .eyebrow,html.dark .form-eyebrow {color:#ffb3a1}
+html.dark .admin-portal .campus-hero-art {border-radius:32px;background:linear-gradient(145deg,rgba(255,255,255,.15),rgba(255,255,255,.045));border:1px solid rgba(255,255,255,.24);box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 20px 42px rgba(5,2,18,.2)!important;backdrop-filter:blur(15px)!important}
+html.dark .admin-portal .campus-hero-art span {color:#ffd3c3}
+html.dark .admin-portal .work-queue {grid-template-columns:minmax(210px,.72fr) repeat(2,minmax(230px,1fr));gap:16px;margin:0 0 32px;padding:0;background:transparent}
+html.dark .admin-portal .work-queue .section-intro {padding:12px 10px 12px 0}
+html.dark .admin-portal .work-queue .section-intro h3,html.dark .admin-portal .campus-register .section-intro h3,html.dark .admin-portal .activity-feed .panel-heading h3 {color:var(--text)!important}
+html.dark .admin-portal .work-queue .section-intro>span:last-child {color:var(--text-secondary)}
+html.dark .admin-portal .work-queue .action-tile,html.dark .admin-portal .work-queue .action-tile:first-of-type,html.dark .admin-portal .work-queue .action-tile:last-of-type {min-height:118px;padding:20px 22px;border:1px solid var(--border);border-radius:21px;background:linear-gradient(135deg,rgba(42,33,61,.86),rgba(31,27,52,.88))!important;color:var(--text);box-shadow:0 14px 32px rgba(4,3,15,.18),inset 0 1px 0 rgba(255,255,255,.045)!important;backdrop-filter:blur(16px)!important;transition:transform .22s,border-color .22s,background .22s,box-shadow .22s!important}
+html.dark .admin-portal .work-queue .action-tile:hover {transform:translateY(-3px)!important;border-color:rgba(255,148,160,.28);background:linear-gradient(135deg,rgba(54,38,70,.94),rgba(39,33,67,.95))!important;box-shadow:0 20px 40px rgba(4,3,15,.28)!important}
+html.dark .admin-portal .action-tile .metric-icon,html.dark .admin-portal .campus-register .metric-icon {background:linear-gradient(140deg,#df5c93,#f19b66);color:white;box-shadow:0 8px 22px rgba(219,79,138,.2)!important}
+html.dark .admin-portal .action-tile-copy strong,html.dark .admin-portal .action-count {color:var(--text)}
+html.dark .admin-portal .action-tile-copy>span,html.dark .admin-portal .metric-detail,html.dark .admin-portal .feed-copy span {color:var(--text-secondary)}
+html.dark .admin-portal .campus-register,html.dark .admin-portal .activity-feed,html.dark .admin-portal .campus-insights,html.dark .card,html.dark .glass-panel,html.dark .stat-card,html.dark .table-card,html.dark .modal,html.dark .student-progress-panel,html.dark .faculty-focus-panel {border:1px solid var(--border);border-radius:23px;background:linear-gradient(145deg,rgba(31,26,50,.88),rgba(26,23,43,.9));color:var(--text);box-shadow:0 18px 42px rgba(4,3,15,.2),inset 0 1px 0 rgba(255,255,255,.035)!important;backdrop-filter:blur(18px)!important}
+html.dark .admin-portal .campus-register {margin-bottom:32px;padding:26px 28px 28px}
+html.dark .admin-portal .campus-register .section-intro {padding:0 0 18px}
+html.dark .admin-portal .campus-register .metric-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;border:0}
+html.dark .admin-portal .campus-register .metric-card,html.dark .admin-portal .campus-register .metric-card:nth-child(2),html.dark .admin-portal .campus-register .metric-card:nth-child(3) {min-height:106px;padding:17px;border:1px solid rgba(226,213,255,.09);border-radius:18px;background:linear-gradient(135deg,rgba(219,99,153,.12),rgba(255,255,255,.035))!important;color:var(--text);box-shadow:inset 0 1px 0 rgba(255,255,255,.055)!important;transition:transform .2s,border-color .2s,background .2s!important}
+html.dark .admin-portal .campus-register .metric-card:nth-child(2) {background:linear-gradient(135deg,rgba(144,113,220,.16),rgba(255,255,255,.035))!important}
+html.dark .admin-portal .campus-register .metric-card:nth-child(3) {background:linear-gradient(135deg,rgba(255,168,102,.14),rgba(255,255,255,.035))!important}
+html.dark .admin-portal .campus-register .metric-card:hover {transform:translateY(-3px)!important;border-color:rgba(255,172,158,.26);background-color:rgba(52,39,69,.92)!important}
+html.dark .admin-portal .metric-label,html.dark .admin-portal .metric-value {color:var(--text)!important}
+html.dark .admin-portal .metric-arrow {color:#e1b5d2}
+html.dark .admin-portal .activity-feed {margin:0 0 28px;padding:24px 26px}
+html.dark .admin-portal .activity-feed .feed-item {border-color:var(--border)}
+html.dark .admin-portal .feed-copy strong,html.dark .admin-portal .campus-insights summary {color:var(--text)}
+html.dark .admin-portal .designed-empty {border:1px dashed var(--border-strong);border-radius:16px;background:rgba(214,126,194,.045)}
+html.dark .admin-portal .designed-empty h4 {color:var(--text)}
+html.dark .admin-portal .designed-empty p {color:var(--text-secondary)}
+html.dark .admin-portal .segmented-control {border:1px solid var(--border);border-radius:13px;background:rgba(15,12,28,.58)}
+html.dark .admin-portal .segmented-control button {border-radius:10px;color:var(--text-secondary)}
+html.dark .admin-portal .segmented-control button[aria-pressed=true] {background:linear-gradient(110deg,#b94c88,#8067c7);color:#fff;box-shadow:0 5px 16px rgba(166,77,153,.2)!important}
+html.dark .admin-portal .campus-insights {margin:0 0 28px;padding:21px 23px}
+html.dark .admin-portal .campus-insights[open] summary {margin-bottom:22px}
+html.dark .admin-portal .workspace-links {justify-content:flex-start;gap:10px;padding:4px 0 12px}
+html.dark .admin-portal .workspace-links button {padding:10px 14px;border:1px solid var(--border);border-radius:13px;background:rgba(38,31,58,.72);color:var(--text-secondary);box-shadow:none!important;transition:transform .2s,background .2s,border-color .2s,color .2s!important}
+html.dark .admin-portal .workspace-links button:hover {transform:translateY(-2px);background:rgba(58,43,74,.9);border-color:rgba(255,148,160,.24);color:var(--text)}
+html.dark .workspace-heading h2,html.dark .section-intro h3,html.dark .panel-heading h3,html.dark .card-header h3,html.dark .student-progress-copy h3,html.dark .faculty-focus-panel h3,html.dark .campus-progress h3 {color:var(--text)}
+html.dark .workspace-heading p,html.dark .section-intro>span:last-child,html.dark .metric-detail,html.dark .feed-copy span,html.dark .campus-insights {color:var(--text-secondary)}
+html.dark .btn-primary,html.dark .login-submit-btn {border:1px solid rgba(255,206,189,.16);border-radius:13px;background:linear-gradient(110deg,#d84d83,#eb795f 58%,#e49a5d);color:#fff9ff;box-shadow:0 10px 24px rgba(217,79,127,.22)!important}
+html.dark .btn-primary:hover,html.dark .login-submit-btn:hover {background:linear-gradient(110deg,#e05c91,#f1886c 58%,#eca86a);box-shadow:0 14px 30px rgba(217,79,127,.28)!important}
+html.dark .btn-outline,html.dark .btn-ghost {border-color:var(--border-strong);border-radius:12px;background:rgba(225,213,255,.045);color:var(--text)}
+html.dark .btn-outline:hover,html.dark .btn-ghost:hover {background:rgba(225,213,255,.09);border-color:rgba(255,157,159,.28)}
+html.dark .input,html.dark .select,html.dark .textarea,html.dark .search-input,html.dark .filter-select {border-color:var(--border-strong);border-radius:12px;background:rgba(18,15,32,.82);color:var(--text)}
+html.dark .input::placeholder,html.dark .search-input::placeholder,html.dark .textarea::placeholder {color:#a299b2}
+html.dark .form-label {color:var(--text)}
+html.dark .data-table {color:var(--text)}
+html.dark .data-table th {background:rgba(42,35,63,.86);color:var(--text)}
+html.dark .data-table td {border-color:var(--border);color:var(--text-secondary)}
+html.dark .data-table tbody tr:hover {background:rgba(244,127,157,.045)}
+html.dark .badge-info {background:rgba(162,137,235,.16);color:#ddd0ff}
+html.dark .modal-overlay {background:rgba(7,5,17,.78)}
+html.dark .progress-orbit progress::-webkit-progress-bar {background:#352c49}
+html.dark .progress-orbit progress::-webkit-progress-value,html.dark .chart-bar {background:linear-gradient(90deg,#ed718e,#ab8bea 58%,#f2a36d)}
+html.dark .login-page {background:radial-gradient(ellipse at 80% 72%,rgba(142,106,224,.24),transparent 42%),radial-gradient(ellipse at 18% 14%,rgba(237,91,147,.21),transparent 38%),#100d1d;color:var(--text)}
+html.dark .login-brand-panel {background:linear-gradient(145deg,#2c2242,#392b55 58%,#63374f);border-color:var(--border);color:var(--text)}
+html.dark .login-brand-panel::before,html.dark .login-brand-panel::after {display:block}
+html.dark .login-brand-logo h1,html.dark .login-brand-panel h2,html.dark .login-brand-panel p,html.dark .login-heading h2,html.dark .login-heading p {color:var(--text)}
+html.dark .login-brand-footer,html.dark .login-brand-badge,html.dark .login-feature-item span {color:var(--text-secondary)}
+html.dark .login-brand-logo-icon,html.dark .login-mobile-logo-icon {background:linear-gradient(145deg,#dc5b91,#ee9b65)}
+html.dark .login-form-panel {border:1px solid var(--border);border-radius:26px;background:rgba(28,24,48,.78);backdrop-filter:blur(22px)}
 
-/* The admin workspace owns local color tokens, so map those too in night mode. */
-html.dark .admin-portal{
- --admin-ink:#f2f6ff;--admin-muted:#b8c5dc;--admin-plum:#273451;--admin-pink:#79dcc5;--admin-orange:#8f9fe8;--admin-lilac:#91a9e8;
- --text:#f2f6ff;--text-secondary:#b8c5dc;--text-muted:#8d9bb4;--bg:#0c1221;--bg2:#111a2c;--surface:#151f33;--surface2:#1b2941;
- --border:rgba(177,195,231,.13);--accent:#79dcc5;--accent-hover:#9be9d7;
- background:transparent;color:var(--text)
+/* Password recovery: one connected canvas, using the same type and brand cues
+   as sign-in without the hard split between a marketing pane and a form. */
+.password-reset-page{--reset-ink:#2b1730;--reset-muted:#766679;--reset-accent:#bf2f70;position:relative;display:grid;grid-template-rows:auto 1fr auto;min-height:100svh;overflow:hidden;padding:26px clamp(22px,5vw,72px) 20px;background:radial-gradient(ellipse at 18% 78%,rgba(239,105,176,.31),transparent 38%),radial-gradient(ellipse at 82% 16%,rgba(255,178,103,.42),transparent 40%),radial-gradient(ellipse at 68% 83%,rgba(165,130,226,.24),transparent 36%),linear-gradient(135deg,#fffaf4 0%,#fff4f7 48%,#f8f3ff 100%);color:var(--reset-ink)}
+.password-reset-page::before,.password-reset-page::after{content:"";position:absolute;z-index:0;pointer-events:none;border-radius:50%;filter:blur(60px);opacity:.52;animation:reset-drift 24s ease-in-out infinite alternate}
+.password-reset-page::before{width:42vw;height:42vw;left:-18vw;top:28vh;background:radial-gradient(circle,#f05da9 0%,rgba(244,139,176,.36) 38%,transparent 70%)}
+.password-reset-page::after{width:38vw;height:38vw;right:-12vw;bottom:-18vh;background:radial-gradient(circle,#ffb16c 0%,rgba(201,151,226,.28) 44%,transparent 72%);animation-delay:-9s}
+.reset-header,.reset-stage,.reset-footer{position:relative;z-index:1}
+.reset-header{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:1440px;margin:0 auto}
+.reset-brand{display:inline-flex;align-items:center;line-height:0;text-decoration:none}
+.reset-brand .apms-brand-image{width:112px}
+.password-reset-page .reset-header .theme-toggle{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:1px solid rgba(114,63,107,.15);border-radius:14px;background:rgba(255,255,255,.58);color:#653b68;backdrop-filter:blur(12px);box-shadow:0 8px 22px rgba(85,47,77,.08)}
+.reset-stage{display:grid;place-items:center;padding:28px 0}
+.reset-card{width:min(100%,520px);padding:clamp(28px,5vw,52px);border:1px solid rgba(255,255,255,.72);border-radius:30px;background:linear-gradient(145deg,rgba(255,255,255,.72),rgba(255,255,255,.42));box-shadow:0 32px 90px rgba(101,57,101,.13),inset 0 1px 0 rgba(255,255,255,.84);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);animation:reset-card-in .55s cubic-bezier(.2,.8,.2,1) both}
+.reset-emblem{width:54px;height:54px;display:grid;place-items:center;margin:0 auto 22px;border:1px solid rgba(255,255,255,.8);border-radius:19px;background:linear-gradient(145deg,#fff4e8,#f9cfe1 62%,#e8d8fb);color:#983a69;box-shadow:0 12px 28px rgba(166,67,125,.16);transform:rotate(-6deg)}
+.reset-emblem svg{width:25px;height:25px}
+.reset-kicker{display:flex;align-items:center;justify-content:center;gap:8px;color:#9a4977;font-size:10px;font-weight:800;letter-spacing:.16em;margin-bottom:14px}
+.reset-kicker span{color:#e49a84}
+.reset-heading{text-align:center;margin:0 0 30px}
+.reset-heading h1{font-family:'Public Sans',system-ui,sans-serif;font-size:clamp(30px,4vw,40px);font-weight:800;letter-spacing:-.05em;line-height:1.08;margin:0 0 12px;color:var(--reset-ink)}
+.reset-heading p{max-width:340px;margin:0 auto;color:var(--reset-muted);font-size:14px;line-height:1.6}
+.reset-form{display:grid;gap:20px}
+.reset-field{display:grid;gap:9px}
+.reset-field .form-label{font-size:12px;font-weight:700;margin:0;color:#403044}
+.reset-field .input{min-height:54px;border:1px solid rgba(96,64,104,.18);border-radius:14px;padding:0 16px;background:rgba(255,255,255,.76);font-family:'Public Sans',system-ui,sans-serif;font-size:14px;transition:border-color .18s ease,box-shadow .18s ease,background .18s ease}
+.reset-field .input:focus{outline:none;border-color:#d45a91;background:#fff;box-shadow:0 0 0 4px rgba(220,100,158,.14)}
+.reset-field small{font-size:11px;color:var(--reset-muted);line-height:1.5}
+.reset-cta{width:100%;min-height:54px;margin-top:4px;border:0;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;font-family:'Public Sans',system-ui,sans-serif;font-weight:750;color:#fff!important;background:linear-gradient(105deg,#b52d70 0%,#e64c83 57%,#f19665 100%);box-shadow:0 12px 26px rgba(194,54,117,.2);transition:transform .2s ease,box-shadow .2s ease,filter .2s ease}
+.reset-cta:hover:not(:disabled){transform:translateY(-2px);filter:saturate(1.08);box-shadow:0 16px 32px rgba(194,54,117,.28)}
+.reset-cta:disabled{opacity:.7;cursor:wait}
+.reset-security-note{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--reset-muted);font-size:11px;line-height:1.5;padding-top:1px}
+.reset-security-note svg{width:16px;height:16px;color:#936b99}
+.reset-alert{display:flex;align-items:center;gap:10px;line-height:1.5;margin-bottom:18px;border-radius:14px}
+.reset-alert svg{width:19px;height:19px;flex:0 0 auto}
+.reset-state-card{display:grid;justify-items:center;gap:12px;text-align:center;padding:22px;border:1px solid rgba(123,81,129,.12);border-radius:20px;background:rgba(255,255,255,.44)}
+.reset-state-card strong{font-size:19px;font-weight:800;letter-spacing:-.025em;color:var(--reset-ink)}
+.reset-state-card p{max-width:360px;margin:0;color:var(--reset-muted);font-size:13px;line-height:1.65}
+.reset-state-card .reset-cta{margin-top:8px}
+.reset-text-button{border:0;background:none;color:var(--reset-accent);font:inherit;font-weight:700;padding:8px 0;cursor:pointer}
+.reset-back-link{margin-top:26px;text-align:center}
+.reset-back-link a{display:inline-flex;align-items:center;gap:7px;color:var(--reset-muted);font-size:12px;font-weight:650;text-decoration:none;transition:color .15s ease}
+.reset-back-link a:hover{color:var(--reset-accent)}
+.reset-back-link svg{width:16px;height:16px}
+.reset-footer{text-align:center;color:rgba(83,59,91,.64);font-size:10px;font-weight:600;letter-spacing:.04em}
+.reset-footer span{padding:0 5px;color:#df8ca5}
+@keyframes reset-card-in{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes reset-drift{from{transform:translate3d(-2%,1%,0) scale(.94)}to{transform:translate3d(4%,-3%,0) scale(1.08)}}
+html.dark .password-reset-page{--reset-ink:#faf5ff;--reset-muted:#bdb2ce;background:radial-gradient(ellipse at 16% 82%,rgba(189,70,151,.31),transparent 40%),radial-gradient(ellipse at 82% 14%,rgba(197,130,95,.24),transparent 41%),radial-gradient(ellipse at 69% 80%,rgba(100,91,190,.28),transparent 37%),linear-gradient(135deg,#11101d 0%,#1b1730 50%,#211a34 100%);color:var(--reset-ink)}
+html.dark .password-reset-page::before{background:radial-gradient(circle,rgba(182,64,149,.48),rgba(115,75,174,.2) 42%,transparent 72%)}
+html.dark .password-reset-page::after{background:radial-gradient(circle,rgba(226,137,103,.32),rgba(122,83,169,.22) 44%,transparent 72%)}
+html.dark .password-reset-page .reset-brand .apms-brand-image img{filter:url(#apms-sidebar-cutout);mix-blend-mode:normal}
+html.dark .password-reset-page .reset-header .theme-toggle{border-color:rgba(223,203,244,.16);background:rgba(40,33,62,.68);color:#f3bf9d;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+html.dark .reset-card{border-color:rgba(226,211,246,.14);background:linear-gradient(145deg,rgba(41,34,63,.76),rgba(31,27,51,.63));box-shadow:0 32px 90px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08)}
+html.dark .reset-emblem{border-color:rgba(255,255,255,.28);background:linear-gradient(145deg,rgba(255,222,195,.96),rgba(224,159,202,.92) 62%,rgba(170,151,225,.92));color:#462643}
+html.dark .reset-kicker{color:#e7a2c2}
+html.dark .reset-heading h1,html.dark .reset-field .form-label,html.dark .reset-state-card strong{color:var(--reset-ink)}
+html.dark .reset-field .input{border-color:rgba(225,208,242,.18);background:rgba(17,15,29,.56);color:#fbf8ff}
+html.dark .reset-field .input::placeholder{color:#958ca6}
+html.dark .reset-field .input:focus{border-color:#dc79ad;background:rgba(20,17,34,.88);box-shadow:0 0 0 4px rgba(220,100,158,.17)}
+html.dark .reset-state-card{border-color:rgba(225,208,242,.12);background:rgba(19,16,33,.3)}
+html.dark .reset-footer{color:rgba(226,214,240,.58)}
+@media(max-width:767px){
+  .password-reset-page{padding:20px 18px 16px}
+  .reset-brand .apms-brand-image{width:96px}
+  .reset-stage{padding:32px 0}
+  .reset-card{width:min(100%,500px);padding:30px 23px;border-radius:26px}
+  .reset-emblem{width:48px;height:48px;margin-bottom:19px;border-radius:17px}
+  .reset-heading{margin-bottom:25px}
+  .reset-heading h1{font-size:31px}
+  .reset-field .input{min-height:52px}
+  .reset-footer{padding-bottom:2px}
 }
-html.dark .admin-portal::before,html.dark .admin-portal::after{display:none}
-html.dark .admin-portal .topbar{background:rgba(13,20,35,.88);border-bottom:1px solid var(--border)}
-html.dark .admin-portal .topbar-title,html.dark .admin-portal .topbar-user-name{color:var(--text)}
-html.dark .admin-portal .topbar-user-sub{color:var(--text-secondary)}
-html.dark .admin-portal .sidebar{background:linear-gradient(180deg,#111a2d,#0d1526);border-right:1px solid var(--border)}
-html.dark .admin-portal .sidebar-brand-text p{color:var(--text-secondary)}
-html.dark .admin-portal .sidebar-footer div{color:var(--text-secondary)!important}
-html.dark .admin-portal .nav-item{color:var(--text-secondary)}
-html.dark .admin-portal .nav-item .material-symbols-outlined{color:#a7b9e5}
-html.dark .admin-portal .nav-item.active,html.dark .admin-portal .nav-item.active:hover{background:linear-gradient(110deg,#30466b,#315d68);border-color:rgba(164,195,235,.12);color:#f6f9ff}
-html.dark .admin-portal .nav-item.active .material-symbols-outlined{color:#aaf0df}
-html.dark .admin-portal .theme-toggle{border-color:var(--border-strong);background:var(--surface2);color:#a9eee0}
-html.dark .admin-portal .work-queue .section-intro h3,html.dark .admin-portal .campus-register .section-intro h3,html.dark .admin-portal .activity-feed .panel-heading h3{color:var(--text)!important}
-html.dark .admin-portal .work-queue .section-intro>span:last-child{color:var(--text-secondary)}
-html.dark .admin-portal .work-queue .action-tile,html.dark .admin-portal .work-queue .action-tile:first-of-type,html.dark .admin-portal .work-queue .action-tile:last-of-type{background:var(--surface)!important;color:var(--text)}
-html.dark .admin-portal .action-tile-copy strong,html.dark .admin-portal .action-count{color:var(--text)}
-html.dark .admin-portal .action-tile-copy>span{color:var(--text-secondary)}
-html.dark .admin-portal .campus-register .metric-card,html.dark .admin-portal .campus-register .metric-card:nth-child(2),html.dark .admin-portal .campus-register .metric-card:nth-child(3){background:#1b2941;color:var(--text)}
-html.dark .admin-portal .metric-label,html.dark .admin-portal .metric-value{color:var(--text)!important}
-html.dark .admin-portal .feed-copy strong,html.dark .admin-portal .campus-insights summary{color:var(--text)}
-html.dark .admin-portal .feed-copy span,html.dark .admin-portal .designed-empty p{color:var(--text-secondary)}
-
-
-/* Role workspaces: expressive surfaces, open rhythm, and readable controls. */
-.student-portal,.faculty-portal{--role-ink:#24182d;--role-muted:#6e5c70;--role-line:rgba(111,61,112,.14);--role-card:rgba(255,255,255,.76);--role-shadow:0 22px 60px rgba(91,43,105,.1);background:radial-gradient(circle at 78% 7%,#ffd1be 0,transparent 30%),radial-gradient(circle at 24% 46%,#ead6fb 0,transparent 38%),linear-gradient(135deg,#fff9f5,#f8eaf5 55%,#f4f3ff)!important;color:var(--role-ink);min-height:100vh}
-.student-portal .ambient-backdrop,.faculty-portal .ambient-backdrop{display:none!important}
-.student-portal .sidebar,.faculty-portal .sidebar{width:234px;padding:0 18px;background:linear-gradient(164deg,#421747 0%,#5f275b 55%,#35204b 100%);border-right:1px solid #ffffff24;box-shadow:12px 0 38px rgba(53,25,70,.14);color:white}
-.student-portal .main-content,.faculty-portal .main-content{margin-left:234px;background:transparent!important}
-.student-portal .sidebar-brand,.faculty-portal .sidebar-brand{padding:29px 8px 25px;border-bottom:1px solid #ffffff2b}
-.student-portal .sidebar-brand-text p,.faculty-portal .sidebar-brand-text p{color:#f5d7ef!important;letter-spacing:.12em;font-weight:700}
-.student-portal .sidebar-nav,.faculty-portal .sidebar-nav{padding-top:26px;gap:7px}
-.student-portal .nav-item,.faculty-portal .nav-item{border-radius:13px;padding:13px 14px;color:#f1dfef;font-size:13px;font-weight:650;transition:background .2s,transform .2s!important}
-.student-portal .nav-item:hover,.faculty-portal .nav-item:hover{background:#ffffff1b;color:white;transform:translateX(3px)}
-.student-portal .nav-item.active,.faculty-portal .nav-item.active{background:linear-gradient(110deg,#f390b7,#ffc787)!important;color:#321b38!important;box-shadow:0 10px 22px #2e112738;font-weight:800}
-.student-portal .sidebar-footer,.faculty-portal .sidebar-footer{border-color:#ffffff2b}
-.student-portal .sidebar-footer div,.faculty-portal .sidebar-footer div{color:#fff!important}
-.student-portal .sidebar-help-btn{color:#fff;border-color:#ffffff36;background:#ffffff16;border-radius:11px}
-.student-portal .topbar,.faculty-portal .topbar{height:80px;padding:0 clamp(24px,4vw,62px);background:#fff9!important;border-bottom:1px solid #ffffff9b;backdrop-filter:blur(20px);box-shadow:0 6px 20px #7c3c6c0b}
-.student-portal .topbar-title,.faculty-portal .topbar-title{font-size:14px;font-weight:800;color:var(--role-ink);letter-spacing:-.02em}
-.student-portal .topbar-user-name,.faculty-portal .topbar-user-name{font-weight:800;color:var(--role-ink)}
-.student-portal .topbar-user-sub,.faculty-portal .topbar-user-sub{color:var(--role-muted)}
-.student-portal .theme-toggle,.faculty-portal .theme-toggle{border:1px solid var(--role-line);border-radius:50%;width:40px;height:40px;background:#ffffffb5;color:#6a315e}
-.student-portal .page-content,.faculty-portal .page-content{max-width:1580px;padding:clamp(30px,4.2vw,64px) clamp(24px,4vw,64px) 88px}
-.student-portal .workspace-heading,.faculty-portal .workspace-heading{margin-bottom:30px}
-.student-portal .workspace-heading h2,.faculty-portal .workspace-heading h2{font-size:clamp(35px,4.5vw,60px);line-height:1.05;font-weight:850;letter-spacing:-.065em;color:var(--role-ink);max-width:760px}
-.student-portal .workspace-heading p,.faculty-portal .workspace-heading p{font-size:15px;color:var(--role-muted);margin-top:12px}
-.student-portal .eyebrow,.faculty-portal .eyebrow{color:#a42e75;font-weight:850;letter-spacing:.13em}
-.student-portal .student-progress-panel,.faculty-portal .faculty-focus-panel{border:1px solid #fff9!important;border-radius:28px;background:linear-gradient(116deg,#ffd6b6 0%,#ffa9b9 48%,#cda7f5 100%)!important;box-shadow:0 24px 55px #a7467040!important;padding:clamp(28px,4vw,50px);min-height:250px;overflow:hidden}
-.student-portal .student-progress-panel::before,.faculty-portal .faculty-focus-panel::before{background:radial-gradient(circle at 84% 55%,#fff8d8ab,transparent 30%),radial-gradient(circle at 23% 90%,#fc7ab38c,transparent 45%);filter:blur(22px);animation:apms-color-flow 25s ease-in-out infinite alternate!important}
-.student-portal .student-progress-copy h3,.faculty-portal .faculty-focus-panel h3{font-size:clamp(32px,3vw,48px);font-weight:850;line-height:1.05;letter-spacing:-.055em;color:#301532}
-.student-portal .student-progress-copy p,.faculty-portal .faculty-focus-panel p{color:#513046}
-.student-portal .student-progress-copy small{color:#54314b}
-.student-portal .student-progress-panel .badge{background:#fff9;color:#582c52;border:1px solid #fff9}
-.student-portal .student-progress-panel .progress-orbit{background:#ffffff4d;border:1px solid #fff8;border-radius:24px;padding:28px;backdrop-filter:blur(12px)}
-.student-portal .student-progress-panel .orbit-copy strong{color:#301532}
-.student-portal .metric-grid,.faculty-portal .metric-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;border:0;margin:26px 0 40px}
-.student-portal .metric-card,.faculty-portal .metric-card{display:block;min-width:0;padding:23px;border:1px solid #fff!important;border-radius:20px!important;background:var(--role-card)!important;box-shadow:var(--role-shadow)!important;backdrop-filter:blur(14px);transition:transform .2s,box-shadow .2s!important}
-.student-portal .metric-card:hover,.faculty-portal .metric-card:hover{transform:translateY(-4px);box-shadow:0 24px 55px #763f8740!important}
-.student-portal .metric-icon,.faculty-portal .metric-icon{display:grid;background:#f8d9ef;color:#8b286b;border-radius:13px}
-.student-portal .metric-value,.faculty-portal .metric-value{font-size:40px;color:var(--role-ink);font-weight:850}
-.student-portal .metric-label,.faculty-portal .metric-label{font-weight:750;color:var(--role-ink)}
-.student-portal .metric-detail,.faculty-portal .metric-detail{color:var(--role-muted)}
-.student-portal .group-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
-.student-portal .group-card{border:1px solid #fff!important;border-radius:20px;padding:26px;background:var(--role-card)!important;box-shadow:var(--role-shadow);backdrop-filter:blur(14px)}
-.student-portal .group-card h4{font-size:22px;font-weight:850;letter-spacing:-.04em;color:var(--role-ink);margin:18px 0 6px}
-.student-portal .group-card p{color:var(--role-muted);min-height:38px}
-.student-portal .section-title h3,.faculty-portal .section-title h3{font-size:24px;font-weight:850;color:var(--role-ink)}
-.student-portal .table-card,.faculty-portal .table-card,.student-portal .card,.faculty-portal .card{border:1px solid #fff!important;border-radius:21px!important;background:var(--role-card)!important;box-shadow:var(--role-shadow)!important;backdrop-filter:blur(14px);overflow:hidden}
-.student-portal .table-card-header,.faculty-portal .table-card-header{background:transparent}
-.student-portal .data-table th,.faculty-portal .data-table th{background:#f8e7f397;color:#6c456a}
-.student-portal .data-table td,.faculty-portal .data-table td{border-color:var(--role-line)}
-.student-portal .btn-primary,.faculty-portal .btn-primary{border:0;border-radius:12px;background:#57254f;color:#fff;box-shadow:0 9px 18px #54244f32}
-.student-portal .btn-primary:hover,.faculty-portal .btn-primary:hover{background:#783365}
-.student-portal .btn-outline,.faculty-portal .btn-outline,.student-portal .btn-ghost,.faculty-portal .btn-ghost{border-radius:11px}
-.student-portal .input,.faculty-portal .input,.student-portal .select,.faculty-portal .select,.student-portal .textarea,.faculty-portal .textarea{border-radius:12px;background:#fffdfa;border-color:#e9d5e4}
-.faculty-roster .roster-intro{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:30px}
-.faculty-roster .roster-intro h2{font-size:clamp(38px,4vw,58px);line-height:1;font-weight:850;letter-spacing:-.06em;margin:9px 0;color:var(--role-ink)}
-.faculty-roster .roster-intro h2 span{color:#e4568f}
-.faculty-roster .roster-intro p{color:var(--role-muted);font-size:14px}
-.faculty-roster .roster-summary{display:grid;grid-template-columns:auto auto;align-items:baseline;column-gap:9px;padding:16px 22px;border:1px solid #fff;border-radius:17px;background:#fff8;backdrop-filter:blur(12px)}
-.faculty-roster .roster-summary strong{font-size:24px;color:#762f69}.faculty-roster .roster-summary span{font-size:11px;color:var(--role-muted)}
-.faculty-roster .roster-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:22px}
-.faculty-roster .roster-search{display:flex;align-items:center;gap:12px;flex:1;padding:0 16px;border:1px solid #e4cadc;border-radius:14px;background:#fffc;min-height:50px;color:#9d5482}
-.faculty-roster .roster-search input{width:100%;border:0;outline:0;background:transparent;color:var(--role-ink);font:inherit;font-size:13px}
-.faculty-roster .roster-toolbar select{min-height:50px;max-width:190px;padding:0 14px;border:1px solid #e4cadc;border-radius:14px;background:#fffc;color:var(--role-ink)}
-.faculty-roster .roster-count{font-size:12px;font-weight:750;color:var(--role-muted)}
-.faculty-roster .roster-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:17px}
-.faculty-roster .roster-card{padding:23px;border:1px solid #fff;border-radius:21px;background:var(--role-card);box-shadow:var(--role-shadow);backdrop-filter:blur(14px)}
-.faculty-roster .roster-card-top{display:flex;align-items:center;gap:12px}
-.faculty-roster .roster-avatar{display:grid;place-items:center;flex:none;width:45px;height:45px;border-radius:15px;background:linear-gradient(135deg,#f5a0b9,#a78ee9);color:#351b39;font-weight:850;overflow:hidden}
-.faculty-roster .roster-avatar img{width:100%;height:100%;object-fit:cover}
-.faculty-roster .roster-person{min-width:0;flex:1}.faculty-roster .roster-person h3{font-size:14px;font-weight:850;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--role-ink)}.faculty-roster .roster-person p{font-size:11px;color:var(--role-muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;margin-top:3px}
-.faculty-roster .roster-waiting{display:flex;align-items:center;gap:3px;padding:5px 8px;border-radius:99px;background:#ffe3e8;color:#9d3a56;font-size:12px;font-weight:800}.faculty-roster .roster-waiting span{font-size:14px}
-.faculty-roster .roster-score{display:flex;align-items:baseline;gap:9px;margin:25px 0 20px}.faculty-roster .roster-score strong{font-size:46px;line-height:1;font-weight:850;letter-spacing:-.07em;color:#702667}.faculty-roster .roster-score span{font-size:12px;color:var(--role-muted)}
-.faculty-roster .roster-progress{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.faculty-roster .roster-group{min-width:0;display:grid;grid-template-columns:1fr auto;gap:8px;color:var(--role-muted);font-size:11px}.faculty-roster .roster-group b{color:var(--role-ink)}.faculty-roster .roster-track{grid-column:1/-1;height:7px;border-radius:99px;background:#e9dceb;overflow:hidden}.faculty-roster .roster-track i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#ec6d9f,#8f77d4)}
-.faculty-roster .roster-card-foot{display:flex;justify-content:space-between;gap:12px;margin-top:21px;padding-top:13px;border-top:1px solid var(--role-line);font-size:10px;color:var(--role-muted)}
-.faculty-roster .roster-empty{padding:70px 20px;text-align:center;border:1px dashed #d2abc9;border-radius:20px;background:#ffffff85}.faculty-roster .roster-empty span{font-size:38px;color:#bb6c9e}.faculty-roster .roster-empty h3{margin:8px 0;color:var(--role-ink)}.faculty-roster .roster-empty p,.faculty-roster .roster-note{color:var(--role-muted);font-size:12px}.faculty-roster .roster-note{margin-top:18px}
-/* Login at night: one composed canvas with a calm luminous edge. */
-html.dark .login-page{background:radial-gradient(circle at 18% 18%,#5252936e,transparent 36%),radial-gradient(circle at 84% 80%,#ba63914d,transparent 38%),#111326!important}
-html.dark .login-brand-panel{background:linear-gradient(145deg,#1b1b38,#343056 58%,#673a60)!important;border:0;color:#fff;box-shadow:none!important}
-html.dark .login-brand-panel::before{opacity:.5;background:radial-gradient(circle at 25% 73%,#be68ad,transparent 33%),radial-gradient(circle at 82% 29%,#e8a071,transparent 40%);filter:blur(42px)}
-html.dark .login-brand-panel::after{background:linear-gradient(90deg,transparent,#19162a45)!important}
-html.dark .login-form-panel{background:#1c1b36e8!important;border:1px solid #ffffff26;border-radius:26px;box-shadow:0 28px 68px #080c1b66!important;backdrop-filter:blur(24px)}
-html.dark .login-form-inner{color:#f9f4fb}
-html.dark .login-heading h2{font-weight:850;letter-spacing:-.06em;color:#fff}
-html.dark .login-heading p{color:#d3c9dc}
-html.dark .login-form-panel .input-icon-wrap .input{background:#272641;border:1px solid #8f83aa88;color:#fff}
-html.dark .login-form-panel .input-icon-wrap .input::placeholder{color:#b8adc8}
-html.dark .login-form-panel .input:focus{border-color:#f0a0c5;outline:2px solid #cf76a544}
-html.dark .login-form-panel .form-label{color:#f6eaf7}
-html.dark .login-form-panel .input-action-btn{color:#d3b9d3}
-html.dark .login-form-panel .input-action-btn:hover{background:#ffffff18}
-html.dark .login-role-tabs{background:#ffffff11;border:1px solid #ffffff27;border-radius:13px;padding:4px}
-html.dark .login-role-tab,html.dark .role-tab{color:#ded0e1}
-html.dark .login-role-tab.active,html.dark .role-tab.active{background:#f6b1cd;color:#321c39;border-radius:9px}
-html.dark .login-submit-btn{background:linear-gradient(100deg,#f396bb,#ffc392);color:#322039;border:0;font-weight:800!important;box-shadow:0 10px 24px #e78ba53b!important}
-html.dark .login-submit-btn:hover{background:linear-gradient(100deg,#f9abc8,#ffd2a8)}
-html.dark .login-brand-panel h2,html.dark .login-brand-panel p{color:#fff}
-html.dark .login-brand-badge,html.dark .login-feature-item span,html.dark .login-brand-footer{color:#eadce7}
-/* Keep the role workspaces legible after switching themes. */
-html.dark .student-portal,html.dark .faculty-portal{--role-ink:#faf2ff;--role-muted:#cbbdd7;--role-line:#ffffff23;--role-card:#24213cdb;--role-shadow:0 20px 55px #08091638;background:radial-gradient(circle at 75% 3%,#46375e,transparent 34%),radial-gradient(circle at 10% 62%,#363c67,transparent 39%),#161629!important}
-html.dark .student-portal .topbar,html.dark .faculty-portal .topbar{background:#25203bca!important;border-color:#ffffff1d}
-html.dark .student-portal .metric-card,html.dark .faculty-portal .metric-card,html.dark .student-portal .group-card,html.dark .student-portal .table-card,html.dark .faculty-portal .table-card,html.dark .student-portal .card,html.dark .faculty-portal .card,html.dark .faculty-roster .roster-card{border-color:#ffffff24!important;background:var(--role-card)!important}
-html.dark .student-portal .student-progress-panel,html.dark .faculty-portal .faculty-focus-panel{background:linear-gradient(116deg,#675b98,#784a7b 55%,#996575)!important;border-color:#ffffff35!important}
-html.dark .student-portal .student-progress-copy h3,html.dark .faculty-portal .faculty-focus-panel h3,html.dark .student-portal .student-progress-copy p,html.dark .faculty-portal .faculty-focus-panel p{color:#fff}
-html.dark .student-portal .student-progress-panel .progress-orbit{background:#ffffff1c}
-html.dark .student-portal .data-table th,html.dark .faculty-portal .data-table th{background:#342b4c;color:#f0dcf1}
-html.dark .faculty-roster .roster-summary,html.dark .faculty-roster .roster-search,html.dark .faculty-roster .roster-toolbar select{background:#28243c;border-color:#ffffff27;color:#fff}
-html.dark .faculty-roster .roster-search input{color:#fff}
-html.dark .faculty-roster .roster-score strong,html.dark .faculty-roster .roster-summary strong{color:#f6a7d0}
-html.dark .faculty-roster .roster-track{background:#4c405d}
-@media(max-width:1000px){.student-portal .metric-grid,.faculty-portal .metric-grid,.student-portal .group-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:767px){.student-portal .sidebar,.faculty-portal .sidebar{width:min(82vw,280px)}.student-portal .main-content,.faculty-portal .main-content{margin-left:0}.student-portal .topbar,.faculty-portal .topbar{height:68px;padding:0 18px}.student-portal .page-content,.faculty-portal .page-content{padding:29px 18px 64px}.student-portal .student-progress-panel,.faculty-portal .faculty-focus-panel{padding:27px;border-radius:22px}.student-portal .metric-grid,.faculty-portal .metric-grid,.student-portal .group-grid{grid-template-columns:1fr;gap:12px}.student-portal .metric-card,.faculty-portal .metric-card{padding:20px}.faculty-roster .roster-intro{display:block}.faculty-roster .roster-summary{display:inline-grid;margin-top:18px}.faculty-roster .roster-toolbar{flex-wrap:wrap}.faculty-roster .roster-search{flex:1 1 100%}.faculty-roster .roster-toolbar select{flex:1}.faculty-roster .roster-grid{grid-template-columns:1fr}.faculty-roster .roster-count{margin-left:auto}html.dark .login-form-panel{border-radius:0;border:0;background:#1c1b36db!important}}
-@media(prefers-reduced-motion:reduce){.student-portal .student-progress-panel::before,.faculty-portal .faculty-focus-panel::before,html.dark .login-brand-panel::before{animation:none!important}}
-
-/* ET Lab student identity verification */
-.etlab-verification-card{margin:4px 0 22px;padding:22px;border:1px solid color-mix(in srgb,var(--accent) 28%,var(--border));background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 9%,var(--surface)),var(--surface));border-radius:18px}
-.etlab-verification-heading{display:flex;align-items:flex-start;gap:13px;margin:0 0 18px}
-.etlab-verification-heading>.material-symbols-outlined{display:grid;place-items:center;width:42px;height:42px;flex:0 0 42px;border-radius:13px;background:var(--accent);color:var(--surface);font-size:22px}
-.etlab-verification-heading h3{margin:0 0 4px;font-size:18px;font-weight:800;color:var(--text)}
-.etlab-verification-heading p,.etlab-privacy-note{margin:0;color:var(--text-secondary);font-size:12px;line-height:1.55}
-.etlab-verification-card .form-group{margin-bottom:14px}
-.etlab-verification-card>.btn{width:100%;justify-content:center}
-.etlab-privacy-note{margin-top:13px;font-size:11px}
-.etlab-verified-identity{display:flex;align-items:center;gap:12px;margin:4px 0 22px;padding:15px 17px;border:1px solid color-mix(in srgb,var(--success) 35%,var(--border));border-radius:14px;background:color-mix(in srgb,var(--success-bg) 65%,var(--surface))}
-.etlab-verified-identity>.material-symbols-outlined{color:var(--success);font-size:24px}
-.etlab-verified-identity>div{display:grid;gap:3px;flex:1;min-width:0}
-.etlab-verified-identity strong{color:var(--text);font-size:14px;font-weight:800}
-.etlab-verified-identity span:not(.material-symbols-outlined){color:var(--text-secondary);font-size:12px}
-html.dark .etlab-verification-card{border-color:rgba(239,168,190,.22);background:linear-gradient(145deg,rgba(154,55,91,.16),var(--surface))}
-html.dark .etlab-verification-heading>.material-symbols-outlined{background:linear-gradient(140deg,#df5c93,#f19b66);color:#fff}
-html.dark .etlab-verified-identity{background:rgba(90,144,104,.12);border-color:rgba(124,197,143,.24)}
-@media(max-width:520px){.etlab-verification-card{padding:17px;border-radius:15px}.etlab-verification-heading h3{font-size:16px}.etlab-verified-identity{align-items:flex-start;flex-wrap:wrap}.etlab-verified-identity .btn{margin-left:34px}}
-
-
-/* Signup theme control stays reachable in both color modes and while scrolling. */
-.signup-theme-toggle { display: inline-flex !important; }
-
-/* Keep signup typography identical in day and night themes. */
-.signup-page { font-family: 'DM Sans', sans-serif !important; }
-.signup-page .login-heading h2,
-.signup-page .login-brand-panel h2 { font-family: 'Archivo', sans-serif !important; font-weight: 800 !important; letter-spacing: -.035em !important; }
-.signup-page .login-heading h2 { line-height: 1.1 !important; }
+@media(prefers-reduced-motion:reduce){.password-reset-page::before,.password-reset-page::after,.reset-card{animation:none!important}.reset-cta{transition:none}}
+html.dark .login-role-tabs,html.dark .journey-showcase {border-color:var(--border)}
+html.dark .login-role-tab,html.dark .journey-controls button {color:var(--text-secondary)}
+html.dark .login-role-tab.active,html.dark .role-tab.active,html.dark .journey-controls button[aria-pressed=true] {border-radius:11px;background:linear-gradient(110deg,rgba(215,87,146,.27),rgba(132,104,211,.26));color:var(--text)}
+html.dark .journey-controls button {border-color:var(--border-strong);border-radius:10px}
+html.dark .journey-caption p,html.dark .journey-showcase>small {color:var(--text-secondary)}
+html.dark .workspace-skeleton>span {border-color:var(--border);background:var(--surface)}
+html.dark ::selection {background:rgba(235,114,157,.34);color:#fff}
+html.dark .topbar,html.dark .sidebar,html.dark .card,html.dark .glass-panel,html.dark .theme-toggle,html.dark .btn,html.dark .metric-card,html.dark .action-tile {transition:background-color .22s ease,color .22s ease,border-color .22s ease,box-shadow .22s ease,transform .22s ease!important}
+@keyframes apms-night-flow {0% {transform:translate3d(-2%,1%,0) rotate(-4deg) scale(.96)}100% {transform:translate3d(3%,-2%,0) rotate(5deg) scale(1.06)}}
+@media(max-width:1120px) {
+ html.dark .admin-portal .dashboard-composition {grid-template-columns:minmax(0,1fr);grid-template-areas:'hero' 'queue' 'stats' 'activity' 'insights' 'links'}
+ html.dark .admin-portal .work-queue {grid-template-columns:repeat(2,minmax(0,1fr))}
+ html.dark .admin-portal .work-queue .section-intro {grid-column:1/-1}
+}
+@media(max-width:767px) {
+ html.dark .admin-portal .page-content {padding:24px 18px 42px}
+ html.dark .admin-portal .dashboard-composition {display:flex;flex-direction:column;gap:0}
+ html.dark .admin-portal .campus-hero {width:100%;min-height:220px;margin-bottom:26px;padding:31px 24px;border-radius:24px}
+ html.dark .admin-portal .campus-hero .workspace-heading {max-width:100%}
+ html.dark .admin-portal .campus-hero .workspace-heading h2 {max-width:78%;font-size:clamp(35px,9vw,48px)}
+ html.dark .admin-portal .campus-hero .workspace-heading p {max-width:78%;font-size:13px}
+ html.dark .admin-portal .campus-hero-art {right:10px;bottom:10px;top:auto;width:84px;height:84px;border-radius:23px;transform:none!important}
+ html.dark .admin-portal .campus-hero-art span {font-size:46px}
+ html.dark .admin-portal .work-queue {display:flex;flex-direction:column;gap:12px;margin-bottom:26px}
+ html.dark .admin-portal .work-queue .section-intro {padding:4px 0 7px}
+ html.dark .admin-portal .work-queue .action-tile {width:100%;min-height:91px;padding:16px;border-radius:17px}
+ html.dark .admin-portal .campus-register,html.dark .admin-portal .activity-feed {width:100%;padding:18px;margin-bottom:22px;border-radius:19px}
+ html.dark .admin-portal .campus-register .metric-grid {grid-template-columns:1fr;gap:9px}
+ html.dark .admin-portal .campus-register .metric-card {min-height:76px;grid-template-columns:auto 1fr auto auto;padding:12px;border-radius:14px}
+ html.dark .admin-portal .metric-value {grid-column:3;grid-row:1;font-size:26px}
+ html.dark .admin-portal .metric-detail {grid-column:2;grid-row:2;text-align:left;font-size:10px}
+ html.dark .admin-portal .metric-label {font-size:12px}
+ html.dark .admin-portal .activity-feed .panel-heading {align-items:flex-start;flex-direction:column;margin-bottom:12px}
+ html.dark .admin-portal .activity-feed .designed-empty {align-items:flex-start;flex-direction:column;gap:6px}
+ html.dark .admin-portal .campus-insights {width:100%;margin-bottom:14px}
+ html.dark .admin-portal .workspace-links {width:100%;justify-content:flex-start;gap:8px}
+ html.dark .admin-portal .workspace-links button {font-size:11px;padding:10px 11px}
+}
+@media(prefers-reduced-motion:reduce) {
+ html.dark .admin-portal::before,html.dark .admin-portal::after,html.dark .admin-portal .campus-hero::before,html.dark .admin-portal .campus-hero-art {animation:none!important}
+}

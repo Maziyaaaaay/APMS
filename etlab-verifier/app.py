@@ -80,89 +80,31 @@ def is_login_page(soup, response_url):
     return "/user/login" in urlparse(response_url).path or "login" in page_title(soup)
 
 
-def normalize_profile_label(value):
-    return re.sub(r"[^a-z0-9]+", " ", value.casefold()).strip()
-
-
-def profile_cell_value(cell):
-    # ET Lab may render values as text, form controls, or links. Collect only
-    # the value cell so similarly named parent fields are never mixed in.
-    values = [cell.get_text(" ", strip=True)]
-    for field in cell.find_all(["input", "textarea", "select"]):
-        value = field.get("value") or ""
-        if not value and field.name == "select":
-            selected = field.find("option", selected=True)
-            value = selected.get_text(" ", strip=True) if selected else ""
-        if value:
-            values.append(value)
-    for link in cell.find_all("a", href=True):
-        href = link["href"].strip()
-        if href.casefold().startswith(("mailto:", "tel:")):
-            values.append(href.split(":", 1)[1])
-    return " ".join(dict.fromkeys(" ".join(value.split()) for value in values if value))
-
-
 def profile_value(soup, labels):
-    wanted = {normalize_profile_label(label) for label in labels}
     if soup is None:
         return ""
+    wanted = {label.casefold() for label in labels}
     for row in soup.find_all("tr"):
         cells = row.find_all(["th", "td"], recursive=False)
         if len(cells) < 2:
             continue
-        label = normalize_profile_label(cells[0].get_text(" ", strip=True).rstrip(":"))
+        label = " ".join(cells[0].get_text(" ", strip=True).rstrip(":").split()).casefold()
         if label in wanted:
-            return profile_cell_value(cells[1])
+            return " ".join(cells[1].get_text(" ", strip=True).split())
     return ""
 
 
 def profile_table_with_labels(soup, labels):
-    wanted = {normalize_profile_label(label) for label in labels}
+    wanted = {label.casefold() for label in labels}
     for table in soup.find_all("table"):
         for row in table.find_all("tr"):
             cells = row.find_all(["th", "td"], recursive=False)
             if len(cells) < 2:
                 continue
-            label = normalize_profile_label(cells[0].get_text(" ", strip=True).rstrip(":"))
+            label = " ".join(cells[0].get_text(" ", strip=True).rstrip(":").split()).casefold()
             if label in wanted:
                 return table
     return None
-
-
-EMAIL_PATTERN = re.compile(
-    r"[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?"
-    r"(?:\.[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?)+",
-    re.IGNORECASE,
-)
-
-
-def profile_email_near_label(soup, anchor_label, labels):
-    # Some COET layouts wrap many profile sections in one outer table. In that
-    # case the first "Email" row may belong to a parent. Use the email row
-    # closest to the student's own mobile row instead.
-    anchor = normalize_profile_label(anchor_label)
-    wanted = {normalize_profile_label(label) for label in labels}
-    rows = []
-    for row in soup.find_all("tr"):
-        cells = row.find_all(["th", "td"], recursive=False)
-        if len(cells) < 2:
-            continue
-        label = normalize_profile_label(cells[0].get_text(" ", strip=True).rstrip(":"))
-        rows.append((label, profile_cell_value(cells[1])))
-    anchor_indexes = [index for index, (label, _value) in enumerate(rows) if label == anchor]
-    if not anchor_indexes:
-        return ""
-    anchor_index = anchor_indexes[0]
-    candidates = [
-        (abs(index - anchor_index), value)
-        for index, (label, value) in enumerate(rows)
-        if label in wanted and value
-    ]
-    if not candidates:
-        return ""
-    value = min(candidates, key=lambda candidate: candidate[0])[1]
-    match = EMAIL_PATTERN.search(value)
-    return match.group(0) if match else ""
 
 
 def login_and_read_identity(username, password):
@@ -234,52 +176,16 @@ def login_and_read_identity(username, password):
             if not name or len(name) > 150 or not registration_number:
                 return "profile_unavailable", None
 
-            # Only read the student's own contact table; the profile also has
-            # separate parent/family contacts that must not be mixed in.
+            # Keep contact fields scoped to the student contact table. The page
+            # also contains parent and emergency contact details; those must
+            # never be mistaken for the student's own email or mobile number.
             student_contact_table = profile_table_with_labels(profile_soup, {"Student Mobile No"})
-            # Scan the full profile for contact rows, anchored to the student's
-            # mobile row. ET Lab can nest or split the visual contact tables.
-            student_email = profile_email_near_label(profile_soup, "Student Mobile No", {
-                "Email", "E-mail", "Email Id", "Student Email", "Student Email Id", "College Email Id",
-            })
-            if not student_email and student_contact_table:
-                # If the ET Lab markup does not expose the email row as a
-                # conventional table row, extract the email from the table
-                # already anchored to "Student Mobile No". This keeps the
-                # fallback scoped to student contacts and avoids parent email.
-                match = EMAIL_PATTERN.search(student_contact_table.get_text(" ", strip=True))
-                student_email = match.group(0) if match else ""
+            student_email = profile_value(student_contact_table, {"Email", "College Email Id"})
             if not student_email:
                 college_email_table = profile_table_with_labels(profile_soup, {"College Email Id"})
                 student_email = profile_value(college_email_table, {"College Email Id"})
-                match = EMAIL_PATTERN.search(student_email)
-                student_email = match.group(0) if match else ""
             student_mobile = profile_value(student_contact_table, {"Student Mobile No"})
             department = profile_value(profile_soup, {"Department"})
-
-            # Log only boolean/count diagnostics; never profile values or credentials.
-            email_labels = {
-                "email", "e mail", "email id", "student email",
-                "student email id", "college email id",
-            }
-            email_label_rows = 0
-            for row in profile_soup.find_all("tr"):
-                cells = row.find_all(["th", "td"], recursive=False)
-                if len(cells) < 2:
-                    continue
-                label = normalize_profile_label(cells[0].get_text(" ", strip=True).rstrip(":"))
-                if label in email_labels and EMAIL_PATTERN.search(profile_cell_value(cells[1])):
-                    email_label_rows += 1
-            app.logger.info(
-                "ETLab contact extraction: student_table=%s; email_label_rows=%d; "
-                "email_text_in_profile=%s; email_text_in_student_table=%s; extracted_email=%s; extracted_phone=%s",
-                bool(student_contact_table),
-                email_label_rows,
-                bool(EMAIL_PATTERN.search(profile_soup.get_text(" ", strip=True))),
-                bool(student_contact_table and EMAIL_PATTERN.search(student_contact_table.get_text(" ", strip=True))),
-                bool(student_email),
-                bool(student_mobile),
-            )
 
             return "verified", {
                 "name": name,
@@ -294,7 +200,7 @@ def login_and_read_identity(username, password):
 
 @app.get("/api/status")
 def status():
-    return jsonify({"status": "ok", "institution": "COET", "build": "email-diagnostic-ffdf66a"})
+    return jsonify({"status": "ok", "institution": "COET"})
 
 
 @app.post("/api/verify")
@@ -315,14 +221,8 @@ def verify():
     if (
         not isinstance(username, str) or not username.strip() or len(username) > 100
         or not isinstance(password, str) or not password or len(password) > 256
-        or (
-            registration_number is not None
-            and (
-                not isinstance(registration_number, str)
-                or not registration_number.strip()
-                or len(registration_number) > 64
-            )
-        )
+        or not isinstance(registration_number, str) or not registration_number.strip()
+        or len(registration_number) > 64
     ):
         return jsonify({"error": "invalid_request"}), 400
 
@@ -337,13 +237,12 @@ def verify():
         return jsonify({"error": "profile_unavailable"}), 502
     if result != "verified" or not identity:
         return jsonify({"error": "upstream_unavailable"}), 502
-    if registration_number and identity["registration_number"] != normalize_registration_number(registration_number):
+    if identity["registration_number"] != normalize_registration_number(registration_number):
         return jsonify({"error": "registration_mismatch"}), 403
 
     return jsonify({
         "verified": True,
         "name": identity["name"],
-        "registrationNo": identity["registration_number"],
         "email": identity.get("email", ""),
         "phone": identity.get("phone", ""),
         "department": identity.get("department", ""),

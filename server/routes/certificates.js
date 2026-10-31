@@ -68,36 +68,19 @@ router.post('/', requireRole('student'), async (req, res) => {
   if (!activityId) return res.status(400).json({ error: 'activityId is required' });
   const activity = ACTIVITIES[activityId];
   if (!activity) return res.status(400).json({ error: 'Choose an activity from the current catalog.' });
-  const recordedName = typeof eventName === 'string' && eventName.trim() ? eventName.trim() : activity.name;
-  if (recordedName.length > 180) return res.status(400).json({ error: 'Certificate name must be 180 characters or fewer.' });
-  if (activityDate && !isValidIsoDate(activityDate)) return res.status(400).json({ error: 'Enter a valid date shown on the certificate.' });
-  if (activityDate && activityDate > getDateInTimeZone()) return res.status(400).json({ error: 'The certificate date cannot be in the future.' });
-  const normalizedAcademicYear = academicYear ? normalizeAcademicYear(academicYear) : null;
-  if (academicYear && !normalizedAcademicYear) return res.status(400).json({ error: 'Enter a valid academic year, such as 2025-26.' });
+  if (typeof eventName !== 'string' || !eventName.trim() || eventName.trim().length > 180) return res.status(400).json({ error: 'A valid event or activity name is required.' });
+  if (!isValidIsoDate(activityDate)) return res.status(400).json({ error: 'A valid activity date is required.' });
+  if (activityDate > getDateInTimeZone()) return res.status(400).json({ error: 'Activity records must be for a completed activity.' });
+  const normalizedAcademicYear = normalizeAcademicYear(academicYear);
+  if (!normalizedAcademicYear) {
+    return res.status(400).json({ error: 'Enter a valid academic year, such as 2025-26.' });
+  }
   if (description !== undefined && (typeof description !== 'string' || description.length > 2000)) return res.status(400).json({ error: 'Activity details must be 2,000 characters or fewer.' });
   if (fileName !== undefined && fileName !== null && (typeof fileName !== 'string' || fileName.length > 255)) return res.status(400).json({ error: 'The uploaded file name must be 255 characters or fewer.' });
   if (!fileUrl && !uploadReceipt) return res.status(400).json({ error: 'A certificate document is required.' });
   if (activity.type === 'hours' && (!Number.isInteger(Number(hours)) || Number(hours) <= 0)) return res.status(400).json({ error: 'Enter the completed course duration in whole hours.' });
   if ((activity.type === 'level' || activity.type === 'choice') && !activity.levels.some(level => level.label === levelSelected)) return res.status(400).json({ error: 'Choose a valid points option for this activity.' });
   const submittedPoints = calculatePoints(activityId, levelSelected, hours);
-
-  if (activity.oncePerStudent) {
-    const { data: existingClaim, error: claimError } = await supabase
-      .from('certificates')
-      .select('id, status')
-      .eq('student_id', req.user.id)
-      .eq('activity_id', activityId)
-      .in('status', ['pending', 'approved'])
-      .limit(1)
-      .maybeSingle();
-    if (claimError) return res.status(500).json({ error: 'Could not verify whether this one-time activity was already claimed.' });
-    if (existingClaim) {
-      const message = existingClaim.status === 'approved'
-        ? 'This one-time activity has already been claimed and approved.'
-        : 'This one-time activity is already awaiting faculty review.';
-      return res.status(409).json({ error: message });
-    }
-  }
 
   let objectPath = null;
   let fileMimeType = null;
@@ -107,25 +90,13 @@ router.post('/', requireRole('student'), async (req, res) => {
     try { receipt = jwt.verify(uploadReceipt, process.env.JWT_SECRET); }
     catch { return res.status(400).json({ error: 'Upload expired. Upload the document again.' }); }
     if (receipt.purpose !== 'certificate-upload' || receipt.userId !== req.user.id) return res.status(403).json({ error: 'Invalid upload ownership.' });
-    if (typeof receipt.objectPath !== 'string' || !receipt.objectPath.startsWith(`${req.user.id}/`) ||
-        !['application/pdf', 'image/jpeg', 'image/png'].includes(receipt.mimeType) ||
-        !Number.isInteger(receipt.size) || receipt.size <= 0 || receipt.size > 10 * 1024 * 1024) {
-      return res.status(403).json({ error: 'Invalid upload receipt.' });
-    }
-    // Storage metadata varies between signed upload methods. Check the stored bytes instead.
-    const { data: document, error: downloadError } = await supabase.storage.from('apms-certificates').download(receipt.objectPath);
-    if (downloadError || !document) return res.status(400).json({ error: 'Document upload is incomplete. Choose the file again.' });
-    const bytes = Buffer.from(await document.arrayBuffer());
-    if (bytes.length !== receipt.size) return res.status(400).json({ error: 'The upload was incomplete. Choose the file again.' });
-    const validFile = receipt.mimeType === 'application/pdf'
-      ? bytes.subarray(0, 5).toString() === '%PDF-'
-      : receipt.mimeType === 'image/png'
-        ? bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
-        : bytes.length >= 4 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[bytes.length - 2] === 0xff && bytes[bytes.length - 1] === 0xd9;
-    if (!validFile) return res.status(400).json({ error: 'This file is not a valid PDF, JPG, or PNG. Choose the certificate again.' });
+    const { data: info, error: infoError } = await supabase.storage.from('apms-certificates').info(receipt.objectPath);
+    if (infoError || !info) return res.status(400).json({ error: 'Document upload is incomplete. Try again.' });
+    const metadata = info.metadata || {};
+    if (Number(metadata.size) !== receipt.size || metadata.mimetype !== receipt.mimeType) return res.status(400).json({ error: 'Uploaded document does not match the declared file.' });
     objectPath = receipt.objectPath;
     fileMimeType = receipt.mimeType;
-    fileSizeBytes = bytes.length;
+    fileSizeBytes = receipt.size;
   } else if (fileUrl) {
     const match = /^data:(application\/pdf|image\/(?:jpeg|png));base64,([A-Za-z0-9+/=]+)$/.exec(fileUrl);
     if (!match) return res.status(400).json({ error: 'Upload a PDF, JPG, or PNG certificate.' });
@@ -151,8 +122,8 @@ router.post('/', requireRole('student'), async (req, res) => {
       level_selected: levelSelected,
       hours: activity.type === 'hours' ? Number(hours) : null,
       description,
-      event_name: recordedName,
-      activity_date: activityDate || null,
+      event_name: String(eventName).trim(),
+      activity_date: activityDate,
       academic_year: normalizedAcademicYear,
       points_awarded: submittedPoints,
       file_url: objectPath,
@@ -207,9 +178,6 @@ router.put('/:id', requireRole('faculty'), async (req, res) => {
   const activity = getActivityForCertificate(current);
   if (!activity || !Number.isInteger(awarded) || awarded < 0 || awarded > activity.maxPoints) {
     return res.status(400).json({ error: `Points must be a whole number between 0 and this activity's ${activity?.maxPoints ?? 0}-point maximum.` });
-  }
-  if (status === 'approved' && activity.id === '2.26' && (awarded < 5 || awarded > 20)) {
-    return res.status(400).json({ error: 'Faculty-assessed community competition awards must be between 5 and 20 points.' });
   }
   if (awarded !== Number(current.points_awarded ?? 0) && !String(notes || '').trim()) {
     return res.status(400).json({ error: 'Add a note explaining any adjustment to the catalog-calculated points.' });

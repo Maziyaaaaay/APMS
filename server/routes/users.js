@@ -207,7 +207,7 @@ router.put('/:id', async (req, res) => {
 // DELETE /api/users/:id — permanent removal by super admin or department faculty.
 router.delete('/:id', requireRole('admin', 'faculty'), async (req, res) => {
   if (req.user.id === req.params.id) return res.status(400).json({ error: 'You cannot remove your own account.' });
-  const { data: target, error: targetError } = await supabase.from('users').select('id, role, is_super_admin, department_id').eq('id', req.params.id).maybeSingle();
+  const { data: target, error: targetError } = await supabase.from('users').select('id, role, username, roll_no, is_super_admin, department_id').eq('id', req.params.id).maybeSingle();
   if (targetError) return res.status(500).json({ error: targetError.message });
   if (!target || target.is_super_admin) return res.status(403).json({ error: 'This account cannot be removed.' });
   const isOwnDepartmentStudent = req.user.role === 'faculty'
@@ -233,6 +233,26 @@ router.delete('/:id', requireRole('admin', 'faculty'), async (req, res) => {
       return res.status(503).json({ error: 'Permanent removal is not enabled in the database yet. Apply migration 005, then retry.' });
     }
     return res.status(400).json({ error: removeError.message || 'Account removal failed.' });
+  }
+
+  // Do not report a successful removal until the database confirms that the
+  // account, registration number, and cascading student records are gone.
+  const verificationQueries = [
+    supabase.from('users').select('id', { count: 'exact', head: true }).eq('id', target.id),
+    supabase.from('account_review_events').select('id', { count: 'exact', head: true }).or(`user_id.eq.${target.id},actor_id.eq.${target.id}`),
+    supabase.from('password_reset_tokens').select('id', { count: 'exact', head: true }).eq('user_id', target.id),
+  ];
+  if (target.role === 'student') {
+    if (target.roll_no) verificationQueries.push(supabase.from('users').select('id', { count: 'exact', head: true }).eq('roll_no', target.roll_no));
+    verificationQueries.push(supabase.from('certificates').select('id', { count: 'exact', head: true }).eq('student_id', target.id));
+  }
+  const verification = await Promise.all(verificationQueries);
+  if (verification.some(result => result.error)) {
+    console.error('Account removal completed, but post-delete verification failed.');
+    return res.status(500).json({ error: 'The account was removed, but APMS could not verify that all linked records were cleared. Contact the administrator before retrying signup.' });
+  }
+  if (verification.some(result => (result.count || 0) > 0)) {
+    return res.status(500).json({ error: 'APMS could not confirm that the account and its linked records were fully removed. Contact the administrator before retrying signup.' });
   }
 
   let storageCleanupPending = false;

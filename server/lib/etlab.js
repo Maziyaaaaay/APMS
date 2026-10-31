@@ -51,22 +51,6 @@ async function apiRequest(url, options) {
   return { response, body };
 }
 
-const DEPARTMENT_BY_BRANCH = Object.freeze({
-  CS: 'Computer Science',
-  IT: 'Information Technology',
-  EC: 'Electronics and Communication Engineering',
-  ECE: 'Electronics and Communication Engineering',
-  EE: 'Electrical Engineering',
-  CE: 'Civil Engineering',
-  ME: 'Mechanical Engineering',
-  ECS: 'Electrical and Computer Science',
-});
-
-function departmentFromRegistrationNo(registrationNo) {
-  const match = normalizeRegistrationNumber(registrationNo).match(/^[A-Z]{3}\d{2}([A-Z]{2,3})\d{2,4}$/);
-  return match ? (DEPARTMENT_BY_BRANCH[match[1]] || '') : '';
-}
-
 export async function verifyEtlabStudent({ username, password, registrationNo }) {
   const baseUrl = getApiBaseUrl();
   const sharedSecret = process.env.ETLAB_VERIFIER_SHARED_SECRET?.trim();
@@ -82,11 +66,7 @@ export async function verifyEtlabStudent({ username, password, registrationNo })
       Accept: 'application/json',
       'X-APMS-Verification-Key': sharedSecret,
     },
-    body: JSON.stringify({
-      username,
-      password,
-      ...(expectedRegistrationNo ? { registrationNo: expectedRegistrationNo } : {}),
-    }),
+    body: JSON.stringify({ username, password, registrationNo: expectedRegistrationNo }),
   });
   if (verification.response.status === 401) {
     // The verifier uses 401 for both a bad shared key and rejected ET Lab
@@ -103,16 +83,8 @@ export async function verifyEtlabStudent({ username, password, registrationNo })
     throw new EtlabError('rate_limited', 'Too many ET Lab verification attempts. Please wait a minute and try again.', 429);
   }
   const verifiedName = typeof verification.body?.name === 'string' ? verification.body.name.trim() : '';
-  const verifiedRegistrationNo = normalizeRegistrationNumber(verification.body?.registrationNo);
-  if (
-    !verification.response.ok || verification.body?.verified !== true
-    || !verifiedName || verifiedName.length > 150
-    || !/^[A-Z0-9]{6,20}$/.test(verifiedRegistrationNo)
-  ) {
+  if (!verification.response.ok || verification.body?.verified !== true || !verifiedName || verifiedName.length > 150 || !expectedRegistrationNo) {
     throw new EtlabError('unavailable', 'ET Lab could not verify those details right now. Please try again later.', 502);
-  }
-  if (expectedRegistrationNo && expectedRegistrationNo !== verifiedRegistrationNo) {
-    throw new EtlabError('registration_mismatch', 'The COET ET Lab profile does not match the KTU registration number entered.', 403);
   }
   const emailCandidate = typeof verification.body.email === 'string' ? verification.body.email.trim() : '';
   const phoneCandidate = typeof verification.body.phone === 'string' ? verification.body.phone.trim() : '';
@@ -123,17 +95,12 @@ export async function verifyEtlabStudent({ username, password, registrationNo })
     ? phoneCandidate
     : '';
   const departmentCandidate = typeof verification.body.department === 'string' ? verification.body.department.trim() : '';
-  const verifiedDepartment = departmentCandidate.length <= 150 && departmentCandidate
-    ? departmentCandidate
-    : departmentFromRegistrationNo(verifiedRegistrationNo);
+  const verifiedDepartment = departmentCandidate.length <= 150 ? departmentCandidate : '';
 
   const proof = jwt.sign({
     purpose: 'student_signup',
-    registrationNo: verifiedRegistrationNo,
+    registrationNo: expectedRegistrationNo,
     name: verifiedName,
-    email: verifiedEmail,
-    phone: verifiedPhone,
-    department: verifiedDepartment,
   }, process.env.JWT_SECRET, {
     algorithm: 'HS256',
     audience: VERIFY_AUDIENCE,
@@ -143,7 +110,7 @@ export async function verifyEtlabStudent({ username, password, registrationNo })
 
   return {
     name: verifiedName,
-    registrationNo: verifiedRegistrationNo,
+    registrationNo: expectedRegistrationNo,
     email: verifiedEmail,
     phone: verifiedPhone,
     department: verifiedDepartment,
@@ -158,21 +125,8 @@ export function readEtlabSignupProof(proof) {
       audience: VERIFY_AUDIENCE,
       issuer: VERIFY_ISSUER,
     });
-    if (
-      claims.purpose !== 'student_signup'
-      || typeof claims.name !== 'string'
-      || typeof claims.registrationNo !== 'string'
-      || typeof claims.email !== 'string'
-      || typeof claims.phone !== 'string'
-      || typeof claims.department !== 'string'
-    ) return null;
-    return {
-      name: claims.name,
-      registrationNo: claims.registrationNo,
-      email: claims.email,
-      phone: claims.phone,
-      department: claims.department,
-    };
+    if (claims.purpose !== 'student_signup' || typeof claims.name !== 'string' || typeof claims.registrationNo !== 'string') return null;
+    return { name: claims.name, registrationNo: claims.registrationNo };
   } catch {
     return null;
   }

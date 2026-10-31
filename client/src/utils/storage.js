@@ -68,25 +68,11 @@ export async function uploadCertificate(file) {
     throw new Error('Choose a PDF, JPG, or PNG up to 10 MB.');
   }
   const { signedUrl, receipt } = await api.post('/certificates/upload-url', { mimeType: file.type, size: file.size });
-  let response;
-  try {
-    // Send the actual file bytes. A multipart wrapper can change the stored MIME
-    // type and size, which makes the receipt fail server-side verification.
-    response = await fetch(signedUrl, {
-      method: 'PUT',
-      headers: { 'Content-Type': file.type, 'cache-control': '3600' },
-      body: file,
-      signal: AbortSignal.timeout(120000),
-    });
-  } catch (error) {
-    throw new Error(error?.name === 'TimeoutError'
-      ? 'Upload timed out. Please try again.'
-      : 'Upload could not reach storage. Check your connection and try again.');
-  }
-  if (!response.ok) {
-    const detail = await response.json().catch(() => null);
-    throw new Error(detail?.message || detail?.error || 'Certificate upload failed. Please try again.');
-  }
+  const body = new FormData();
+  body.append('cacheControl', '3600');
+  body.append('', file);
+  const response = await fetch(signedUrl, { method: 'PUT', headers: { 'x-upsert': 'false' }, body, signal: AbortSignal.timeout(120000) });
+  if (!response.ok) throw new Error('Certificate upload failed. Check your connection and try again.');
   return receipt;
 }
 

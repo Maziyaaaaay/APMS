@@ -1,5 +1,6 @@
--- Preserve an optional academic year when one is available.
--- Existing and new rows may leave it null when it is not shown on the proof.
+-- Preserve the academic year supplied with each new activity submission.
+-- Existing rows remain null because their academic year cannot be inferred
+-- reliably from the activity date.
 begin;
 
 alter table public.certificates
@@ -32,12 +33,13 @@ begin
     end if;
     if new.status <> 'pending' then raise exception 'New submissions must await review.'; end if;
     if new.activity_date > (now() at time zone 'Asia/Kolkata')::date then raise exception 'The activity date cannot be in the future.'; end if;
+    if new.academic_year is null then raise exception 'An academic year is required for a new submission.'; end if;
   else
     if old.status <> 'pending' then raise exception 'A completed review cannot be overwritten.'; end if;
     if new.student_id <> old.student_id or new.activity_id <> old.activity_id
       or new.activity_snapshot is distinct from old.activity_snapshot
       or new.catalog_version <> old.catalog_version or new.file_url <> old.file_url
-      or new.event_name <> old.event_name or new.activity_date is distinct from old.activity_date
+      or new.event_name <> old.event_name or new.activity_date <> old.activity_date
       or new.academic_year is distinct from old.academic_year
       or new.level_selected is distinct from old.level_selected or new.hours is distinct from old.hours then
       raise exception 'Submitted activity evidence is immutable.';
