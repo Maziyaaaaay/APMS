@@ -81,13 +81,15 @@ begin
   end if;
   if new.role <> 'faculty' or new.account_status <> 'approved' then return new; end if;
   for batch in select distinct value from unnest(new.evaluation_batches) as value order by value loop
-    perform pg_advisory_xact_lock(126342, batch);
+    perform pg_advisory_xact_lock(hashtext(new.department_id::text), batch);
     if exists (
       select 1 from public.users existing
       where existing.id <> new.id and existing.role = 'faculty'
-        and existing.account_status = 'approved' and batch = any(existing.evaluation_batches)
+        and existing.account_status = 'approved'
+        and existing.department_id is not distinct from new.department_id
+        and batch = any(existing.evaluation_batches)
     ) then
-      raise exception 'Batch % is already assigned to another approved faculty advisor.', batch using errcode = '23505';
+      raise exception 'Batch % is already assigned to another approved faculty advisor in this department.', batch using errcode = '23505';
     end if;
   end loop;
   return new;
