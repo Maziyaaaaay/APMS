@@ -976,3 +976,13 @@ html:not(.dark) .student-portal .student-profile-aside > div[style*="var(--prima
 html:not(.dark) .student-portal .student-profile-aside > div[style*="var(--primary)"] p { color: #fff5f8 !important; }
 html:not(.dark) .student-portal .student-profile-main .profile-info-item { background: #fff9fa; border-color: #eddce3; }
 html:not(.dark) .student-portal .student-profile-main .profile-info-item label { color: #796a78; }
+
+html:not(.dark) .student-portal .student-profile-points .material-symbols-outlined {
+  color: #c82f68 !important;
+  background: #f9dce8 !important;
+}
+html:not(.dark) .student-portal .student-profile-points progress {
+  accent-color: #c82f68 !important;
+}
+html:not(.dark) .student-portal .student-profile-points progress::-webkit-progress-bar { background: #f5d9e4; }
+html:not(.dark) .student-portal .student-profile-points progress::-webkit-progress-value { background: linear-gradient(90deg,#c82f68,#ed805b); }
