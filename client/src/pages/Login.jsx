@@ -60,18 +60,6 @@ export default function Login() {
     return (
         <div className="login-page">
             <AmbientBackdrop />
-            <div className="login-theme-control">
-                <button
-                    className="login-theme-toggle"
-                    type="button"
-                    onClick={() => setDark(current => !current)}
-                    aria-label={dark ? 'Switch to day mode' : 'Switch to night mode'}
-                    title={dark ? 'Switch to day mode' : 'Switch to night mode'}
-                >
-                    <span className="material-symbols-outlined" aria-hidden="true">{dark ? 'light_mode' : 'dark_mode'}</span>
-                    <span>{dark ? 'Day mode' : 'Night mode'}</span>
-                </button>
-            </div>
             {/* ── Left branded panel (desktop only) ── */}
             <div className="login-brand-panel">
                 <div className="login-brand-logo"><BrandLogo />
@@ -87,6 +75,19 @@ export default function Login() {
             {/* ── Right form panel ── */}
             <div className="login-form-panel">
                 <div className="login-form-inner">
+
+                    {/* Theme toggle  /  top right */}
+                    <div style={{ display:'flex', justifyContent:'flex-end', marginBottom: 16 }}>
+                        <button
+                            className="theme-toggle"
+                            onClick={() => setDark(d => !d)}
+                            title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+                        >
+                            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+                                {dark ? 'light_mode' : 'dark_mode'}
+                            </span>
+                        </button>
+                    </div>
 
                     {/* Mobile logo */}
                     <div className="login-mobile-logo"><BrandLogo />
@@ -115,14 +116,14 @@ export default function Login() {
                     <form onSubmit={handleLogin}>
                         {/* Username */}
                         <div className="form-group">
-                            <label className="form-label" htmlFor="username">{role === 'student' ? 'Email or KTU Registration Number' : 'Email or Username'}</label>
+                            <label className="form-label" htmlFor="username">{role === 'student' ? 'KTU Registration Number' : 'Username'}</label>
                             <div className="input-icon-wrap">
 
                                 <input
                                     className="input"
                                     id="username"
                                     type="text"
-                                    placeholder={role === 'student' ? 'Enter your email or KTU registration number' : `Enter your ${role} email or username`}
+                                    placeholder={role === 'student' ? 'Enter your KTU registration number' : `Enter ${role} username`}
                                     value={username}
                                     onChange={e => setUsername(e.target.value)}
                                     required
@@ -205,7 +206,7 @@ export default function Login() {
                             )}
                         </button>
 
-                        <a href="#" className="login-forgot">Forgot Password?</a>
+                        <Link to="/forgot-password" className="login-forgot">Forgot Password?</Link>
                     </form>
 
                     {/* Sign Up link */}

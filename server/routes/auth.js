@@ -2,10 +2,80 @@ import { createRouter } from '../lib/router.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import supabase from '../db/supabase.js';
+import { EtlabError, normalizeRegistrationNumber, readEtlabSignupProof, verifyEtlabStudent } from '../lib/etlab.js';
+import crypto from 'node:crypto';
+import nodemailer from 'nodemailer';
 
 const router = createRouter();
 const validEmail = value => typeof value === 'string' && value.trim().length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 const validPhone = value => typeof value === 'string' && /^\+?[0-9][0-9\s().-]{7,19}$/.test(value.trim());
+const resetRequestBuckets = new Map();
+
+function rateLimited(key) {
+  const now = Date.now();
+  for (const [bucket, value] of resetRequestBuckets) if (value.until <= now) resetRequestBuckets.delete(bucket);
+  const current = resetRequestBuckets.get(key);
+  if (current && current.count >= 4) return true;
+  resetRequestBuckets.set(key, { count: (current?.count || 0) + 1, until: current?.until || now + 15 * 60_000 });
+  return false;
+}
+
+router.post('/password-reset/request', async (req, res) => {
+  const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+  if (!validEmail(email)) return res.status(400).json({ error: 'Enter a valid email address.' });
+  if (rateLimited(`${req.ip}:${email}`)) return res.status(429).json({ error: 'Too many reset requests. Wait 15 minutes and try again.' });
+  const generic = 'If an approved account uses that email, a reset link has been sent.';
+  const smtpReady = ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS'].every(key => typeof process.env[key] === 'string' && process.env[key].trim());
+  if (!smtpReady) {
+    console.error('Password reset email is not configured: SMTP_HOST, SMTP_USER, and SMTP_PASS are required.');
+    return res.status(503).json({ error: 'Password reset email is not configured yet. Please contact the APMS administrator.' });
+  }
+  // Disabled/rejected historical accounts may share an email with a current
+  // account. Only approved accounts can request a reset, so exclude inactive
+  // records before asking PostgREST for a single row.
+  const { data: user, error } = await supabase
+    .from('users')
+    .select('id,email,name')
+    .eq('email', email)
+    .eq('account_status', 'approved')
+    .maybeSingle();
+  if (error) return res.status(500).json({ error: 'Could not process the request. Try again later.' });
+  if (!user) return res.json({ message: generic });
+  await supabase.from('password_reset_tokens').delete().eq('user_id', user.id);
+  const token = crypto.randomBytes(32).toString('base64url');
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  const { error: insertError } = await supabase.from('password_reset_tokens').insert({ user_id: user.id, token_hash: tokenHash, expires_at: new Date(Date.now() + 30 * 60_000).toISOString() });
+  if (insertError) return res.status(503).json({ error: 'Password reset is not available yet. Contact your APMS administrator.' });
+  try {
+    const smtpPort = Number(process.env.SMTP_PORT || 587);
+    if (!Number.isInteger(smtpPort) || smtpPort < 1 || smtpPort > 65535) throw new Error('SMTP_PORT must be a valid port number.');
+    const secure = process.env.SMTP_SECURE === 'true' || (process.env.SMTP_SECURE !== 'false' && smtpPort === 465);
+    const transporter = nodemailer.createTransport({ host: process.env.SMTP_HOST, port: smtpPort, secure, auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } });
+    const link = new URL('/reset-password', process.env.APP_URL || process.env.APP_BASE_URL || 'https://ktuapms.vercel.app'); link.searchParams.set('token', token);
+    const from = { name: process.env.SMTP_FROM_NAME || 'KTU APMS', address: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER };
+    await transporter.sendMail({ from, to: email, subject: 'Reset your KTU APMS password', text: `Hello ${user.name},\n\nReset your password within 30 minutes: ${link}\n\nIf you did not request this, ignore this email.`, html: `<p>Hello,</p><p><a href="${link}">Reset your KTU APMS password</a>. This link expires in 30 minutes.</p><p>If you did not request this, ignore this email.</p>` });
+  } catch (e) {
+    await supabase.from('password_reset_tokens').delete().eq('token_hash', tokenHash);
+    console.error('Password reset email failed:', e.message);
+    return res.status(503).json({ error: 'Could not send the email. Please try again later or contact your administrator.' });
+  }
+  return res.json({ message: generic });
+});
+
+router.post('/password-reset/complete', async (req, res) => {
+  const token = typeof req.body.token === 'string' ? req.body.token : '';
+  const password = typeof req.body.password === 'string' ? req.body.password : '';
+  if (token.length < 40 || token.length > 100) return res.status(400).json({ error: 'Reset link is invalid or expired. Request a new one.' });
+  if (password.length < 12 || Buffer.byteLength(password) > 72) return res.status(400).json({ error: 'Password must be at least 12 characters and no more than 72 bytes.' });
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  const { data: completed, error: completeError } = await supabase.rpc('apms_consume_password_reset', {
+    p_token_hash: tokenHash,
+    p_password_hash: await bcrypt.hash(password, 12),
+  });
+  if (completeError) return res.status(500).json({ error: 'Password reset is temporarily unavailable. Contact your administrator.' });
+  if (!completed) return res.status(400).json({ error: 'Reset link is invalid, expired, or already used. Request a new one.' });
+  return res.json({ message: 'Password updated. You can now sign in.' });
+});
 
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
@@ -30,20 +100,7 @@ router.post('/login', async (req, res) => {
     if (data && data.length > 0) {
       user = data[0];
     } else {
-      // Also allow signing in with the email address used during registration.
-      const { data: emailMatches, error: emailError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('role', role)
-        .eq('email', username)
-        .limit(1);
-      if (emailError) return res.status(500).json({ error: emailError.message });
-      if (emailMatches && emailMatches.length > 0) {
-        user = emailMatches[0];
-      }
-    }
-    if (!user) {
-      // Fallback: try matching by KTU registration number
+      // Fallback: try matching by roll number
       const { data: data2, error: err2 } = await supabase
         .from('users')
         .select('*')
@@ -96,11 +153,47 @@ router.post('/login', async (req, res) => {
   res.json({ token, user: safeUser });
 });
 
+router.post('/etlab/verify', async (req, res) => {
+  const username = typeof req.body.username === 'string' ? req.body.username.trim() : '';
+  const password = typeof req.body.password === 'string' ? req.body.password : '';
+  const registrationNo = typeof req.body.registrationNo === 'string' ? req.body.registrationNo.trim() : '';
+  if (!username || username.length > 100 || !password || password.length > 256 || !registrationNo || registrationNo.length > 64) {
+    return res.status(400).json({ error: 'Enter your ET Lab username, password, and KTU registration number.' });
+  }
+  try {
+    const identity = await verifyEtlabStudent({ username, password, registrationNo });
+    return res.json({
+      identity: {
+        name: identity.name,
+        registrationNo: identity.registrationNo,
+        email: identity.email,
+        phone: identity.phone,
+        department: identity.department,
+      },
+      proof: identity.proof,
+    });
+  } catch (error) {
+    if (error instanceof EtlabError) return res.status(error.status).json({ error: error.message, code: error.code });
+    return res.status(502).json({ error: 'ET Lab verification failed. Please try again later.' });
+  }
+});
+
 router.post('/signup', async (req, res) => {
-  let { role, password, email, phone, rollNo, department, studentType, designation, year, profileUrl } = req.body;
+  const { role, password, email, phone, rollNo, department, studentType, designation, year, profileUrl } = req.body;
   let name = typeof req.body.name === 'string' ? req.body.name.trim() : '';
-  let registrationNo = role === 'student' ? String(rollNo || '').trim().toUpperCase() : '';
-  let username = role === 'student' ? registrationNo : (typeof req.body.username === 'string' ? req.body.username.trim().toLowerCase() : '');
+  const etlabVerificationToken = typeof req.body.etlabVerificationToken === 'string' ? req.body.etlabVerificationToken : '';
+  const registrationNo = role === 'student' ? String(rollNo || '').trim().toUpperCase() : '';
+  const username = role === 'student' ? registrationNo : (typeof req.body.username === 'string' ? req.body.username.trim().toLowerCase() : '');
+
+  if (role === 'student') {
+    const verifiedIdentity = readEtlabSignupProof(etlabVerificationToken);
+    if (!verifiedIdentity) return res.status(401).json({ error: 'Verify your ET Lab identity again before creating your account.', code: 'etlab_verification_required' });
+    if (normalizeRegistrationNumber(registrationNo) !== verifiedIdentity.registrationNo) {
+      return res.status(400).json({ error: 'The verified ET Lab registration number changed. Verify your identity again.' });
+    }
+    // Use the verified name rather than trusting a client-supplied identity value.
+    name = verifiedIdentity.name;
+  }
 
   if (!username || !password || !name || !role || !email || !phone) {
     return res.status(400).json({ error: 'Name, email, phone number, and password are required.' });

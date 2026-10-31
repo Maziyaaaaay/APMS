@@ -19,6 +19,9 @@ app.use((_req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('X-Frame-Options', 'DENY');
+  // APMS API responses are private by default. Individual safe public endpoints
+  // may opt into short browser caching, but user-scoped data must never be cached.
+  if (_req.path.startsWith('/api/')) res.setHeader('Cache-Control', 'private, no-store, max-age=0');
   next();
 });
 

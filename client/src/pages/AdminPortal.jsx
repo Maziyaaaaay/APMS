@@ -165,7 +165,7 @@ function AccountApprovals({ users, onRefresh, currentUser }) {
         }
     };
     const disableAdmin = async (account) => {
-        if (!window.confirm('Permanently remove admin account ' + account.name + ' and its account history? This cannot be undone.')) return;
+        if (!window.confirm(`Permanently remove admin account ${account.name} and all account history authored by them? This cannot be undone.`)) return;
         setBusyId(account.id);
         try { await deleteUser(account.id); await onRefresh(); }
         catch (err) { alert(err.message); }
@@ -295,14 +295,13 @@ function UsersTab({ students, faculty, onRefresh, currentUser }) {
     };
 
     const handleDelete = async (account) => {
-        const identity = account.roll_no || account.rollNo || account.username;
         const message = account.role === 'student'
-            ? 'Permanently remove ' + account.name + ' (' + identity + ')? This deletes their account, submissions, point history, and uploaded certificate files. Their KTU registration number will become available again. This cannot be undone.'
-            : 'Permanently remove ' + account.name + '? Their account and authored history will be deleted. Student certificate decisions and points remain, but reviewer attribution is cleared. This cannot be undone.';
+            ? `Permanently remove ${account.name} (${account.roll_no || account.rollNo || account.username})? This deletes the account, all of this student's activity submissions and uploaded certificate files. The registration number will become available again. This cannot be undone.`
+            : `Permanently remove ${account.name}? Their account, review history, and circulars they created will be deleted. Student certificates will keep their current decisions and points, but reviewer attribution will be cleared. This cannot be undone.`;
         if (!window.confirm(message)) return;
         try {
             const result = await deleteUser(account.id);
-            if (result.storageCleanupPending) alert('The account was removed, but some certificate files need storage cleanup. Contact the APMS administrator.');
+            if (result.storageCleanupPending) alert('The account was removed, but some certificate files could not be cleaned up. Contact the APMS administrator to finish storage cleanup.');
         } catch (err) { alert(err.message); return; }
         onRefresh();
     };
@@ -474,13 +473,15 @@ function UsersTab({ students, faculty, onRefresh, currentUser }) {
                                             <td>
                                                 <div style={{ display: 'flex', gap: 6 }}>
                                                     {currentUser?.isSuperAdmin && (
+                                                        <>
                                                         <button className="btn btn-primary btn-sm" style={{ fontSize: 11 }} onClick={() => handlePromote(u.id)} title="Promote to Admin">
                                                             <span className="material-symbols-outlined" style={{ fontSize: 14 }}>shield</span>
                                                         </button>
+                                                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(u)} title="Permanently remove account">
+                                                            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
+                                                        </button>
+                                                        </>
                                                     )}
-                                                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(u)}>
-                                                        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
-                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -787,12 +788,12 @@ function PointGradingTab() {
                 {filtered.length} activities · {Object.keys(overrides).length} with custom notes
             </div>
 
-            <div className="point-catalog-list" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {filtered.map(a => {
                     const ov = overrides[a.id];
                     const isEditing = editing === a.id;
                     return (
-                        <div key={a.id} className="point-catalog-row" style={{ padding: '14px 16px', borderRadius: 'var(--radius)', border: `1px solid ${ov ? 'rgba(45,91,227,0.25)' : 'var(--border)'}`, background: ov ? 'rgba(45,91,227,0.04)' : 'var(--surface)' }}>
+                        <div key={a.id} style={{ padding: '14px 16px', borderRadius: 'var(--radius)', border: `1px solid ${ov ? 'rgba(45,91,227,0.25)' : 'var(--border)'}`, background: ov ? 'rgba(45,91,227,0.04)' : 'var(--surface)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                                 <div style={{ flex: 1 }}>
                                     <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{a.name}</div>

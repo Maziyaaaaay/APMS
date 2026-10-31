@@ -1,7 +1,7 @@
 // KTU 2024 Activity Points Algorithm
 // Source: APJ Abdul Kalam Technological University - Activity Points Handbook 2024
 
-export const CATALOG_VERSION = 'ktu-2024-provisional-v5';
+export const CATALOG_VERSION = 'ktu-2024-provisional-v4';
 
 export const STUDENT_TYPES = {
     regular: { total: 120, perGroup: 40 },
@@ -61,7 +61,7 @@ export const ACTIVITIES = {
         note: '5 pts per magazine; maximum 5 pts per magazine in an academic year',
     },
     '1.5': {
-        id: '1.5', group: 1, oncePerStudent: true, name: 'Driving License (4-Wheeler)',
+        id: '1.5', group: 1, name: 'Driving License (4-Wheeler)',
         category: 'Community & Outreach',
         type: 'fixed',
         maxPoints: 5,
@@ -446,18 +446,6 @@ export const ACTIVITIES = {
             { label: 'GMAT Score 600–649', points: 20 },
         ],
     },
-    '2.26': {
-        id: '2.26', group: 2, name: 'Community-led Hackathon / Technical Competition — Winners',
-        category: 'Technical Events & Competitions',
-        type: 'choice',
-        maxPoints: 20,
-        levels: [
-            { label: 'District-level win — faculty assessed (5–20 points)', points: 5 },
-            { label: 'State-level win — 15-point reference; faculty assessed (5–20 points)', points: 15 },
-        ],
-        note: 'Faculty-assessed APMS category for community-led competitions such as IEDC, µLearn, TinkerHub, or GDG. The handbook does not list a general district-level rate or explicitly name every community as a professional society. The 15-point state reference comes from Group II 2.4 and applies only if the SFA confirms that category fits. Faculty awards 5–20 points; confirm eligibility before treating this as official KTU credit.',
-    },
-
     // ───────────── GROUP III ─────────────
     '3.1': {
         id: '3.1', group: 3, name: 'Industrial Visit Report (Min 4 Industries, S5/S6)',

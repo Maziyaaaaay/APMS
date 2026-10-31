@@ -57,7 +57,6 @@ begin
     end if;
     if new.status <> 'pending' then raise exception 'New submissions must await review.'; end if;
     if new.activity_date > (now() at time zone 'Asia/Kolkata')::date then raise exception 'The activity date cannot be in the future.'; end if;
-    if new.academic_year is null then raise exception 'An academic year is required for a new submission.'; end if;
   else
     if new.reviewed_by is null and old.reviewed_by is not null
       and (to_jsonb(new) - 'reviewed_by') = (to_jsonb(old) - 'reviewed_by') then

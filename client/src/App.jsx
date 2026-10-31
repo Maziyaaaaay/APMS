@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { getCurrentUser } from './utils/auth';
 import Login from './pages/Login';
 import SignupPage from './pages/SignupPage';
+import PasswordResetPage from './pages/PasswordResetPage';
 const StudentPortal = lazy(() => import('./pages/StudentPortal')); 
 const FacultyPortal = lazy(() => import('./pages/FacultyPortal')); 
 const AdminPortal = lazy(() => import('./pages/AdminPortal')); 
@@ -34,6 +35,8 @@ export default function App() {
       <Suspense fallback={<div role="status" className="workspace-skeleton" aria-label="Loading workspace"><span className="skeleton-title" /><span /><span /><span /><p>Loading your workspace…</p></div>}><Routes>
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/forgot-password" element={<PasswordResetPage mode="request" />} />
+        <Route path="/reset-password" element={<PasswordResetPage mode="reset" />} />
         <Route path="/student" element={
           <ProtectedRoute requiredRole="student"><StudentPortal /></ProtectedRoute>
         } />
