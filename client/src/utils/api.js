@@ -4,7 +4,7 @@
 const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 function getToken() {
-  return localStorage.getItem('apms_token');
+  return sessionStorage.getItem('apms_token') || localStorage.getItem('apms_token');
 }
 
 async function request(method, path, body = null) {
@@ -33,7 +33,9 @@ async function request(method, path, body = null) {
 
   if (res.status === 401 && token && path !== '/auth/login') {
     localStorage.removeItem('apms_token');
+    sessionStorage.removeItem('apms_token');
     localStorage.removeItem('apms_user');
+    sessionStorage.removeItem('apms_user');
     window.dispatchEvent(new Event('apms-session-ended'));
   }
   if (!res.ok) throw new Error(data.error || `Request failed: ${res.status}`);
@@ -46,9 +48,10 @@ export const api = {
   put: (path, body) => request('PUT', path, body),
   patch: (path, body) => request('PATCH', path, body),
   delete: (path) => request('DELETE', path),
-  setToken: (token) => {
-    if (token) localStorage.setItem('apms_token', token);
-    else localStorage.removeItem('apms_token');
+  setToken: (token, remember = true) => {
+    localStorage.removeItem('apms_token');
+    sessionStorage.removeItem('apms_token');
+    if (token) (remember ? localStorage : sessionStorage).setItem('apms_token', token);
   },
   getToken,
 };
