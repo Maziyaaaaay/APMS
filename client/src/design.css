@@ -1247,3 +1247,42 @@ html:not(.dark) .portal-layout .search-input:focus { border-color: #ce6a91; }
 html:not(.dark) .admin-portal .campus-hero { border-color: rgba(125,70,96,.10) !important; }
 html:not(.dark) .admin-portal .campus-register .metric-card { border-color: rgba(125,70,96,.08) !important; }
 html:not(.dark) .student-portal .student-profile-main .profile-info-item { border-color: rgba(125,70,96,.08) !important; }
+
+/* Softly tinted portal cards: use a shared color family instead of stark white tiles. */
+html:not(.dark) .portal-layout {
+  --surface: #fffaf9;
+  --surface2: #f9edf2;
+}
+html:not(.dark) .portal-layout .card,
+html:not(.dark) .portal-layout .table-card,
+html:not(.dark) .portal-layout .stat-card,
+html:not(.dark) .portal-layout .glass-panel,
+html:not(.dark) .portal-layout .student-submission-tools,
+html:not(.dark) .portal-layout .student-profile-main > .card,
+html:not(.dark) .portal-layout .student-profile-aside > .card {
+  background: linear-gradient(145deg,#fffaf9 0%,#fff4f5 100%) !important;
+}
+html:not(.dark) .portal-layout .student-metrics .metric-card,
+html:not(.dark) .portal-layout .work-queue .action-tile {
+  background: linear-gradient(145deg,#fff8f7 0%,#fdebf1 100%) !important;
+}
+html:not(.dark) .portal-layout .group-card:nth-child(1) { background: linear-gradient(145deg,#fff7f6 0%,#fce8ee 100%) !important; }
+html:not(.dark) .portal-layout .group-card:nth-child(2) { background: linear-gradient(145deg,#fbf8ff 0%,#f0eaff 100%) !important; }
+html:not(.dark) .portal-layout .group-card:nth-child(3) { background: linear-gradient(145deg,#fffaf1 0%,#fff0da 100%) !important; }
+html:not(.dark) .portal-layout .student-profile-main .profile-info-item {
+  background: #fff6f6 !important;
+  border-color: rgba(125,70,96,.08) !important;
+}
+html:not(.dark) .portal-layout .student-profile-aside .settings-item { background: #fff8f8 !important; }
+html:not(.dark) .portal-layout .card-header,
+html:not(.dark) .portal-layout .table-card-header { background: rgba(250,232,239,.62) !important; }
+html:not(.dark) .portal-layout .student-progress-panel,
+html:not(.dark) .portal-layout .faculty-focus-panel { background: linear-gradient(120deg,#fff1eb 0%,#fbe5ee 56%,#fff0df 100%) !important; }
+html:not(.dark) .admin-portal .campus-hero { background: linear-gradient(120deg,#fff1eb 0%,#fbe5ee 56%,#fff0df 100%) !important; }
+html:not(.dark) .admin-portal .campus-register .metric-card:nth-child(1) { background: linear-gradient(145deg,#fff7f6,#fce8ee) !important; }
+html:not(.dark) .admin-portal .campus-register .metric-card:nth-child(2) { background: linear-gradient(145deg,#fbf8ff,#f0eaff) !important; }
+html:not(.dark) .admin-portal .campus-register .metric-card:nth-child(3) { background: linear-gradient(145deg,#fffaf1,#fff0da) !important; }
+html:not(.dark) .admin-portal .activity-feed,
+html:not(.dark) .admin-portal .campus-insights { background: linear-gradient(145deg,#fffaf9,#fff4f5) !important; }
+html:not(.dark) .portal-layout .data-table tbody tr:nth-child(even) { background: rgba(249,237,242,.5); }
+html:not(.dark) .portal-layout .data-table tbody tr:hover { background: #fff0f4; }
