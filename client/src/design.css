@@ -990,3 +990,163 @@ html:not(.dark) .student-portal .student-profile-points progress::-webkit-progre
 html:not(.dark) .student-portal .student-profile-points > div:first-child > div { background: #f9dce8 !important; border-radius: 4px !important; }
 html:not(.dark) .student-portal .student-profile-points .progress-track { background: #f5d9e4 !important; }
 html:not(.dark) .student-portal .student-profile-points .progress-fill { background: linear-gradient(90deg,#c82f68,#ed805b) !important; }
+
+/* Shared APMS day system: consistent color, spacing and rounded surfaces for every role. */
+html:not(.dark) .portal-layout {
+  --bg: #fff6f2;
+  --bg2: #fff0f2;
+  --surface: #fffdfc;
+  --surface2: #fde8ef;
+  --text: #302536;
+  --text-secondary: #716271;
+  --text-muted: #796d79;
+  --border: #ead5df;
+  --border-strong: #d9bfcb;
+  --sidebar-bg: #fff7f8;
+  --sidebar-hover: #fde8ef;
+  --accent: #c82f68;
+  --accent-hover: #a92558;
+  --success-bg: #e7f1e8;
+  --danger-bg: #f9e6e5;
+  background: var(--bg);
+  color: var(--text);
+}
+html:not(.dark) .portal-layout .main-content,
+html:not(.dark) .portal-layout .topbar { background: var(--bg); color: var(--text); border-color: var(--border); }
+html:not(.dark) .portal-layout .sidebar {
+  width: 216px; padding: 0 18px; color: var(--text); background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+}
+html:not(.dark) .portal-layout .main-content { margin-left: 216px; }
+html:not(.dark) .portal-layout .sidebar-brand { padding: 26px 0 22px; border-color: var(--border); }
+html:not(.dark) .portal-layout .sidebar-brand-text h1,
+html:not(.dark) .portal-layout .topbar-title,
+html:not(.dark) .portal-layout .topbar-user-name { color: var(--text); }
+html:not(.dark) .portal-layout .sidebar-brand-text p,
+html:not(.dark) .portal-layout .topbar-user-sub { color: var(--text-secondary); }
+html:not(.dark) .portal-layout .sidebar-nav { gap: 6px; padding: 24px 0; }
+html:not(.dark) .portal-layout .nav-item { min-height: 44px; padding: 11px 12px; border: 1px solid transparent; border-radius: 10px; color: var(--text-secondary); }
+html:not(.dark) .portal-layout .nav-item .material-symbols-outlined { color: inherit; }
+html:not(.dark) .portal-layout .nav-item.active { color: #a92558; background: #f9dce8; border-color: #f1cbd9; box-shadow: none !important; }
+html:not(.dark) .portal-layout .nav-item:hover:not(.active) { color: #a92558; background: #fde8ef; transform: none !important; }
+html:not(.dark) .portal-layout .sidebar-footer { border-color: var(--border); }
+html:not(.dark) .portal-layout .sidebar-footer div { color: var(--text-secondary) !important; }
+html:not(.dark) .portal-layout .sidebar-footer .user-avatar,
+html:not(.dark) .portal-layout .topbar-avatar { color: #9c2154 !important; background: #f3dfeb; border-color: #fff; }
+html:not(.dark) .portal-layout .topbar { min-height: 72px; height: 72px; padding: 0 clamp(22px,3.4vw,48px); border-bottom: 1px solid var(--border); }
+html:not(.dark) .portal-layout .theme-toggle { color: #ad2457; background: #fffdfc; border: 1px solid var(--border); border-radius: 10px; }
+html:not(.dark) .portal-layout .page-content { max-width: 1480px; padding: clamp(28px,3.5vw,48px) clamp(22px,3.8vw,56px) 64px; }
+html:not(.dark) .student-portal .page-content.student-page-content { max-width: 1480px; padding: clamp(28px,3.5vw,48px) clamp(22px,3.8vw,56px) 64px; }
+html:not(.dark) .portal-layout .workspace-heading { gap: 24px; margin-bottom: 32px; }
+html:not(.dark) .portal-layout .workspace-heading h2 { color: var(--text); }
+html:not(.dark) .portal-layout .workspace-heading p { color: var(--text-secondary); }
+html:not(.dark) .portal-layout .eyebrow { color: #ad2a5d; }
+html:not(.dark) .portal-layout .btn,
+html:not(.dark) .portal-layout .input,
+html:not(.dark) .portal-layout .select,
+html:not(.dark) .portal-layout .textarea,
+html:not(.dark) .portal-layout .search-input,
+html:not(.dark) .portal-layout .filter-select,
+html:not(.dark) .portal-layout .theme-toggle { border-radius: 10px; }
+html:not(.dark) .portal-layout .btn-primary,
+html:not(.dark) .portal-layout .login-submit-btn { color: #fff; background: #c82f68; border-color: #c82f68; box-shadow: none !important; }
+html:not(.dark) .portal-layout .btn-primary:hover,
+html:not(.dark) .portal-layout .login-submit-btn:hover { background: #a92558; border-color: #a92558; }
+html:not(.dark) .portal-layout .card,
+html:not(.dark) .portal-layout .table-card,
+html:not(.dark) .portal-layout .stat-card,
+html:not(.dark) .portal-layout .glass-panel,
+html:not(.dark) .portal-layout .student-progress-panel,
+html:not(.dark) .portal-layout .faculty-focus-panel,
+html:not(.dark) .portal-layout .campus-register,
+html:not(.dark) .portal-layout .activity-feed,
+html:not(.dark) .portal-layout .student-submission-tools,
+html:not(.dark) .portal-layout .student-metrics .metric-card,
+html:not(.dark) .portal-layout .group-card,
+html:not(.dark) .portal-layout .work-queue .action-tile,
+html:not(.dark) .portal-layout .student-profile-main .profile-info-item,
+html:not(.dark) .portal-layout .student-profile-aside .settings-item {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background-color: var(--surface);
+  box-shadow: 0 6px 20px rgba(123,37,77,.045) !important;
+}
+html:not(.dark) .portal-layout .card-header,
+html:not(.dark) .portal-layout .table-card-header { border-color: var(--border); border-radius: 14px 14px 0 0; }
+html:not(.dark) .portal-layout .badge { border-radius: 6px; }
+html:not(.dark) .portal-layout .segmented-control,
+html:not(.dark) .portal-layout .segmented-control button { border-radius: 9px; }
+html:not(.dark) .portal-layout .student-progress-panel,
+html:not(.dark) .portal-layout .faculty-focus-panel {
+  border-color: #f0d1df;
+  background: radial-gradient(ellipse at 92% 110%,rgba(238,111,157,.23),transparent 46%),
+              radial-gradient(ellipse at 74% -16%,rgba(255,184,111,.22),transparent 42%),
+              linear-gradient(120deg,#fff3ef 0%,#fde7ef 54%,#fff0e4 100%);
+}
+html:not(.dark) .portal-layout .group-card:nth-child(1) .group-card-icon,
+html:not(.dark) .portal-layout .student-metrics .metric-icon { background: #f9dce8 !important; color: #b82c62 !important; border-radius: 9px; }
+html:not(.dark) .portal-layout .group-card:nth-child(2) .group-card-icon { background: #ece4fb !important; color: #7653b5 !important; border-radius: 9px; }
+html:not(.dark) .portal-layout .group-card:nth-child(3) .group-card-icon { background: #fff0d8 !important; color: #b87621 !important; border-radius: 9px; }
+
+/* Admin day mode now uses the same light rose surfaces and keeps its content layout. */
+html:not(.dark) .admin-portal::before,
+html:not(.dark) .admin-portal::after { display: none !important; }
+html:not(.dark) .admin-portal .sidebar { background: #fff7f8; color: var(--text); }
+html:not(.dark) .admin-portal .sidebar-brand { border-color: var(--border); }
+html:not(.dark) .admin-portal .sidebar-brand-text h1,
+html:not(.dark) .admin-portal .sidebar-brand-text p,
+html:not(.dark) .admin-portal .sidebar-footer div,
+html:not(.dark) .admin-portal .nav-item,
+html:not(.dark) .admin-portal .nav-item .material-symbols-outlined { color: var(--text-secondary) !important; }
+html:not(.dark) .admin-portal .nav-item.active { color: #a92558 !important; background: #f9dce8; border-color: #f1cbd9; box-shadow: none !important; }
+html:not(.dark) .admin-portal .nav-item.active .material-symbols-outlined { color: #a92558 !important; }
+html:not(.dark) .admin-portal .nav-item:hover:not(.active) { color: #a92558 !important; background: #fde8ef; transform: none !important; }
+html:not(.dark) .admin-portal .sidebar-footer { border-color: var(--border); }
+html:not(.dark) .admin-portal .topbar { background: #fff9fc; border-color: var(--border); backdrop-filter: none !important; }
+html:not(.dark) .admin-portal .topbar-title,
+html:not(.dark) .admin-portal .topbar-user-name { color: var(--text); }
+html:not(.dark) .admin-portal .topbar-user-sub { color: var(--text-secondary); }
+html:not(.dark) .admin-portal .topbar-avatar { color: #9c2154; background: #f3dfeb; border-color: #fff; box-shadow: none !important; }
+html:not(.dark) .admin-portal .campus-hero {
+  min-height: 250px; border: 1px solid #f0d1df; border-radius: 18px;
+  color: var(--text); background: linear-gradient(120deg,#fff3ef,#fde7ef 56%,#fff0e4);
+  box-shadow: 0 8px 24px rgba(123,37,77,.06) !important;
+}
+html:not(.dark) .admin-portal .campus-hero::before,
+html:not(.dark) .admin-portal .campus-hero::after { display: none !important; animation: none !important; }
+html:not(.dark) .admin-portal .campus-hero .eyebrow { color: #ad2a5d; }
+html:not(.dark) .admin-portal .campus-hero .workspace-heading h2 { color: #302536; }
+html:not(.dark) .admin-portal .campus-hero .workspace-heading p { color: #716271; }
+html:not(.dark) .admin-portal .campus-hero-art { border-radius: 18px; background: #ffffff9c; border: 1px solid #fff; box-shadow: none !important; animation: none !important; }
+html:not(.dark) .admin-portal .campus-hero-art span { color: #b42d60; }
+html:not(.dark) .admin-portal .work-queue .section-intro h3,
+html:not(.dark) .admin-portal .metric-label,
+html:not(.dark) .admin-portal .metric-value,
+html:not(.dark) .admin-portal .feed-copy strong,
+html:not(.dark) .admin-portal .panel-heading h3,
+html:not(.dark) .admin-portal .campus-insights summary { color: var(--text); }
+html:not(.dark) .admin-portal .work-queue .section-intro>span:last-child,
+html:not(.dark) .admin-portal .metric-detail,
+html:not(.dark) .admin-portal .feed-copy span { color: var(--text-secondary); }
+html:not(.dark) .admin-portal .campus-register .metric-card:nth-child(1),
+html:not(.dark) .admin-portal .campus-register .metric-card:nth-child(2),
+html:not(.dark) .admin-portal .campus-register .metric-card:nth-child(3) { background: #fffdfc !important; }
+html:not(.dark) .admin-portal .work-queue .action-tile,
+html:not(.dark) .admin-portal .campus-register,
+html:not(.dark) .admin-portal .activity-feed,
+html:not(.dark) .admin-portal .campus-insights { border-color: var(--border); }
+@media (max-width: 767px) {
+  html:not(.dark) .admin-portal .sidebar { width: min(290px,86vw); }
+  html:not(.dark) .admin-portal .main-content { margin-left: 0; }
+  html:not(.dark) .admin-portal .page-content,
+  html:not(.dark) .student-portal .page-content.student-page-content { padding: 26px 18px 48px; }
+  html:not(.dark) .portal-layout .card,
+  html:not(.dark) .portal-layout .table-card,
+  html:not(.dark) .portal-layout .stat-card,
+  html:not(.dark) .portal-layout .glass-panel,
+  html:not(.dark) .portal-layout .campus-hero,
+  html:not(.dark) .portal-layout .student-progress-panel,
+  html:not(.dark) .portal-layout .faculty-focus-panel,
+  html:not(.dark) .portal-layout .campus-register,
+  html:not(.dark) .portal-layout .activity-feed { border-radius: 12px; }
+}
