@@ -986,3 +986,7 @@ html:not(.dark) .student-portal .student-profile-points progress {
 }
 html:not(.dark) .student-portal .student-profile-points progress::-webkit-progress-bar { background: #f5d9e4; }
 html:not(.dark) .student-portal .student-profile-points progress::-webkit-progress-value { background: linear-gradient(90deg,#c82f68,#ed805b); }
+
+html:not(.dark) .student-portal .student-profile-points > div:first-child > div { background: #f9dce8 !important; border-radius: 4px !important; }
+html:not(.dark) .student-portal .student-profile-points .progress-track { background: #f5d9e4 !important; }
+html:not(.dark) .student-portal .student-profile-points .progress-fill { background: linear-gradient(90deg,#c82f68,#ed805b) !important; }
