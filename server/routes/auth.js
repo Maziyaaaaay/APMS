@@ -23,11 +23,6 @@ function rateLimited(key) {
 
 router.post('/password-reset/request', async (req, res) => {
   const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
-  if (role === 'faculty' && (!Array.isArray(evaluationBatches) || evaluationBatches.length < 1 || evaluationBatches.length > 8
-    || evaluationBatches.some(batch => !Number.isInteger(batch) || batch < 2000 || batch > 2100)
-    || new Set(evaluationBatches).size !== evaluationBatches.length)) {
-    return res.status(400).json({ error: 'Choose one or more valid student batches to evaluate.' });
-  }
   if (!validEmail(email)) return res.status(400).json({ error: 'Enter a valid email address.' });
   if (rateLimited(`${req.ip}:${email}`)) return res.status(429).json({ error: 'Too many reset requests. Wait 15 minutes and try again.' });
   const generic = 'If an approved account uses that email, a reset link has been sent.';
@@ -215,6 +210,11 @@ router.post('/signup', async (req, res) => {
   }
   if (!department) {
     return res.status(400).json({ error: 'A department is required for student and faculty accounts.' });
+  }
+  if (role === 'faculty' && (!Array.isArray(evaluationBatches) || evaluationBatches.length < 1 || evaluationBatches.length > 8
+    || evaluationBatches.some(batch => !Number.isInteger(batch) || batch < 2000 || batch > 2100)
+    || new Set(evaluationBatches).size !== evaluationBatches.length)) {
+    return res.status(400).json({ error: 'Choose one or more valid student batches to evaluate.' });
   }
   if (!validEmail(email)) return res.status(400).json({ error: 'Enter a valid email address.' });
   if (!validPhone(phone)) return res.status(400).json({ error: 'Enter a valid phone number, including the country code if needed.' });

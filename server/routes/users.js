@@ -251,7 +251,8 @@ router.delete('/:id', requireRole('admin', 'faculty'), async (req, res) => {
   if (!target || target.is_super_admin) return res.status(403).json({ error: 'This account cannot be removed.' });
   const isOwnDepartmentStudent = req.user.role === 'faculty'
     && target.role === 'student'
-    && target.department_id === req.user.departmentId\n    && req.user.evaluationBatches?.includes(target.batch_year);
+    && target.department_id === req.user.departmentId
+    && req.user.evaluationBatches?.includes(target.batch_year);
   if (!req.user.isSuperAdmin && !isOwnDepartmentStudent) {
     return res.status(403).json({ error: 'Faculty can permanently remove only students in their own department. Other accounts require the super admin.' });
   }
