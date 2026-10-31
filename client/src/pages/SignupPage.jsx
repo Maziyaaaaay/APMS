@@ -248,7 +248,7 @@ export default function SignupPage() {
             <div style={{ padding: '32px 0', textAlign: 'center' }}>
               <span className="material-symbols-outlined" style={{ fontSize: 56, color: 'var(--success)', display: 'block', marginBottom: 12 }}>check_circle</span>
               <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>Request submitted</div>
-                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{role === 'student' ? 'Your department faculty advisor must approve your account before you can sign in.' : 'An administrator must approve your faculty account${selectedEvaluationBatches.length ? ` and ${selectedEvaluationBatches.join(', ')} batch assignment` : ''} before you can sign in.'}</div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{role === 'student' ? 'Your department faculty advisor must approve your account before you can sign in.' : `An administrator must approve your faculty account${selectedEvaluationBatches.length ? ` and ${selectedEvaluationBatches.join(', ')} batch assignment` : ''} before you can sign in.`}</div>
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
