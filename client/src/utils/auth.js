@@ -12,11 +12,14 @@ function decodeToken(token) {
   }
 }
 
-export async function login(username, password, role) {
+export async function login(username, password, role, remember = false) {
   try {
     const { token, user } = await api.post('/auth/login', { username, password, role });
-    api.setToken(token);
-    localStorage.setItem('apms_user', JSON.stringify(user));
+    api.setToken(token, remember);
+    const storage = remember ? localStorage : sessionStorage;
+    const otherStorage = remember ? sessionStorage : localStorage;
+    storage.setItem('apms_user', JSON.stringify(user));
+    otherStorage.removeItem('apms_user');
     return { success: true, user };
   } catch (err) {
     return { success: false, message: err.message };
@@ -43,6 +46,7 @@ export async function verifyEtlabStudent(credentials) {
 export function logout() {
   api.setToken(null);
   localStorage.removeItem('apms_user');
+  sessionStorage.removeItem('apms_user');
 }
 
 export function getCurrentUser() {
@@ -55,7 +59,7 @@ export function getCurrentUser() {
     logout();
     return null;
   }
-  const userStr = localStorage.getItem('apms_user');
+  const userStr = sessionStorage.getItem('apms_user') || localStorage.getItem('apms_user');
   if (!userStr) return null;
   try {
     return JSON.parse(userStr);
