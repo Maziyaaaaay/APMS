@@ -26,12 +26,14 @@ router.get('/', async (req, res) => {
 
   if (req.user.role === 'faculty') {
     // Get students in faculty's department first
+    if (!req.user.evaluationBatches?.length) return res.json([]);
     const { data: students, error: sErr } = await supabase
       .from('users')
       .select('id')
       .eq('role', 'student')
       .eq('account_status', 'approved')
-      .eq('department_id', req.user.departmentId);
+      .eq('department_id', req.user.departmentId)
+      .in('batch_year', req.user.evaluationBatches);
     if (sErr) return res.status(500).json({ error: sErr.message });
     const studentIds = students.map(s => s.id);
     if (studentIds.length === 0) return res.json([]);
@@ -144,12 +146,12 @@ router.post('/', requireRole('student'), async (req, res) => {
 // GET /api/certificates/:id/file-url — private, short-lived file access.
 router.get('/:id/file-url', async (req, res) => {
   const { data: cert, error } = await supabase.from('certificates')
-    .select('id, student_id, file_url, file_mime_type, file_name, student:student_id(department_id, account_status)')
+    .select('id, student_id, file_url, file_mime_type, file_name, student:student_id(department_id, account_status, batch_year)')
     .eq('id', req.params.id).maybeSingle();
   if (error) return res.status(500).json({ error: error.message });
   if (!cert || !cert.file_url) return res.status(404).json({ error: 'Certificate file not found.' });
   if (req.user.role === 'student' && cert.student_id !== req.user.id) return res.status(403).json({ error: 'Forbidden' });
-  if (req.user.role === 'faculty' && (cert.student?.department_id !== req.user.departmentId || cert.student?.account_status !== 'approved')) return res.status(403).json({ error: 'You can only access files from approved students in your department.' });
+  if (req.user.role === 'faculty' && (cert.student?.department_id !== req.user.departmentId || cert.student?.account_status !== 'approved' || !req.user.evaluationBatches?.includes(cert.student?.batch_year))) return res.status(403).json({ error: 'You can only access files from approved students in your assigned batches.' });
   if (!['student', 'faculty'].includes(req.user.role)) return res.status(403).json({ error: 'Only the student and their department faculty advisor can access this document.' });
   const { data: signed, error: signError } = await supabase.storage.from('apms-certificates')
     .createSignedUrl(cert.file_url, 60);
@@ -165,13 +167,13 @@ router.put('/:id', requireRole('faculty'), async (req, res) => {
   }
 
   const { data: current, error: currentError } = await supabase.from('certificates')
-    .select('id, student_id, status, points_awarded, activity_id, activity_snapshot, catalog_version, student:student_id(department_id, account_status)')
+    .select('id, student_id, status, points_awarded, activity_id, activity_snapshot, catalog_version, student:student_id(department_id, account_status, batch_year)')
     .eq('id', req.params.id).maybeSingle();
   if (currentError) return res.status(500).json({ error: currentError.message });
   if (!current) return res.status(404).json({ error: 'Certificate not found.' });
   if (current.status !== 'pending') return res.status(409).json({ error: 'This submission has already been reviewed.' });
-  if (req.user.role === 'faculty' && (current.student?.department_id !== req.user.departmentId || current.student?.account_status !== 'approved')) {
-    return res.status(403).json({ error: 'You can only review submissions from your department.' });
+  if (req.user.role === 'faculty' && (current.student?.department_id !== req.user.departmentId || current.student?.account_status !== 'approved' || !req.user.evaluationBatches?.includes(current.student?.batch_year))) {
+    return res.status(403).json({ error: 'You can only review submissions from your assigned batches.' });
   }
   if (status === 'rejected' && !String(notes || '').trim()) return res.status(400).json({ error: 'Explain why the submission is being rejected.' });
   const awarded = status === 'rejected' ? 0 : Number(pointsAwarded);

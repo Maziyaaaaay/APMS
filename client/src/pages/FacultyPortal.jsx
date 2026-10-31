@@ -3,7 +3,8 @@ import { AmbientBackdrop, WorkspaceHeading, MetricCard } from '../components/Das
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, logout } from '../utils/auth';
-import { getCertificates, getUsers, getAccountRequests, reviewAccount, updateCertificate, updateUser, deleteUser, getCirculars, getCertificateFileUrl } from '../utils/storage';
+import BatchAssignmentModal from '../components/BatchAssignmentModal';
+import { getCertificates, getUsers, getAccountRequests, reviewAccount, updateCertificate, updateUser, deleteUser, getCirculars, getCertificateFileUrl, getUserById, setFacultyEvaluationBatches } from '../utils/storage';
 import { compressImage } from '../utils/imageCompressor';
 import { getActivityForCertificate, calculateStudentSummary } from '../utils/points';
 import { generateApprovalPDF } from '../utils/pdfGenerator';
@@ -46,6 +47,8 @@ export default function FacultyPortal() {
     const [circulars, setCirculars] = useState([]);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'));
+    const [batchDialogOpen, setBatchDialogOpen] = useState(false);
+    const [savingBatches, setSavingBatches] = useState(false);
 
     const [loadError, setLoadError] = useState('');
     const refreshData = useCallback(async () => {
@@ -67,6 +70,27 @@ export default function FacultyPortal() {
         if (!user) { navigate('/'); return; }
         Promise.resolve().then(refreshData);
     }, [user, navigate, refreshData]);
+
+    useEffect(() => {
+        if (!user?.id) return;
+        getUserById(user.id).then(profile => {
+            const batches = profile.evaluation_batches || profile.evaluationBatches || [];
+            setUser(current => current ? { ...current, evaluationBatches: batches } : current);
+            if (!batches.length) setBatchDialogOpen(true);
+        }).catch(error => setLoadError(error.message));
+    }, [user?.id]);
+
+    const saveInitialBatches = async (batches) => {
+        setSavingBatches(true);
+        try {
+            const result = await setFacultyEvaluationBatches(user.id, batches);
+            setUser(current => current ? { ...current, evaluationBatches: result.evaluationBatches || batches } : current);
+            setBatchDialogOpen(false);
+            setLoadError('');
+            await refreshData();
+        } catch (error) { window.alert(error.message); }
+        finally { setSavingBatches(false); }
+    };
 
     const handleLogout = () => { logout(); navigate('/'); };
     const toggleDark = () => {
@@ -993,6 +1017,16 @@ function ProfileTab({ user, onLogout, onRefresh, onUpdateUser }) {
                     <p>Sign out of your account</p>
                 </div>
             </div>
+        <BatchAssignmentModal
+            open={batchDialogOpen}
+            title="Which batches will you evaluate?"
+            description="Choose the student admission batches you are responsible for. Your student approvals and certificate reviews will be routed by this assignment."
+            onCancel={() => setBatchDialogOpen(false)}
+            onConfirm={saveInitialBatches}
+            submitLabel="Save batches"
+            busy={savingBatches}
+            cancelDisabled={!user?.evaluationBatches?.length}
+        />
         </div>
     );
 }

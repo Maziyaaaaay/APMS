@@ -1,6 +1,7 @@
 import BrandLogo from '../components/BrandLogo';
 import { AmbientBackdrop } from '../components/DashboardKit';
 import AchievementScene from '../components/AchievementScene';
+import BatchAssignmentModal from '../components/BatchAssignmentModal';
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { signup, verifyEtlabStudent } from '../utils/auth';
@@ -20,6 +21,8 @@ export default function SignupPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [batchDialogOpen, setBatchDialogOpen] = useState(false);
+  const [selectedEvaluationBatches, setSelectedEvaluationBatches] = useState([]);
   const [etlabUsername, setEtlabUsername] = useState('');
   const [etlabPassword, setEtlabPassword] = useState('');
   const [etlabIdentity, setEtlabIdentity] = useState(null);
@@ -116,6 +119,11 @@ export default function SignupPage() {
       setError(role === 'student' ? 'Name and KTU registration number are required.' : 'Name and username are required.'); return;
     }
     if (!form.email.trim() || !form.phone.trim()) { setError('Email and phone number are required.'); return; }
+    if (role === 'faculty') { setBatchDialogOpen(true); return; }
+    await createAccount([]);
+  };
+
+  const createAccount = async (evaluationBatches) => {
     setLoading(true);
     try {
       const result = await signup({
@@ -129,11 +137,14 @@ export default function SignupPage() {
         rollNo: role === 'student' ? form.rollNo.trim() : undefined,
         studentType: role === 'student' ? form.studentType : undefined,
         designation: role === 'faculty' ? form.designation.trim() : undefined,
+        evaluationBatches: role === 'faculty' ? evaluationBatches : undefined,
         year: role === 'student' ? form.year : undefined,
         profileUrl: role === 'student' ? form.profileUrl : undefined,
         etlabVerificationToken: role === 'student' ? etlabProof : undefined,
       });
       if (result.success) {
+        setSelectedEvaluationBatches(evaluationBatches);
+        setBatchDialogOpen(false);
         setSuccess(true);
         setTimeout(() => navigate('/?registered=1'), 1800);
       } else {
@@ -144,6 +155,11 @@ export default function SignupPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const confirmFacultyBatches = async (batches) => {
+    if (!batches.length) return;
+    await createAccount(batches);
   };
 
   return (
@@ -232,7 +248,7 @@ export default function SignupPage() {
             <div style={{ padding: '32px 0', textAlign: 'center' }}>
               <span className="material-symbols-outlined" style={{ fontSize: 56, color: 'var(--success)', display: 'block', marginBottom: 12 }}>check_circle</span>
               <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>Request submitted</div>
-                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{role === 'student' ? 'Your department faculty advisor must approve your account before you can sign in.' : 'An administrator must approve your faculty account before you can sign in.'}</div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{role === 'student' ? 'Your department faculty advisor must approve your account before you can sign in.' : `An administrator must approve your faculty account${selectedEvaluationBatches.length ? ` and ${selectedEvaluationBatches.join(', ')} batch assignment` : ''} before you can sign in.`}</div>
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
@@ -403,6 +419,15 @@ export default function SignupPage() {
           )}
         </div>
       </div>
+      <BatchAssignmentModal
+        open={batchDialogOpen}
+        title="Which batches will you evaluate?"
+        description="Choose the student admission batches you are responsible for. Your batch request will be activated after administrator approval."
+        onCancel={() => setBatchDialogOpen(false)}
+        onConfirm={confirmFacultyBatches}
+        submitLabel="Continue registration"
+        busy={loading}
+      />
     </div>
   );
 }

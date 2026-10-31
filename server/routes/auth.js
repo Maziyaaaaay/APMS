@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import supabase from '../db/supabase.js';
 import { EtlabError, normalizeRegistrationNumber, readEtlabSignupProof, verifyEtlabStudent } from '../lib/etlab.js';
+import { inferKtuBatchYear } from '../lib/validation.js';
 import crypto from 'node:crypto';
 import nodemailer from 'nodemailer';
 
@@ -22,6 +23,11 @@ function rateLimited(key) {
 
 router.post('/password-reset/request', async (req, res) => {
   const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+  if (role === 'faculty' && (!Array.isArray(evaluationBatches) || evaluationBatches.length < 1 || evaluationBatches.length > 8
+    || evaluationBatches.some(batch => !Number.isInteger(batch) || batch < 2000 || batch > 2100)
+    || new Set(evaluationBatches).size !== evaluationBatches.length)) {
+    return res.status(400).json({ error: 'Choose one or more valid student batches to evaluate.' });
+  }
   if (!validEmail(email)) return res.status(400).json({ error: 'Enter a valid email address.' });
   if (rateLimited(`${req.ip}:${email}`)) return res.status(429).json({ error: 'Too many reset requests. Wait 15 minutes and try again.' });
   const generic = 'If an approved account uses that email, a reset link has been sent.';
@@ -139,6 +145,8 @@ router.post('/login', async (req, res) => {
     email:         user.email,
     phone:         user.phone,
     rollNo:        user.roll_no,
+    batchYear:     user.batch_year,
+    evaluationBatches: user.evaluation_batches || [],
     department:    user.department,
     class:         user.class,
     year:          user.year,
@@ -180,6 +188,7 @@ router.post('/etlab/verify', async (req, res) => {
 
 router.post('/signup', async (req, res) => {
   const { role, password, email, phone, rollNo, department, studentType, designation, year, profileUrl } = req.body;
+  const evaluationBatches = req.body.evaluationBatches;
   let name = typeof req.body.name === 'string' ? req.body.name.trim() : '';
   const etlabVerificationToken = typeof req.body.etlabVerificationToken === 'string' ? req.body.etlabVerificationToken : '';
   const registrationNo = role === 'student' ? String(rollNo || '').trim().toUpperCase() : '';
@@ -216,6 +225,10 @@ router.post('/signup', async (req, res) => {
   if (typeof username !== 'string' || !/^[a-z0-9][a-z0-9._-]{2,63}$/i.test(username.trim())) return res.status(400).json({ error: role === 'student' ? 'Enter a valid KTU registration number.' : 'Use 3–64 letters, numbers, dots, underscores, or hyphens for your username.' });
   if (typeof name !== 'string' || !name.trim() || name.trim().length > 150) return res.status(400).json({ error: 'Enter your full name (up to 150 characters).' });
   const password_hash = await bcrypt.hash(password, 12);
+  const batchYear = role === 'student' ? inferKtuBatchYear(registrationNo) : null;
+  if (role === 'student' && batchYear === null) {
+    return res.status(400).json({ error: 'We could not identify your admission batch from your KTU registration number. Contact the APMS administrator to complete your registration.' });
+  }
 
   const { data: departmentRow, error: departmentError } = await supabase.from('departments')
     .select('id, name').eq('name', department).maybeSingle();
@@ -226,6 +239,8 @@ router.post('/signup', async (req, res) => {
     role, account_status: 'pending', username, password_hash, name: name.trim(), email: email.trim().toLowerCase(), phone: phone.trim(),
     profile_url:  profileUrl || null,
     roll_no:      role === 'student' ? registrationNo : null,
+    batch_year:   batchYear,
+    evaluation_batches: role === 'faculty' ? evaluationBatches : [],
     department:   department || null,
     department_id: departmentRow.id,
     year:         role === 'student' ? (year ? parseInt(year) : null) : null,
@@ -236,7 +251,7 @@ router.post('/signup', async (req, res) => {
   const { data, error } = await supabase
     .from('users')
     .insert(insertData)
-    .select('id, role, account_status, username, name, email, phone, roll_no, department, student_type, designation')
+    .select('id, role, account_status, username, name, email, phone, roll_no, department, student_type, designation, batch_year, evaluation_batches')
     .single();
 
   if (error) {
@@ -246,7 +261,7 @@ router.post('/signup', async (req, res) => {
     return res.status(400).json({ error: error.message });
   }
 
-  res.status(201).json({ success: true, user: data });
+  res.status(201).json({ success: true, user: { ...data, batchYear: data.batch_year, evaluationBatches: data.evaluation_batches || [] } });
 });
 
 // POST /api/auth/logout  (stateless — client just discards the token)

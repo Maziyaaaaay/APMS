@@ -1,5 +1,6 @@
 import BrandLogo from '../components/BrandLogo';
 import InterfaceIcon from '../components/InterfaceIcon';
+import BatchAssignmentModal from '../components/BatchAssignmentModal';
 import { AmbientBackdrop, WorkspaceHeading, MetricCard, ActionTile } from '../components/DashboardKit';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -192,11 +193,12 @@ function AccountApprovals({ users, onRefresh, currentUser }) {
                 <p className="td-muted" style={{ marginTop: 0 }}>Faculty accounts wait for admin approval. Student accounts are approved by a faculty advisor in their department.</p>
                 {pending.length === 0 ? <div className="empty-state"><span className="material-symbols-outlined">task_alt</span><p>No faculty registrations are waiting.</p></div> : (
                     <div className="table-overflow"><table className="data-table">
-                        <thead><tr><th>Faculty</th><th>Contact</th><th>Department</th><th>Requested</th><th>Decision</th></tr></thead>
+                        <thead><tr><th>Faculty</th><th>Contact</th><th>Department</th><th>Requested batches</th><th>Requested</th><th>Decision</th></tr></thead>
                         <tbody>{pending.map(account => <tr key={account.id}>
                             <td><div className="td-bold">{account.name}</div><div className="td-muted">@{account.username}</div></td>
                             <td><div>{account.email}</div><div className="td-muted">{account.phone}</div></td>
                             <td>{account.department || ' / '}</td>
+                            <td>{(account.evaluation_batches || []).join(', ') || 'Not selected'}</td>
                             <td>{account.account_status}<br />{account.created_at ? new Date(account.created_at).toLocaleDateString('en-IN') : ' / '}</td>
                             <td><div style={{ display: 'flex', gap: 8 }}>
                                 <button className="btn btn-primary btn-sm" disabled={busyId === account.id} onClick={() => decide(account, 'approved')}>Approve</button>
@@ -271,9 +273,11 @@ function UsersTab({ students, faculty, onRefresh, currentUser }) {
     const [userType, setUserType] = useState('student');
     const [search, setSearch] = useState('');
     const [showAdd, setShowAdd] = useState(false);
+    const [batchTarget, setBatchTarget] = useState(null);
+    const [savingBatch, setSavingBatch] = useState(false);
     const [newUser, setNewUser] = useState({
         name: '', username: '', password: '', email: '', phone: '',
-        department: '', role: 'student', studentType: 'regular', rollNo: '', designation: '',
+        department: '', role: 'student', studentType: 'regular', rollNo: '', batchYear: '', designation: '',
     });
 
     const [departments, setDepartments] = useState([]);
@@ -288,9 +292,9 @@ function UsersTab({ students, faculty, onRefresh, currentUser }) {
 
     const handleAdd = async () => {
         if (!newUser.name || !(newUser.role === 'student' ? newUser.rollNo : newUser.username) || !newUser.password || !newUser.email || !newUser.phone) return;
-        try { await addUser({ ...newUser, username: newUser.role === 'student' ? newUser.rollNo : newUser.username }); } catch (err) { alert(err.message); return; }
+        try { await addUser({ ...newUser, username: newUser.role === 'student' ? newUser.rollNo : newUser.username, batchYear: newUser.batchYear ? Number(newUser.batchYear) : undefined }); } catch (err) { alert(err.message); return; }
         setShowAdd(false);
-        setNewUser({ name: '', username: '', password: '', email: '', phone: '', department: '', role: newUser.role, studentType: 'regular', rollNo: '', designation: '' });
+        setNewUser({ name: '', username: '', password: '', email: '', phone: '', department: '', role: newUser.role, studentType: 'regular', rollNo: '', batchYear: '', designation: '' });
         onRefresh();
     };
 
@@ -304,6 +308,14 @@ function UsersTab({ students, faculty, onRefresh, currentUser }) {
             if (result.storageCleanupPending) alert('The account was removed, but some certificate files could not be cleaned up. Contact the APMS administrator to finish storage cleanup.');
         } catch (err) { alert(err.message); return; }
         onRefresh();
+    };
+
+    const handleAssignBatch = async (batches) => {
+        if (!batchTarget || !batches.length) return;
+        setSavingBatch(true);
+        try { await updateUser({ id: batchTarget.id, batchYear: batches[0] }); setBatchTarget(null); onRefresh(); }
+        catch (err) { alert(err.message); }
+        finally { setSavingBatch(false); }
     };
 
     const handlePromote = async (id) => {
@@ -389,10 +401,16 @@ function UsersTab({ students, faculty, onRefresh, currentUser }) {
                                 </select>
                             </div>
                             {newUser.role === 'student' && (
-                                <div className="form-group">
-                                    <label className="form-label">KTU Registration Number *</label>
-                                    <input className="input" value={newUser.rollNo} onChange={e => setNewUser(p => ({ ...p, rollNo: e.target.value }))} />
-                                </div>
+                                <>
+                                  <div className="form-group">
+                                      <label className="form-label">KTU Registration Number *</label>
+                                      <input className="input" value={newUser.rollNo} onChange={e => setNewUser(p => ({ ...p, rollNo: e.target.value }))} />
+                                  </div>
+                                  <div className="form-group">
+                                      <label className="form-label">Admission Batch Year</label>
+                                      <input className="input" type="number" min="2000" max="2100" placeholder="Auto-detected from registration number" value={newUser.batchYear} onChange={e => setNewUser(p => ({ ...p, batchYear: e.target.value }))} />
+                                  </div>
+                                </>
                             )}
                             {newUser.role === 'faculty' && (
                                 <div className="form-group">
@@ -467,11 +485,12 @@ function UsersTab({ students, faculty, onRefresh, currentUser }) {
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="td-muted">{u.roll_no || u.rollNo || u.designation || ' / '}</td>
+                                            <td className="td-muted">{userType === 'student' ? <>{u.roll_no || u.rollNo || ' / '}<div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Batch {u.batch_year || 'unassigned'}</div></> : <>{u.designation || 'Faculty Advisor'}<div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Batches {(u.evaluation_batches || []).join(', ') || 'not assigned'}</div></>}</td>
                                             <td className="td-muted">{u.department || ' / '}</td>
                                             <td className="td-muted">@{u.username}</td>
                                             <td>
                                                 <div style={{ display: 'flex', gap: 6 }}>
+                                                    {currentUser?.isSuperAdmin && userType === 'student' && <button className="btn btn-outline btn-sm" onClick={() => setBatchTarget(u)} title="Assign or correct student batch">Batch</button>}
                                                     {currentUser?.isSuperAdmin && (
                                                         <>
                                                         <button className="btn btn-primary btn-sm" style={{ fontSize: 11 }} onClick={() => handlePromote(u.id)} title="Promote to Admin">
@@ -492,6 +511,17 @@ function UsersTab({ students, faculty, onRefresh, currentUser }) {
                     </div>
                 </div>
             )}
+        <BatchAssignmentModal
+            open={Boolean(batchTarget)}
+            title={`Assign ${batchTarget?.name || 'student'} to a batch`}
+            description="Choose the admission batch used to route this student's approvals and certificate reviews to the responsible faculty advisor."
+            initialBatches={batchTarget?.batch_year ? [batchTarget.batch_year] : []}
+            multiple={false}
+            onCancel={() => setBatchTarget(null)}
+            onConfirm={handleAssignBatch}
+            submitLabel="Save batch"
+            busy={savingBatch}
+        />
         </>
     );
 }

@@ -44,6 +44,10 @@ export async function reviewAccount(id, status, note = '') {
   return api.patch(`/users/${id}/approval`, { status, note });
 }
 
+export async function setFacultyEvaluationBatches(id, evaluationBatches) {
+  return api.patch(`/users/${id}/evaluation-batches`, { evaluationBatches });
+}
+
 // ─── Certificates ────────────────────────────────────────────────────────────
 export async function getCertificates() {
   return api.get('/certificates');
