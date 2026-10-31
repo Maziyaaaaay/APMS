@@ -92,7 +92,8 @@ router.post('/', requireRole('admin'), async (req, res) => {
   const { data, error } = await supabase.from('users').insert({
     role, account_status: 'approved', username, password_hash, name, email: email?.trim().toLowerCase() || null, phone: phone?.trim() || null,
     approved_by: req.user.id, last_modified_by: req.user.id,
-    roll_no: rollNo, department, department_id: departmentId, class: cls, year, semester, batch_year: batchYear,\n    evaluation_batches: role === 'faculty' && Array.isArray(req.body.evaluationBatches) ? req.body.evaluationBatches : [],
+    roll_no: rollNo, department, department_id: departmentId, class: cls, year, semester, batch_year: batchYear,
+    evaluation_batches: role === 'faculty' && Array.isArray(req.body.evaluationBatches) ? req.body.evaluationBatches : [],
     student_type: role === 'student' ? (studentType || 'regular') : null, designation,
   }).select('id, role, account_status, username, name, email, phone, roll_no, department, class, year, semester, batch_year, evaluation_batches, student_type, designation, profile_url').single();
 
