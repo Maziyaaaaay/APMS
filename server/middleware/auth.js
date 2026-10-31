@@ -10,7 +10,7 @@ export async function authMiddleware(req, res, next) {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const { data: current, error } = await supabase.from('users')
-      .select('id, role, is_super_admin, account_status, department, department_id, session_version')
+      .select('id, role, is_super_admin, account_status, department, department_id, session_version, batch_year, evaluation_batches')
       .eq('id', decoded.id).maybeSingle();
     if (error || !current || current.account_status !== 'approved' || decoded.sessionVersion !== current.session_version) {
       return res.status(401).json({ error: 'Your session expired or account access changed. Please sign in again.' });
@@ -22,6 +22,8 @@ export async function authMiddleware(req, res, next) {
       accountStatus: current.account_status,
       department: current.department,
       departmentId: current.department_id,
+      batchYear: current.batch_year,
+      evaluationBatches: current.evaluation_batches || [],
     };
     next();
   } catch {
