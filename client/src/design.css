@@ -1195,3 +1195,8 @@ html:not(.dark) .admin-portal .campus-insights { border-color: var(--border); }
   .portal-layout .group-card,
   .portal-layout .work-queue .action-tile { border-radius: 12px !important; }
 }
+
+@media (max-width: 767px) {
+  html:not(.dark) .portal-layout .sidebar { width: min(290px,86vw); }
+  html:not(.dark) .portal-layout .main-content { margin-left: 0; }
+}
