@@ -26,6 +26,8 @@ create table public.users (
   department_id uuid references public.departments(id) on delete restrict,
   department text, -- compatibility display value; a trigger derives this from department_id
   roll_no text,
+  batch_year integer check (batch_year is null or batch_year between 2000 and 2100),
+  evaluation_batches integer[] not null default '{}',
   class text,
   year integer check (year between 1 and 6),
   semester integer check (semester between 1 and 12),
@@ -44,6 +46,36 @@ create table public.users (
 create unique index users_single_super_admin_idx on public.users ((is_super_admin)) where is_super_admin;
 create unique index users_roll_no_unique on public.users (upper(trim(roll_no))) where roll_no is not null;
 create index users_department_status_idx on public.users (department_id, role, account_status);
+create index users_department_batch_status_idx on public.users (department_id, batch_year, role, account_status);
+
+create function public.apms_validate_faculty_batches() returns trigger
+language plpgsql set search_path = public, pg_temp as $
+declare
+  batch integer;
+begin
+  if new.evaluation_batches is null then new.evaluation_batches := '{}'; end if;
+  if coalesce(cardinality(new.evaluation_batches), 0) > 8
+    or exists (select 1 from unnest(new.evaluation_batches) as b where b is null or b < 2000 or b > 2100)
+    or (select count(distinct b) from unnest(new.evaluation_batches) as b) <> coalesce(cardinality(new.evaluation_batches), 0) then
+    raise exception 'Faculty batch assignments must contain up to eight unique years between 2000 and 2100.' using errcode = '23514';
+  end if;
+  if new.role <> 'faculty' or new.account_status <> 'approved' then return new; end if;
+  for batch in select distinct value from unnest(new.evaluation_batches) as value order by value loop
+    perform pg_advisory_xact_lock(126342, batch);
+    if exists (
+      select 1 from public.users existing
+      where existing.id <> new.id and existing.role = 'faculty'
+        and existing.account_status = 'approved' and batch = any(existing.evaluation_batches)
+    ) then
+      raise exception 'Batch % is already assigned to another approved faculty advisor.', batch using errcode = '23505';
+    end if;
+  end loop;
+  return new;
+end;
+$;
+create trigger apms_validate_faculty_batches before insert or update of role, account_status, evaluation_batches on public.users
+for each row execute function public.apms_validate_faculty_batches();
+
 create index users_status_role_idx on public.users (account_status, role);
 
 create table public.certificates (
@@ -231,7 +263,8 @@ begin
     if reviewer.id is null or reviewer.account_status <> 'approved' or reviewer.role <> 'faculty' then
       raise exception 'An approved faculty advisor must review the submission.';
     end if;
-    if student.account_status <> 'approved' or reviewer.department_id is distinct from student.department_id then
+    if student.account_status <> 'approved' or reviewer.department_id is distinct from student.department_id
+      or student.batch_year is null or not (student.batch_year = any(reviewer.evaluation_batches)) then
       raise exception 'Faculty may only review approved students in their department.';
     end if;
     if new.points_awarded <> old.points_awarded and length(trim(coalesce(new.notes, ''))) = 0 then
