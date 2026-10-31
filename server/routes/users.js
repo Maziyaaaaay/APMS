@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import supabase from '../db/supabase.js';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
 import jwt from 'jsonwebtoken';
+import { inferKtuBatchYear } from '../lib/validation.js';
 
 const router = createRouter();
 router.use(authMiddleware);
@@ -11,13 +12,15 @@ const validPhone = value => typeof value === 'string' && /^\+?[0-9][0-9\s().-]{7
 
 // GET /api/users — admin gets all, faculty gets their dept students, student not allowed
 router.get('/', async (req, res) => {
-  let query = supabase.from('users').select('id, role, is_super_admin, account_status, username, name, email, phone, roll_no, department, department_id, class, year, semester, student_type, designation, profile_url, created_at, approved_at');
+  let query = supabase.from('users').select('id, role, is_super_admin, account_status, username, name, email, phone, roll_no, department, department_id, class, year, semester, batch_year, evaluation_batches, student_type, designation, profile_url, created_at, approved_at');
 
   if (req.user.role === 'student') {
     return res.status(403).json({ error: 'Forbidden' });
   }
   if (req.user.role === 'faculty') {
-    query = query.eq('role', 'student').eq('department_id', req.user.departmentId).eq('account_status', 'approved');
+    if (!req.user.evaluationBatches?.length) return res.json([]);
+    query = query.eq('role', 'student').eq('department_id', req.user.departmentId).eq('account_status', 'approved')
+      .in('batch_year', req.user.evaluationBatches);
   }
 
   const { data, error } = await query.order('name');
@@ -29,9 +32,12 @@ router.get('/', async (req, res) => {
 router.get('/approval-requests', requireRole('admin', 'faculty'), async (req, res) => {
   const targetRole = req.user.role === 'admin' ? 'faculty' : 'student';
   let query = supabase.from('users')
-    .select('id, role, account_status, username, name, email, phone, roll_no, department, department_id, designation, year, created_at')
+    .select('id, role, account_status, username, name, email, phone, roll_no, department, department_id, designation, year, batch_year, evaluation_batches, created_at')
     .eq('role', targetRole).eq('account_status', 'pending');
-  if (req.user.role === 'faculty') query = query.eq('department_id', req.user.departmentId);
+  if (req.user.role === 'faculty') {
+    if (!req.user.evaluationBatches?.length) return res.json([]);
+    query = query.eq('department_id', req.user.departmentId).in('batch_year', req.user.evaluationBatches);
+  }
   const { data, error } = await query.order('created_at');
   if (error) return res.status(500).json({ error: error.message });
   res.json(data);
@@ -44,15 +50,15 @@ router.get('/:id', async (req, res) => {
   }
   if (req.user.role === 'faculty' && req.user.id !== req.params.id) {
     const { data: target, error: targetError } = await supabase.from('users')
-      .select('role, department_id, account_status').eq('id', req.params.id).maybeSingle();
+      .select('role, department_id, account_status, batch_year').eq('id', req.params.id).maybeSingle();
     if (targetError) return res.status(500).json({ error: targetError.message });
-    if (!target || target.role !== 'student' || target.account_status !== 'approved' || target.department_id !== req.user.departmentId) {
-      return res.status(403).json({ error: 'Faculty can only view profiles of students in their department.' });
+    if (!target || target.role !== 'student' || target.account_status !== 'approved' || target.department_id !== req.user.departmentId || !req.user.evaluationBatches?.includes(target.batch_year)) {
+      return res.status(403).json({ error: 'Faculty can only view profiles of students in their assigned batches.' });
     }
   }
   const { data, error } = await supabase
     .from('users')
-    .select('id, role, username, name, email, phone, roll_no, department, class, year, semester, student_type, designation, profile_url')
+    .select('id, role, username, name, email, phone, roll_no, department, class, year, semester, batch_year, evaluation_batches, student_type, designation, profile_url')
     .eq('id', req.params.id)
     .single();
   if (error) return res.status(404).json({ error: 'User not found' });
@@ -79,12 +85,16 @@ router.post('/', requireRole('admin'), async (req, res) => {
   if (['student', 'faculty'].includes(role) && !departmentId) return res.status(400).json({ error: 'Department is required.' });
   if (typeof password !== 'string' || password.length < 12 || Buffer.byteLength(password) > 72) return res.status(400).json({ error: 'Password must have at least 12 characters and at most 72 UTF-8 bytes.' });
   const password_hash = await bcrypt.hash(password, 12);
+  const suppliedBatchYear = req.body.batchYear === undefined || req.body.batchYear === '' ? null : Number(req.body.batchYear);
+  const batchYear = role === 'student' ? (suppliedBatchYear || inferKtuBatchYear(String(rollNo || ''))) : null;
+  if (role === 'student' && batchYear !== null && (!Number.isInteger(batchYear) || batchYear < 2000 || batchYear > 2100)) return res.status(400).json({ error: 'Choose a valid admission batch year.' });
+  if (role === 'student' && batchYear === null) return res.status(400).json({ error: 'Enter a valid KTU registration number with an identifiable admission year, or set the batch year.' });
   const { data, error } = await supabase.from('users').insert({
     role, account_status: 'approved', username, password_hash, name, email: email?.trim().toLowerCase() || null, phone: phone?.trim() || null,
     approved_by: req.user.id, last_modified_by: req.user.id,
-    roll_no: rollNo, department, department_id: departmentId, class: cls, year, semester,
+    roll_no: rollNo, department, department_id: departmentId, class: cls, year, semester, batch_year: batchYear,\n    evaluation_batches: role === 'faculty' && Array.isArray(req.body.evaluationBatches) ? req.body.evaluationBatches : [],
     student_type: role === 'student' ? (studentType || 'regular') : null, designation,
-  }).select('id, role, account_status, username, name, email, phone, roll_no, department, class, year, semester, student_type, designation, profile_url').single();
+  }).select('id, role, account_status, username, name, email, phone, roll_no, department, class, year, semester, batch_year, evaluation_batches, student_type, designation, profile_url').single();
 
   if (error) return res.status(400).json({ error: error.message });
   res.status(201).json(data);
@@ -126,6 +136,11 @@ router.put('/:id', async (req, res) => {
       update.phone = rest.phone?.trim() || null;
     }
     if (rest.rollNo !== undefined) update.roll_no = rest.rollNo;
+    if (rest.batchYear !== undefined && req.user.isSuperAdmin) {
+      const value = rest.batchYear === null || rest.batchYear === '' ? null : Number(rest.batchYear);
+      if (value !== null && (!Number.isInteger(value) || value < 2000 || value > 2100)) return res.status(400).json({ error: 'Choose a valid admission batch year.' });
+      update.batch_year = value;
+    }
     if (rest.department !== undefined && req.user.isSuperAdmin) {
       const { data: departmentRow, error: departmentError } = await supabase.from('departments').select('id').eq('name', rest.department).maybeSingle();
       if (departmentError) return res.status(500).json({ error: departmentError.message });
@@ -153,8 +168,11 @@ router.put('/:id', async (req, res) => {
       if (rest.rollNo !== undefined) {
         const rollNo = String(rest.rollNo || '').trim().toUpperCase();
         if (!/^[A-Z0-9][A-Z0-9._-]{2,63}$/.test(rollNo)) return res.status(400).json({ error: 'Enter a valid KTU registration number.' });
+        const batchYear = inferKtuBatchYear(rollNo);
+        if (batchYear === null) return res.status(400).json({ error: 'The admission batch cannot be identified from that KTU registration number.' });
         update.roll_no = rollNo;
         update.username = rollNo;
+        update.batch_year = batchYear;
       }
       // Department membership is controlled by an administrator, never by the account holder.
       if (rest.year !== undefined) update.year = rest.year;
@@ -172,7 +190,7 @@ router.put('/:id', async (req, res) => {
 
   const { data, error } = await supabase.from('users').update(update)
     .eq('id', req.params.id)
-    .select('id, role, username, name, email, phone, roll_no, department, class, year, semester, student_type, designation, profile_url, session_version').single();
+    .select('id, role, username, name, email, phone, roll_no, department, class, year, semester, batch_year, evaluation_batches, student_type, designation, profile_url, session_version').single();
 
   if (error) return res.status(400).json({ error: error.message });
 
@@ -188,6 +206,8 @@ router.put('/:id', async (req, res) => {
     department:    data.department,
     class:         data.class,
     year:          data.year,
+    batchYear:     data.batch_year,
+    evaluationBatches: data.evaluation_batches || [],
     semester:      data.semester,
     studentType:   data.student_type,
     designation:   data.designation,
@@ -204,15 +224,33 @@ router.put('/:id', async (req, res) => {
   res.json({ user: mappedUser });
 });
 
+// Faculty may choose an initial assignment once; changes are admin-managed.
+router.patch('/:id/evaluation-batches', requireRole('faculty'), async (req, res) => {
+  if (req.user.id !== req.params.id) return res.status(403).json({ error: 'You can only set your own initial batch assignment.' });
+  const batches = req.body.evaluationBatches;
+  if (!Array.isArray(batches) || batches.length < 1 || batches.length > 8
+    || batches.some(batch => !Number.isInteger(batch) || batch < 2000 || batch > 2100)
+    || new Set(batches).size !== batches.length) return res.status(400).json({ error: 'Choose one or more valid student batches.' });
+  if (req.user.evaluationBatches?.length) return res.status(409).json({ error: 'Your batch assignment is already set. Contact an administrator to change it.' });
+  const { data, error } = await supabase.from('users').update({ evaluation_batches: batches, last_modified_by: req.user.id })
+    .eq('id', req.user.id).eq('role', 'faculty').eq('account_status', 'approved').select('id, evaluation_batches').maybeSingle();
+  if (error) {
+    if (error.code === '23505' || error.message?.includes('already assigned')) return res.status(409).json({ error: 'That batch is already assigned to another faculty advisor. Choose a different batch.' });
+    return res.status(400).json({ error: error.message });
+  }
+  if (!data) return res.status(409).json({ error: 'Your account changed. Refresh and try again.' });
+  res.json({ success: true, evaluationBatches: data.evaluation_batches || [] });
+});
+
 // DELETE /api/users/:id — permanent removal by super admin or department faculty.
 router.delete('/:id', requireRole('admin', 'faculty'), async (req, res) => {
   if (req.user.id === req.params.id) return res.status(400).json({ error: 'You cannot remove your own account.' });
-  const { data: target, error: targetError } = await supabase.from('users').select('id, role, username, roll_no, is_super_admin, department_id').eq('id', req.params.id).maybeSingle();
+  const { data: target, error: targetError } = await supabase.from('users').select('id, role, username, roll_no, is_super_admin, department_id, batch_year').eq('id', req.params.id).maybeSingle();
   if (targetError) return res.status(500).json({ error: targetError.message });
   if (!target || target.is_super_admin) return res.status(403).json({ error: 'This account cannot be removed.' });
   const isOwnDepartmentStudent = req.user.role === 'faculty'
     && target.role === 'student'
-    && target.department_id === req.user.departmentId;
+    && target.department_id === req.user.departmentId\n    && req.user.evaluationBatches?.includes(target.batch_year);
   if (!req.user.isSuperAdmin && !isOwnDepartmentStudent) {
     return res.status(403).json({ error: 'Faculty can permanently remove only students in their own department. Other accounts require the super admin.' });
   }
@@ -298,7 +336,7 @@ router.patch('/:id/approval', requireRole('admin', 'faculty'), async (req, res) 
     return res.status(400).json({ error: 'status must be approved, rejected, or disabled.' });
   }
   const { data: existing, error: lookupError } = await supabase.from('users')
-    .select('id, role, account_status, is_super_admin').eq('id', req.params.id).maybeSingle();
+.select('id, role, account_status, is_super_admin, batch_year').eq('id', req.params.id).maybeSingle();
   if (lookupError) return res.status(500).json({ error: lookupError.message });
   const requiredRole = req.user.role === 'admin' ? 'faculty' : 'student';
   if (!existing || existing.is_super_admin || existing.role !== requiredRole) {
@@ -306,16 +344,16 @@ router.patch('/:id/approval', requireRole('admin', 'faculty'), async (req, res) 
   }
   if (existing.account_status !== 'pending') return res.status(409).json({ error: 'This account is no longer waiting for approval.' });
   if (req.user.role === 'faculty') {
-    const { data: target, error: targetError } = await supabase.from('users').select('department_id').eq('id', req.params.id).maybeSingle();
+    const { data: target, error: targetError } = await supabase.from('users').select('department_id, batch_year').eq('id', req.params.id).maybeSingle();
     if (targetError) return res.status(500).json({ error: targetError.message });
-    if (!target || target.department_id !== req.user.departmentId) return res.status(403).json({ error: 'Faculty can only approve students in their own department.' });
+    if (!target || target.department_id !== req.user.departmentId || !req.user.evaluationBatches?.includes(target.batch_year)) return res.status(403).json({ error: 'Faculty can only approve students in their assigned batches.' });
   }
   const { data, error } = await supabase.from('users').update({
     account_status: status,
     approved_at: status === 'approved' ? new Date().toISOString() : null,
     approved_by: req.user.id, last_modified_by: req.user.id, review_note: String(note || '').trim() || null,
   }).eq('id', req.params.id).eq('account_status', existing.account_status)
-    .select('id, role, account_status, username, name, email, phone, roll_no, department, created_at, approved_at').maybeSingle();
+    .select('id, role, account_status, username, name, email, phone, roll_no, department, batch_year, created_at, approved_at').maybeSingle();
   if (error) return res.status(400).json({ error: error.message });
   if (!data) return res.status(409).json({ error: 'The account changed. Refresh and try again.' });
   res.json(data);
