@@ -45,7 +45,7 @@ export default function Login() {
         setError('');
         setLoading(true);
         try {
-            const result = await login(username, password, role);
+            const result = await login(username, password, role, remember);
             if (result.success) {
                 navigate(`/${role === 'faculty' ? 'faculty' : role}`);
             } else {
