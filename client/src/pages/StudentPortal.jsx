@@ -75,7 +75,7 @@ export default function StudentPortal() {
     };
 
     return (
-        <div className="portal-layout">
+        <div className="portal-layout student-portal">
             <AmbientBackdrop />
             {/* ── Sidebar overlay (mobile) ── */}
             <div
@@ -148,7 +148,7 @@ export default function StudentPortal() {
                 </header>
 
                 {/* Page Content */}
-                <div className="page-content" key={tab}>
+                <div className={`page-content student-page-content student-page-${tab}`} key={tab}>
                     {loadError && <div role="alert" className="alert alert-danger">{loadError} <button onClick={refreshCerts}>Try again</button></div>}
                     {tab === 'dashboard'   && <DashboardTab   user={user} certs={certs} summary={summary} req={req} onSubmit={() => setTab('submit')} onViewAll={() => setTab('submissions')} />}
                     {tab === 'submit'      && <SubmitTab      user={user} onSuccess={() => { refreshCerts(); setTab('submissions'); }} />}
@@ -173,7 +173,7 @@ function DashboardTab({ user, certs, summary, req, onSubmit, onViewAll }) {
     const recent   = [...certs].sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt)).slice(0, 5);
 
     return (
-        <>
+        <div className="student-dashboard-page">
             <WorkspaceHeading eyebrow="STUDENT WORKSPACE" title={`Hey ${user?.name?.split(' ')[0] || 'there'}. What’s next?`} description="Your points, certificates, and next steps." action={onSubmit} actionLabel="Upload certificate" icon="add" />
             <section className="student-progress-panel glass-panel">
                 <div className="student-progress-copy"><span className="eyebrow">YOUR ACTIVITY POINTS</span><h3>Your progress.</h3><p>{Math.max(0, req.total - summary.total)} points left to your estimated target.</p><span className={`badge ${summary.eligible ? 'badge-approved' : 'badge-info'}`}>{summary.eligible ? 'Estimate meets target' : 'Your journey is in progress'}</span><small>Provisional 2024-scheme estimate · approved submissions only</small></div>
@@ -255,7 +255,7 @@ function DashboardTab({ user, certs, summary, req, onSubmit, onViewAll }) {
                     </div>
                 )}
             </div>
-        </>
+        </div>
     );
 }
 
@@ -289,7 +289,7 @@ function SubmitTab({ user, onSuccess }) {
         return acc;
     }, {});
 
-    const STEPS = ['Activity Details', 'Upload Certificate', 'Review & Submit'];
+    const STEPS = ['Choose activity', 'Add certificate details'];
 
     const handleSelectActivity = (id) => { setActivityId(id); setSelectedLevel(''); setStep(1); };
 
@@ -345,7 +345,10 @@ function SubmitTab({ user, onSuccess }) {
     }
 
     return (
-        <div style={{ maxWidth: 860, margin:'0 auto' }}>
+        <div className="student-submit-page">
+            <div className="student-page-heading">
+                <div><span className="eyebrow">YOUR ACTIVITY RECORD</span><h2>Submit an achievement</h2><p>Choose the activity, add its details, and attach your certificate for faculty review.</p></div>
+            </div>
             {/* Step Indicator */}
             <div className="step-indicator">
                 {STEPS.map((s, i) => (
@@ -365,7 +368,7 @@ function SubmitTab({ user, onSuccess }) {
                 ))}
             </div>
 
-            <div style={{ display:'grid', gridTemplateColumns:'1fr auto', gap:20, alignItems:'start' }}>
+            <div className="student-submit-layout">
                 {/* ── Left: Main Form Card ── */}
                 <div className="card">
                     <div className="card-header">
@@ -400,10 +403,10 @@ function SubmitTab({ user, onSuccess }) {
                                     <div key={cat} style={{ marginBottom:18 }}>
                                         <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>{cat}</div>
                                         {acts.map(a => (
-                                            <div key={a.id}
-                                                className="cert-card"
-                                                style={{ cursor:'pointer', marginBottom:7 }}
+                                            <button key={a.id} type="button"
+                                                className="cert-card student-activity-choice"
                                                 onClick={() => handleSelectActivity(a.id)}
+                                                aria-label={`Choose ${a.name}, maximum ${a.maxPoints} points`}
                                             >
                                                 <div className="cert-card-header" style={{ marginBottom:0 }}>
                                                     <div>
@@ -412,7 +415,7 @@ function SubmitTab({ user, onSuccess }) {
                                                     </div>
                                                     <span className="material-symbols-outlined" style={{ color:'var(--text-muted)', fontSize:18 }}>chevron_right</span>
                                                 </div>
-                                            </div>
+                                            </button>
                                         ))}
                                     </div>
                                 ))}
@@ -546,7 +549,7 @@ function SubmitTab({ user, onSuccess }) {
                 </div>
 
                 {/* ── Right: Info Cards ── */}
-                <div style={{ width:220, display:'flex', flexDirection:'column', gap:14 }}>
+                <div className="student-submit-aside">
                     {/* Point Rules */}
                     <div className="card" style={{ padding:18 }}>
                         <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12 }}>
@@ -610,22 +613,25 @@ function SubmissionsTab({ certs }) {
     };
 
     return (
-        <>
+        <div className="student-submissions-page">
+            <div className="student-page-heading">
+                <div><span className="eyebrow">ACTIVITY RECORD</span><h2>My submissions</h2><p>Check what’s awaiting review, approved, or needs another look.</p></div>
+            </div>
             {/* Search + Filter Row */}
-            <div style={{ display:'flex', flexWrap:'wrap', gap:12, marginBottom:20, alignItems:'center' }}>
-                <div className="search-box" style={{ flex:'1 1 220px', minWidth:180 }}>
+            <div className="student-submission-tools">
+                <div className="search-box student-submission-search">
                     <span className="search-box-icon">
                         <span className="material-symbols-outlined">search</span>
                     </span>
                     <input className="input" placeholder="Search activities…"
                         value={search} onChange={e => setSearch(e.target.value)} />
                 </div>
-                <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                <div className="student-submission-filters" role="group" aria-label="Filter submissions by status">
                     {['all','pending','approved','rejected'].map(s => (
                         <button key={s}
                             className={`btn btn-sm ${filter === s ? 'btn-primary' : 'btn-ghost'}`}
                             onClick={() => setFilter(s)}
-                            style={{ textTransform:'capitalize' }}
+                            aria-pressed={filter === s}
                         >
                             {s === 'all' ? `All (${counts.all})` : `${s.charAt(0).toUpperCase()+s.slice(1)} (${counts[s]})`}
                         </button>
@@ -642,7 +648,7 @@ function SubmissionsTab({ certs }) {
                 ) : (
                     <>
                         <div className="table-overflow">
-                            <table className="data-table">
+                            <table className="data-table student-submission-table">
                                 <thead>
                                     <tr>
                                         <th>Activity Name</th>
@@ -660,14 +666,14 @@ function SubmissionsTab({ certs }) {
                                         const act = getActivityForCertificate(c);
                                         return (
                                             <tr key={c.id}>
-                                                <td className="td-bold">{act?.name || c.activityName}<div className="td-muted" style={{fontSize:11,fontWeight:400}}>{c.event_name || 'Legacy submission'}{(c.academic_year || c.academicYear) ? ` · AY ${c.academic_year || c.academicYear}` : ''}</div></td>
-                                                <td className="td-muted">Group {act?.group || ' / '}</td>
-                                                <td className="td-muted">{c.level_selected || c.selectedLevel || ' / '}</td>
-                                                <td className="td-muted">{new Date(c.created_at || c.createdAt).toLocaleDateString('en-IN')}</td>
-                                                <td className="td-center td-bold" style={{ color:'var(--accent)' }}>{c.points_awarded ?? c.pointsAwarded}</td>
-                                                <td><span className={`badge badge-${c.status}`}>{c.status}</span></td>
-                                                <td>{c.file_url ? <CertificateFileButton certificateId={c.id} /> : ' / '}</td>
-                                                <td className="td-muted" style={{ maxWidth:160, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                                                <td className="td-bold" data-label="Activity">{act?.name || c.activityName}<div className="td-muted" style={{fontSize:11,fontWeight:400}}>{c.event_name || 'Legacy submission'}{(c.academic_year || c.academicYear) ? ` · AY ${c.academic_year || c.academicYear}` : ''}</div></td>
+                                                <td className="td-muted" data-label="Group">Group {act?.group || ' / '}</td>
+                                                <td className="td-muted" data-label="Level">{c.level_selected || c.selectedLevel || ' / '}</td>
+                                                <td className="td-muted" data-label="Submitted">{new Date(c.created_at || c.createdAt).toLocaleDateString('en-IN')}</td>
+                                                <td className="td-center td-bold" data-label="Points" style={{ color:'var(--accent)' }}>{c.points_awarded ?? c.pointsAwarded}</td>
+                                                <td data-label="Status"><span className={`badge badge-${c.status}`}>{c.status}</span></td>
+                                                <td data-label="Document">{c.file_url ? <CertificateFileButton certificateId={c.id} /> : ' / '}</td>
+                                                <td className="td-muted" data-label="Remarks" style={{ maxWidth:160, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
                                                     {c.notes || c.facultyRemark || (c.status === 'pending' ? 'Under review' : c.status === 'approved' ? 'Verified' : ' / ')}
                                                 </td>
                                             </tr>
@@ -682,7 +688,7 @@ function SubmissionsTab({ certs }) {
                     </>
                 )}
             </div>
-        </>
+        </div>
     );
 }
 
@@ -771,9 +777,10 @@ function ProfileTab({ user, summary, req, onLogout, onGuidelines, onUpdateUser }
     };
 
     return (
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 300px', gap:20, maxWidth:960, margin:'0 auto' }}>
+        <div className="student-profile-layout">
             {/* Left Column */}
-            <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+            <div className="student-profile-main">
+                <div className="student-page-heading"><div><span className="eyebrow">YOUR ACCOUNT</span><h2>Profile</h2><p>Keep your contact details and student information up to date.</p></div></div>
                 {saved && (
                     <div className="alert alert-success" style={{ marginBottom: 0 }}>
                         <span className="material-symbols-outlined" style={{ fontSize:16 }}>check_circle</span>
@@ -911,7 +918,7 @@ function ProfileTab({ user, summary, req, onLogout, onGuidelines, onUpdateUser }
             </div>
 
             {/* Right Column */}
-            <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+            <div className="student-profile-aside">
                 {/* Activity Points Card */}
                 <div className="card" style={{ padding:20 }}>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
