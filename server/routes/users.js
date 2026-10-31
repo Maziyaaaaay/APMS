@@ -236,7 +236,7 @@ router.patch('/:id/evaluation-batches', requireRole('faculty'), async (req, res)
   const { data, error } = await supabase.from('users').update({ evaluation_batches: batches, last_modified_by: req.user.id })
     .eq('id', req.user.id).eq('role', 'faculty').eq('account_status', 'approved').select('id, evaluation_batches').maybeSingle();
   if (error) {
-    if (error.code === '23505' || error.message?.includes('already assigned')) return res.status(409).json({ error: 'That batch is already assigned to another faculty advisor. Choose a different batch.' });
+    if (error.code === '23505' || error.message?.includes('already assigned')) return res.status(409).json({ error: 'That batch is already assigned to another faculty advisor in your department. Choose a different batch.' });
     return res.status(400).json({ error: error.message });
   }
   if (!data) return res.status(409).json({ error: 'Your account changed. Refresh and try again.' });
