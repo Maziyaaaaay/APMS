@@ -51,6 +51,7 @@ export default function FacultyPortal() {
     const [savingBatches, setSavingBatches] = useState(false);
 
     const [loadError, setLoadError] = useState('');
+    const [initialLoading, setInitialLoading] = useState(true);
     const refreshData = useCallback(async () => {
         const results = await Promise.allSettled([
             getCertificates(), getUsers(), getCirculars(), getAccountRequests(),
@@ -62,6 +63,7 @@ export default function FacultyPortal() {
         if (results[2].status === 'fulfilled') setCirculars(results[2].value);
         if (results[3].status === 'fulfilled') setAccountRequests(results[3].value);
         setLoadError(failures.length ? `Could not load ${failures.join(', ')}. Please try again.` : '');
+        setInitialLoading(false);
     }, []);
     useEffect(() => {
         if (!user) { navigate('/'); return; }
@@ -180,6 +182,7 @@ export default function FacultyPortal() {
                 {/* Page Content */}
                 <div className="page-content" key={tab}>
                     {loadError && <div role="alert" className="alert alert-danger">{loadError} <button onClick={refreshData}>Try again</button></div>}
+                    {initialLoading && tab !== 'profile' ? <div className="empty-state" role="status">Loading faculty data…</div> : <>
                     {tab === 'dashboard' && (
                         <DashboardTab
                             user={user}
@@ -208,6 +211,7 @@ export default function FacultyPortal() {
                     {tab === 'profile' && (
                         <ProfileTab user={user} onLogout={handleLogout} onRefresh={refreshData} onUpdateUser={setUser} />
                     )}
+                    </>}
                 </div>
             </div>
         </div>
