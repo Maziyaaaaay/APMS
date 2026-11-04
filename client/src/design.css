@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
 /* APMS structural design: paper, ink, strong type, task-first lists. */
 :root,html.dark {
  --primary:#292d27;--primary-light:#3d4539;--accent:#9e3e22;--accent-hover:#81301b;
@@ -1474,4 +1475,29 @@ html:not(.dark) .login-brand-panel {background:radial-gradient(ellipse at 84% 72
 html:not(.dark) .login-form-panel {background:linear-gradient(145deg,#f5ede3,#e9eef0)}
 html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) :is(.faculty-focus-panel,.campus-hero,.student-progress-panel) .btn-outline {background:rgba(255,250,243,.14);border-color:rgba(255,250,243,.6);color:#fffaf3}
 html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) :is(.faculty-focus-panel,.campus-hero,.student-progress-panel) .btn-outline:hover {background:rgba(255,250,243,.25);color:#fff}
+
+
+/* Unified, breathable portal cards. */
+:is(.faculty-portal,.student-portal,.admin-portal) {font-family:'Manrope',system-ui,sans-serif}
+:is(.faculty-portal,.student-portal,.admin-portal) :is(h1,h2,h3,h4,.topbar-title,.nav-item,.btn,.metric-value,.metric-label,.action-tile-copy strong) {font-family:'Manrope',system-ui,sans-serif!important}
+:is(.faculty-portal,.student-portal,.admin-portal) :is(h2,h3,h4) {letter-spacing:-.035em;line-height:1.2}
+:is(.faculty-portal,.student-portal,.admin-portal) .page-content {padding-top:clamp(32px,4vw,58px);padding-bottom:76px}
+:is(.faculty-portal,.student-portal,.admin-portal) :is(.metric-grid,.student-metrics,.group-grid) {gap:clamp(14px,1.6vw,22px)}
+:is(.faculty-portal,.student-portal,.admin-portal) :is(.card,.table-card,.metric-card,.group-card,.action-tile,.student-submission-tools,.campus-register,.activity-feed,.campus-insights) {border-radius:22px!important}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) :is(.card,.table-card,.metric-card,.group-card,.action-tile,.student-submission-tools,.campus-register,.activity-feed,.campus-insights),
+html:not(.dark) .admin-portal .work-queue :is(.action-tile:first-of-type,.action-tile:last-of-type),
+html:not(.dark) .portal-layout:is(.faculty-portal,.student-portal,.admin-portal) .student-metrics .metric-card:first-child {
+  background:linear-gradient(140deg,rgba(255,255,255,.58),rgba(248,243,236,.34))!important;
+  border:1px solid rgba(255,255,255,.56)!important;
+  box-shadow:0 18px 42px rgba(34,67,95,.075),inset 0 1px rgba(255,255,255,.68)!important;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .metric-card:nth-child(n) {background:linear-gradient(140deg,rgba(255,255,255,.58),rgba(248,243,236,.34))!important}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .table-card-header {background:rgba(228,237,242,.42)!important}
+html.dark :is(.faculty-portal,.student-portal,.admin-portal) :is(.card,.table-card,.metric-card,.group-card,.action-tile,.student-submission-tools,.campus-register,.activity-feed,.campus-insights) {background:linear-gradient(140deg,rgba(45,40,61,.72),rgba(29,28,44,.62))!important;border:1px solid rgba(235,220,255,.1)!important;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+:is(.faculty-portal,.student-portal,.admin-portal) .metric-card {min-height:150px;padding:clamp(20px,2vw,28px)!important}
+:is(.faculty-portal,.student-portal,.admin-portal) :is(.card-body,.table-card-header) {padding:clamp(20px,2vw,30px)}
+:is(.faculty-portal,.student-portal,.admin-portal) .data-table td {padding-top:17px;padding-bottom:17px}
+:is(.faculty-portal,.student-portal,.admin-portal) .workspace-heading {margin-bottom:30px}
+@media(max-width:767px){:is(.faculty-portal,.student-portal,.admin-portal) .page-content{padding-top:28px;padding-bottom:48px}:is(.faculty-portal,.student-portal,.admin-portal) .metric-card{min-height:124px;padding:18px!important}}
 
