@@ -95,7 +95,14 @@ router.post('/', requireRole('student'), async (req, res) => {
     const { data: info, error: infoError } = await supabase.storage.from('apms-certificates').info(receipt.objectPath);
     if (infoError || !info) return res.status(400).json({ error: 'Document upload is incomplete. Try again.' });
     const metadata = info.metadata || {};
-    if (Number(metadata.size) !== receipt.size || metadata.mimetype !== receipt.mimeType) return res.status(400).json({ error: 'Uploaded document does not match the declared file.' });
+    // Current Storage SDKs return size/contentType at the top level. Older
+    // responses expose them under metadata, so accept both response shapes.
+    const storedSize = Number(info.size ?? metadata.size ?? metadata.contentLength ?? metadata.content_length);
+    const storedMimeType = String(info.contentType ?? info.content_type ?? metadata.mimetype ?? metadata.mimeType ?? metadata.contentType ?? metadata.content_type ?? '')
+      .split(';', 1)[0].trim().toLowerCase();
+    if (storedSize !== receipt.size || storedMimeType !== String(receipt.mimeType).toLowerCase()) {
+      return res.status(400).json({ error: 'Uploaded document does not match the declared file.' });
+    }
     objectPath = receipt.objectPath;
     fileMimeType = receipt.mimeType;
     fileSizeBytes = receipt.size;
