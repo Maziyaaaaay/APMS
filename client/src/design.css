@@ -1501,3 +1501,29 @@ html.dark :is(.faculty-portal,.student-portal,.admin-portal) :is(.card,.table-ca
 :is(.faculty-portal,.student-portal,.admin-portal) .workspace-heading {margin-bottom:30px}
 @media(max-width:767px){:is(.faculty-portal,.student-portal,.admin-portal) .page-content{padding-top:28px;padding-bottom:48px}:is(.faculty-portal,.student-portal,.admin-portal) .metric-card{min-height:124px;padding:18px!important}}
 
+
+/* Sky canvas with a fine print texture; linen is a supporting highlight. */
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) {
+  --bg:#e7f1f8;--bg2:#dceaf4;--surface:#f7fbfd;--surface2:#e9f2f7;
+  --student-page:#e7f1f8;--student-surface:#f7fbfd;--student-raised:#deedf5;
+  background:
+    radial-gradient(circle,rgba(22,100,176,.055) 0 1px,transparent 1.4px) 0 0/28px 28px,
+    radial-gradient(ellipse at 78% 13%,rgba(65,150,205,.23),transparent 42%),
+    radial-gradient(ellipse at 18% 74%,rgba(210,22,36,.09),transparent 42%),
+    radial-gradient(ellipse at 95% 88%,rgba(239,232,222,.42),transparent 34%),
+    linear-gradient(145deg,#e4f0f8 0%,#f2f8fb 53%,#dbeaf4 100%);
+}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .topbar {background:rgba(241,248,252,.74);border-bottom-color:rgba(22,100,176,.1)}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) :is(.card,.table-card,.metric-card,.group-card,.action-tile,.student-submission-tools,.campus-register,.activity-feed,.campus-insights),
+html:not(.dark) .admin-portal .work-queue :is(.action-tile:first-of-type,.action-tile:last-of-type),
+html:not(.dark) .portal-layout:is(.faculty-portal,.student-portal,.admin-portal) .student-metrics .metric-card:first-child,
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .metric-card:nth-child(n) {
+  background:linear-gradient(135deg,rgba(255,255,255,.65),rgba(234,246,252,.43))!important;
+  border-color:rgba(255,255,255,.7)!important;
+  box-shadow:0 18px 45px rgba(28,77,119,.075),inset 0 1px rgba(255,255,255,.8)!important;
+}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .table-card-header {background:rgba(218,237,247,.43)!important}
+html:not(.dark) .login-page {background:radial-gradient(ellipse at 22% 80%,rgba(210,22,36,.08),transparent 40%),linear-gradient(135deg,#e0eef7,#f2f8fb)}
+html:not(.dark) .login-form-panel {background:linear-gradient(145deg,rgba(244,250,253,.92),rgba(223,238,247,.87))}
+html:not(.dark) .password-reset-page {background:radial-gradient(ellipse at 14% 77%,rgba(22,100,176,.19),transparent 42%),radial-gradient(ellipse at 88% 12%,rgba(210,22,36,.08),transparent 39%),linear-gradient(145deg,#e1eff8,#f5f9fa)}
+
