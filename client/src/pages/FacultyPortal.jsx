@@ -237,7 +237,7 @@ function StudentApprovalsTab({ requests, onRefresh }) {
         finally { setBusyId(null); }
     };
 
-    return <section className="card">
+    return <section className="card faculty-request-panel">
         <div className="card-header"><h3>Student registrations</h3><span className="badge badge-pending">{requests.length} waiting</span></div>
         <div className="card-body">
             <p className="td-muted" style={{ marginTop: 0 }}>Approve students from your department before they can sign in and submit activity records.</p>
@@ -427,7 +427,8 @@ export function ReviewsTab({ pendingCerts, students, user, onRefresh }) {
                 </div>
             </div>
 
-            <div className="table-card">
+            <div className="table-card faculty-review-panel">
+                <div className="table-card-header"><h3>Pending reviews</h3><span className="badge badge-pending">{filtered.length} waiting</span></div>
                 {filtered.length === 0 ? (
                     <div className="empty-state">
                         <span className="material-symbols-outlined">check_circle</span>
