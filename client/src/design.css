@@ -1455,3 +1455,5 @@ html:not(.dark) .admin-portal .work-queue .action-tile:last-of-type {background:
 html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) :is(.faculty-focus-panel,.campus-hero,.student-progress-panel) .btn-outline {background:rgba(255,250,243,.14);border-color:rgba(255,250,243,.6);color:#fffaf3}
 html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) :is(.faculty-focus-panel,.campus-hero,.student-progress-panel) .btn-outline:hover {background:rgba(255,250,243,.25);color:#fff}
 
+
+html:not(.dark) .portal-layout:is(.faculty-portal,.student-portal,.admin-portal) .student-metrics .metric-card:first-child {background:#deebf4!important}
