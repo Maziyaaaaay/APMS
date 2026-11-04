@@ -1286,3 +1286,53 @@ html:not(.dark) .admin-portal .activity-feed,
 html:not(.dark) .admin-portal .campus-insights { background: linear-gradient(145deg,#fffaf9,#fff4f5) !important; }
 html:not(.dark) .portal-layout .data-table tbody tr:nth-child(even) { background: rgba(249,237,242,.5); }
 html:not(.dark) .portal-layout .data-table tbody tr:hover { background: #fff0f4; }
+
+
+/* Faculty palette: soft daylight and legible, deep night surfaces. */
+.faculty-portal {
+  --text:#26233a; --text-secondary:#5e5a70; --text-muted:#716b80;
+  --border:rgba(88,66,105,.13); --surface:#fffafd; --surface2:#f6edf7;
+  --accent:#a33572; --primary:#a33572;
+  font-family: 'Public Sans', system-ui, sans-serif;
+  background:radial-gradient(ellipse at 85% 8%,#f4e2f6,transparent 40%),radial-gradient(ellipse at 15% 82%,#ffe8e1,transparent 45%),#fbf5fa;
+}
+.faculty-portal h1,.faculty-portal h2,.faculty-portal h3,.faculty-portal h4,.faculty-portal .metric-value {font-family:'Public Sans',system-ui,sans-serif;letter-spacing:-.025em}
+.faculty-portal .sidebar,.faculty-portal .topbar {background:rgba(255,250,253,.86);border-color:var(--border)}
+.faculty-portal .main-content {background:transparent}
+.faculty-portal .nav-item {border-radius:12px;color:#625b70}
+.faculty-portal .nav-item.active {background:#ecdaf0;color:#6c2d64}
+.faculty-portal .faculty-focus-panel {background:linear-gradient(120deg,#f8e7f2 0%,#f5d9e9 52%,#ffdfcf 100%);color:#30243c;border:0;border-radius:24px}
+.faculty-portal .faculty-focus-panel::before {display:none!important}
+.faculty-portal .metric-card,.faculty-portal .card,.faculty-portal .table-card {background:#fffafd;border-color:var(--border);border-radius:18px}
+.faculty-portal .metric-grid {gap:12px}
+.faculty-portal .metric-card {padding:20px;border:0;background:#f6eaf5}
+.faculty-portal .metric-card:nth-child(2) {background:#fbe8e9}
+.faculty-portal .metric-card:nth-child(3) {background:#eeeaf9}
+.faculty-portal .metric-card:nth-child(4) {background:#fbeee4}
+.faculty-portal .btn-primary {background:#a33572;color:#fff;border:0}
+.faculty-portal .btn-primary:hover {background:#872a60}
+.faculty-portal .input,.faculty-portal select.input,.faculty-portal textarea.input {background:#fffafd;color:#26233a;border-color:rgba(88,66,105,.2)}
+html.dark .faculty-portal {
+  --text:#f6f2fc; --text-secondary:#c5bbd3; --text-muted:#aca1bc;
+  --surface:#201c2e; --surface2:#292337; --border:rgba(222,205,236,.12);
+  --accent:#ef9cc4; --primary:#ef9cc4;
+  background:radial-gradient(ellipse at 90% 0%,#292139,transparent 42%),radial-gradient(ellipse at 10% 80%,#241c32,transparent 42%),#11111c;
+}
+html.dark .faculty-portal .sidebar,html.dark .faculty-portal .topbar {background:#151420;border-color:var(--border)}
+html.dark .faculty-portal .main-content {background:transparent}
+html.dark .faculty-portal .sidebar .apms-brand-image {mix-blend-mode:screen}
+html.dark .faculty-portal .sidebar .apms-brand-image img {filter:brightness(0) invert(1);opacity:.93}
+html.dark .faculty-portal .nav-item {color:#c7bdd5}
+html.dark .faculty-portal .nav-item.active {background:#3a2c48;color:#ffcee5}
+html.dark .faculty-portal .faculty-focus-panel {background:linear-gradient(120deg,#33253e,#503047 58%,#604039);color:#fff5fb;border:1px solid rgba(255,225,240,.10)}
+html.dark .faculty-portal .faculty-focus-panel h3,html.dark .faculty-portal .faculty-focus-panel p {color:#fff5fb}
+html.dark .faculty-portal .metric-card,html.dark .faculty-portal .card,html.dark .faculty-portal .table-card {background:#211d2d;border-color:var(--border);color:var(--text)}
+html.dark .faculty-portal .metric-card:nth-child(2) {background:#292032}
+html.dark .faculty-portal .metric-card:nth-child(3) {background:#242239}
+html.dark .faculty-portal .metric-card:nth-child(4) {background:#2c2432}
+html.dark .faculty-portal .btn-primary {background:#e9a2c3!important;color:#261825!important;border:0}
+html.dark .faculty-portal .btn-primary:hover {background:#f3bad3!important}
+html.dark .faculty-portal .input,html.dark .faculty-portal select.input,html.dark .faculty-portal textarea.input {background:#181723;color:#f6f2fc;border-color:rgba(222,205,236,.18)}
+html.dark .faculty-portal .data-table th {background:#292337;color:#d8cfe2}
+html.dark .faculty-portal .data-table td {border-color:var(--border)}
+@media(max-width:767px){.faculty-portal .metric-grid{gap:10px}.faculty-portal .metric-card{padding:16px}.faculty-portal .faculty-focus-panel{padding:24px}}
