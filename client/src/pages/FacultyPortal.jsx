@@ -52,19 +52,16 @@ export default function FacultyPortal() {
 
     const [loadError, setLoadError] = useState('');
     const refreshData = useCallback(async () => {
-        try {
-            const [certsData, usersData, circsData, requestsData] = await Promise.all([
-                getCertificates(),
-                getUsers(),
-                getCirculars(),
-                getAccountRequests(),
-            ]);
-            setCerts(certsData);
-            setStudents(usersData.filter(u => u.role === 'student'));
-            setCirculars(circsData); setAccountRequests(requestsData); setLoadError('');
-        } catch (err) {
-            setLoadError(err.message);
-        }
+        const results = await Promise.allSettled([
+            getCertificates(), getUsers(), getCirculars(), getAccountRequests(),
+        ]);
+        const labels = ['certificates', 'students', 'circulars', 'student requests'];
+        const failures = results.flatMap((result, index) => result.status === 'rejected' ? [labels[index]] : []);
+        if (results[0].status === 'fulfilled') setCerts(results[0].value);
+        if (results[1].status === 'fulfilled') setStudents(results[1].value.filter(u => u.role === 'student'));
+        if (results[2].status === 'fulfilled') setCirculars(results[2].value);
+        if (results[3].status === 'fulfilled') setAccountRequests(results[3].value);
+        setLoadError(failures.length ? `Could not load ${failures.join(', ')}. Please try again.` : '');
     }, []);
     useEffect(() => {
         if (!user) { navigate('/'); return; }
@@ -1017,16 +1014,6 @@ function ProfileTab({ user, onLogout, onRefresh, onUpdateUser }) {
                     <p>Sign out of your account</p>
                 </div>
             </div>
-        <BatchAssignmentModal
-            open={batchDialogOpen}
-            title="Which batches will you evaluate?"
-            description="Choose the student admission batches you are responsible for. Your student approvals and certificate reviews will be routed by this assignment."
-            onCancel={() => setBatchDialogOpen(false)}
-            onConfirm={saveInitialBatches}
-            submitLabel="Save batches"
-            busy={savingBatches}
-            cancelDisabled={!user?.evaluationBatches?.length}
-        />
         </div>
     );
 }
