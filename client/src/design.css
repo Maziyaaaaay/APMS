@@ -1435,3 +1435,19 @@ html:not(.dark) .login-submit-btn:hover {background:#ae111e}
 html:not(.dark) .password-reset-page {--reset-ink:#172c43;--reset-muted:#506275;--reset-accent:#d21624;background:radial-gradient(ellipse at 13% 78%,rgba(22,100,176,.16),transparent 43%),radial-gradient(ellipse at 85% 12%,rgba(210,22,36,.1),transparent 39%),#efe8de}
 @media(max-width:767px){html:not(.dark) .login-form-panel{background:rgba(239,232,222,.96)}}
 
+
+/* Legacy light-mode gradients used !important; keep the new palette above them. */
+html:not(.dark) .portal-layout.faculty-portal .faculty-focus-panel,
+html:not(.dark) .portal-layout.student-portal .student-progress-panel,
+html:not(.dark) .portal-layout.admin-portal .campus-hero {
+  background:linear-gradient(115deg,#145a9f 0%,#1664b0 48%,#9e2837 82%,#d21624 100%)!important;
+}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) :is(.card,.table-card,.campus-register,.activity-feed,.campus-insights,.student-submission-tools) {background:#f8f3ec!important}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .metric-card {background:#deebf4!important}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .metric-card:nth-child(2) {background:#f4e0da!important}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .metric-card:nth-child(3) {background:#e8e4dc!important}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .metric-card:nth-child(4) {background:#dbe8eb!important}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .table-card-header {background:#e6edf1!important}
+html:not(.dark) .admin-portal .work-queue .action-tile:first-of-type {background:#deebf4!important}
+html:not(.dark) .admin-portal .work-queue .action-tile:last-of-type {background:#f4e0da!important}
+
