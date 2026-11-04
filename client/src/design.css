@@ -1527,3 +1527,31 @@ html:not(.dark) .login-page {background:radial-gradient(ellipse at 22% 80%,rgba(
 html:not(.dark) .login-form-panel {background:linear-gradient(145deg,rgba(244,250,253,.92),rgba(223,238,247,.87))}
 html:not(.dark) .password-reset-page {background:radial-gradient(ellipse at 14% 77%,rgba(22,100,176,.19),transparent 42%),radial-gradient(ellipse at 88% 12%,rgba(210,22,36,.08),transparent 39%),linear-gradient(145deg,#e1eff8,#f5f9fa)}
 
+
+/* Faculty review and registration panels echo the dashboard gradient. */
+html:not(.dark) .faculty-portal :is(.faculty-request-panel,.faculty-review-panel) {
+  overflow:hidden;
+  background:radial-gradient(ellipse at 91% 78%,rgba(210,22,36,.35),transparent 43%),radial-gradient(ellipse at 70% 8%,rgba(239,232,222,.25),transparent 43%),linear-gradient(115deg,#1d639d,#377bb0 56%,#935b73 100%)!important;
+  border:1px solid rgba(255,255,255,.58)!important;
+  box-shadow:0 18px 48px rgba(25,80,126,.16)!important;
+}
+html:not(.dark) .faculty-portal .faculty-request-panel .card-header,
+html:not(.dark) .faculty-portal .faculty-review-panel .table-card-header {
+  min-height:82px;display:flex;align-items:center;justify-content:space-between;gap:18px;
+  background:transparent!important;border-color:rgba(255,255,255,.23)!important;
+}
+html:not(.dark) .faculty-portal :is(.faculty-request-panel .card-header,.faculty-review-panel .table-card-header) h3 {color:#fffaf3!important}
+html:not(.dark) .faculty-portal :is(.faculty-request-panel,.faculty-review-panel) .badge-pending {background:rgba(255,250,243,.19);border:1px solid rgba(255,255,255,.43);color:#fffaf3}
+html:not(.dark) .faculty-portal .faculty-request-panel .card-body,
+html:not(.dark) .faculty-portal .faculty-review-panel .table-overflow,
+html:not(.dark) .faculty-portal .faculty-review-panel .empty-state,
+html:not(.dark) .faculty-portal .faculty-review-panel .table-card-footer {
+  background:linear-gradient(140deg,rgba(247,251,254,.9),rgba(233,244,251,.81));
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+}
+html:not(.dark) .faculty-portal :is(.faculty-request-panel,.faculty-review-panel) .data-table th {background:rgba(215,234,246,.78);color:#214e72}
+html:not(.dark) .faculty-portal :is(.faculty-request-panel,.faculty-review-panel) .data-table tbody tr {background:transparent}
+html:not(.dark) .faculty-portal :is(.faculty-request-panel,.faculty-review-panel) .data-table tbody tr:nth-child(even) {background:rgba(255,255,255,.3)}
+html:not(.dark) .faculty-portal :is(.faculty-request-panel,.faculty-review-panel) .data-table td {color:#172c43;border-color:rgba(29,99,157,.12)}
+@media(max-width:767px){html:not(.dark) .faculty-portal .faculty-request-panel .card-header,html:not(.dark) .faculty-portal .faculty-review-panel .table-card-header{min-height:68px;align-items:flex-start;flex-wrap:wrap;padding:20px}}
+
