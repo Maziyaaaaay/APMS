@@ -111,7 +111,7 @@ export default function FacultyPortal() {
     };
 
     return (
-        <div className="portal-layout">
+        <div className="portal-layout faculty-portal">
             <AmbientBackdrop />
             {/* Sidebar overlay (mobile) */}
             <div
