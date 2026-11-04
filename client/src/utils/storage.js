@@ -68,15 +68,27 @@ export async function getPendingCertificates() {
 }
 
 export async function uploadCertificate(file) {
-  if (!file || !['application/pdf', 'image/jpeg', 'image/png'].includes(file.type) || file.size <= 0 || file.size > 10 * 1024 * 1024) {
+  const extension = file?.name?.split('.').pop()?.toLowerCase();
+  const mimeType = file?.type || ({ pdf: 'application/pdf', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png' })[extension];
+  if (!file || !['application/pdf', 'image/jpeg', 'image/png'].includes(mimeType) || file.size <= 0 || file.size > 10 * 1024 * 1024) {
     throw new Error('Choose a PDF, JPG, or PNG up to 10 MB.');
   }
-  const { signedUrl, receipt } = await api.post('/certificates/upload-url', { mimeType: file.type, size: file.size });
-  const body = new FormData();
-  body.append('cacheControl', '3600');
-  body.append('', file);
-  const response = await fetch(signedUrl, { method: 'PUT', headers: { 'x-upsert': 'false' }, body, signal: AbortSignal.timeout(120000) });
-  if (!response.ok) throw new Error('Certificate upload failed. Check your connection and try again.');
+  const { signedUrl, receipt } = await api.post('/certificates/upload-url', { mimeType, size: file.size });
+  // Supabase Storage expects raw file bytes here; multipart form data changes the MIME type.
+  const response = await fetch(signedUrl, {
+    method: 'PUT',
+    headers: { 'Content-Type': mimeType, 'x-upsert': 'false' },
+    body: file,
+    signal: AbortSignal.timeout(120000),
+  });
+  if (!response.ok) {
+    let reason = '';
+    try {
+      const payload = await response.json();
+      reason = payload.message || payload.error || '';
+    } catch { /* Storage may return a non-JSON error body. */ }
+    throw new Error(reason ? `Certificate upload failed: ${reason}` : 'Certificate upload failed. Check your connection and try again.');
+  }
   return receipt;
 }
 
