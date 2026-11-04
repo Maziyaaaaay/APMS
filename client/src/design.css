@@ -1343,3 +1343,95 @@ html.dark .student-portal {--student-page:#15131f;--student-surface:#211d2d;--st
 :is(.student-portal,.admin-portal) .campus-hero,:is(.student-portal,.admin-portal) .student-progress-panel {background:linear-gradient(120deg,#f8e7f2,#f5d9e9 52%,#ffdfcf);color:#30243c}
 html.dark :is(.student-portal,.admin-portal) .campus-hero,html.dark :is(.student-portal,.admin-portal) .student-progress-panel {background:linear-gradient(120deg,#33253e,#503047 58%,#604039);color:#fff5fb}
 :is(.student-portal,.admin-portal) .campus-hero::before,:is(.student-portal,.admin-portal) .student-progress-panel::before {display:none!important}
+
+/* Day palette: Aegean Sky / Sandy Linen / Scarlet Bikini. */
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) {
+  --primary:#1664b0;--primary-light:#2476c5;--accent:#d21624;--accent-hover:#ae111e;
+  --bg:#efe8de;--bg2:#e6dbce;--surface:#f8f3ec;--surface2:#efe5d9;
+  --text:#172c43;--text-secondary:#45576a;--text-muted:#617083;
+  --border:rgba(25,69,110,.17);--border-strong:rgba(25,69,110,.29);
+  --student-page:#efe8de;--student-surface:#f8f3ec;--student-raised:#e5ecf1;
+  --student-ink:#172c43;--student-muted:#506275;--student-line:rgba(25,69,110,.18);
+  --student-accent:#1664b0;--student-accent-soft:#d6e8f5;
+  background:radial-gradient(ellipse at 87% 8%,rgba(22,100,176,.11),transparent 40%),radial-gradient(ellipse at 14% 83%,rgba(210,22,36,.07),transparent 42%),#efe8de;
+  color:var(--text);
+}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .sidebar {
+  background:linear-gradient(165deg,#145a9f,#1664b0 57%,#0f477e);
+  border-color:rgba(255,255,255,.16);
+}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .sidebar .apms-brand-image {mix-blend-mode:screen}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .sidebar .apms-brand-image img {filter:url(#apms-sidebar-cutout);opacity:.98}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .sidebar-brand,
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .sidebar-footer {border-color:rgba(255,255,255,.2)}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .sidebar-brand-text h1,
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .sidebar-brand-text p,
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .sidebar-footer div {color:#f9f2e9!important}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .nav-item,
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .nav-item .material-symbols-outlined {color:#e3eff9}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .nav-item:hover:not(.active) {background:rgba(255,255,255,.13);color:#fff}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .nav-item.active,
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .nav-item.active:hover {
+  background:#efe8de;color:#133f6d;border-color:transparent;box-shadow:0 9px 20px rgba(6,45,85,.13)!important;
+}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .nav-item.active .material-symbols-outlined {color:#d21624}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .sidebar-help-btn {background:rgba(255,255,255,.11);border-color:rgba(255,255,255,.28);color:#fff}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .topbar {background:rgba(239,232,222,.9);border-color:rgba(25,69,110,.15)}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .topbar-title,
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .topbar-user-name {color:#172c43}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .topbar-user-sub {color:#506275}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .topbar-avatar {background:#1664b0;color:#fff;border-color:#efe8de}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .theme-toggle {background:#f8f3ec;border-color:rgba(25,69,110,.2);color:#1664b0}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .theme-toggle:hover {background:#dcecf7;color:#0d4a86}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .faculty-focus-panel,
+html:not(.dark) :is(.student-portal,.admin-portal) .campus-hero,
+html:not(.dark) .student-portal .student-progress-panel {
+  background:linear-gradient(115deg,#145a9f 0%,#1664b0 48%,#9e2837 82%,#d21624 100%);
+  color:#fffaf3;border:1px solid rgba(11,71,125,.16);
+  box-shadow:0 20px 44px rgba(28,69,109,.14)!important;
+}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) :is(.faculty-focus-panel,.campus-hero,.student-progress-panel) :is(h2,h3,p,.eyebrow,.orbit-copy,.orbit-copy strong,.progress-label) {color:#fffaf3}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) :is(.faculty-focus-panel,.campus-hero,.student-progress-panel) .btn-primary {background:#efe8de!important;color:#124e89!important}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) :is(.faculty-focus-panel,.campus-hero,.student-progress-panel) .btn-primary:hover {background:#fff8ef!important;color:#0d447b!important}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) :is(.metric-card,.card,.table-card,.group-card,.action-tile,.student-submission-tools,.settings-item) {
+  border-color:rgba(25,69,110,.16);background:#f8f3ec;color:#172c43;
+}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) :is(.metric-card,.group-card) {background:#deebf4}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .metric-card:nth-child(2) {background:#f4e0da}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .metric-card:nth-child(3) {background:#e8e4dc}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .metric-card:nth-child(4) {background:#dbe8eb}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) :is(.metric-value,.action-count,.section-intro h3,.panel-heading h3,.feed-copy strong,.action-tile-copy strong) {color:#183d62}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) :is(.metric-label,.metric-detail,.action-tile-copy>span,.feed-copy span,.designed-empty p) {color:#506275}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) :is(.metric-icon,.group-card-icon) {background:#1664b0;color:#fff}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .btn-primary {background:#d21624!important;color:#fff!important;border:0}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .btn-primary:hover {background:#ae111e!important}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) :is(.input,select.input,textarea.input,.search-input,.filter-select) {background:#fffaf3;color:#172c43;border-color:rgba(25,69,110,.24)}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) :is(.input,select.input,textarea.input,.search-input):focus {border-color:#1664b0;outline-color:#1664b0}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .data-table th {background:#e4edf2;color:#234965}
+html:not(.dark) :is(.faculty-portal,.student-portal,.admin-portal) .data-table td {border-color:rgba(25,69,110,.13)}
+html:not(.dark) .admin-portal :is(.campus-register,.activity-feed,.campus-insights,.work-queue .action-tile) {background:#f8f3ec;border-color:rgba(25,69,110,.16)}
+html:not(.dark) .admin-portal .work-queue .action-tile:first-of-type {background:#deebf4}
+html:not(.dark) .admin-portal .work-queue .action-tile:last-of-type {background:#f4e0da}
+html:not(.dark) .admin-portal .segmented-control {background:#e5ecf1;border-color:rgba(25,69,110,.16)}
+html:not(.dark) .admin-portal .segmented-control button[aria-pressed=true] {background:#1664b0;color:#fff}
+html:not(.dark) .admin-portal .workspace-links button {background:#dcebf5;border-color:rgba(25,69,110,.16);color:#134e87}
+html:not(.dark) .student-portal .student-profile-main .profile-info-item {background:#e7edf0}
+html:not(.dark) .student-portal .student-profile-aside>div[style*="var(--primary)"] {background:#1664b0!important}
+
+html:not(.dark) .login-page {background:#efe8de;color:#172c43}
+html:not(.dark) .login-brand-panel {background:#1664b0;color:#fffaf3}
+html:not(.dark) .login-brand-panel::before {background:radial-gradient(ellipse at 78% 38%,rgba(210,22,36,.92),transparent 43%),radial-gradient(ellipse at 30% 75%,rgba(238,232,222,.35),transparent 44%),radial-gradient(ellipse at 45% 40%,#2478be,transparent 54%)}
+html:not(.dark) .login-brand-panel::after {background:linear-gradient(180deg,rgba(9,55,100,.1),rgba(9,55,100,.12) 54%,rgba(9,55,100,.38))}
+html:not(.dark) .login-brand-panel :is(h2,p,.brand-eyebrow,.journey-caption strong,.login-brand-footer) {color:#fffaf3}
+html:not(.dark) .login-brand-panel .apms-brand-image img {filter:url(#apms-sidebar-cutout)}
+html:not(.dark) .login-form-panel {background:#efe8de;color:#172c43}
+html:not(.dark) .login-heading h2 {color:#172c43}
+html:not(.dark) .login-heading p {color:#506275}
+html:not(.dark) .login-role-tab.active,html:not(.dark) .role-tab.active {background:#1664b0;color:#fff}
+html:not(.dark) .login-form-panel .input-icon-wrap .input {background:#fffaf3;border-color:rgba(25,69,110,.24);color:#172c43}
+html:not(.dark) .login-form-panel .input:focus {border-color:#1664b0;outline-color:#1664b0}
+html:not(.dark) .login-submit-btn {background:#d21624;color:#fff}
+html:not(.dark) .login-submit-btn:hover {background:#ae111e}
+html:not(.dark) .password-reset-page {--reset-ink:#172c43;--reset-muted:#506275;--reset-accent:#d21624;background:radial-gradient(ellipse at 13% 78%,rgba(22,100,176,.16),transparent 43%),radial-gradient(ellipse at 85% 12%,rgba(210,22,36,.1),transparent 39%),#efe8de}
+@media(max-width:767px){html:not(.dark) .login-form-panel{background:rgba(239,232,222,.96)}}
+
